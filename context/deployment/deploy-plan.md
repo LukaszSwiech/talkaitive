@@ -133,4 +133,17 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 3. **Region:** the workspace `preferredRegion` was verified through the API before anything was created. `web` was pinned with `railway service scale --service web eu-west=1`.
 4. **`check --deploy` reports `mail.E001`** (console email backend). Nothing sends email in the MVP, so this is accepted for now.
 5. **The local gunicorn smoke test** was replaced by Django test-client checks plus `gunicorn --check-config`.
-6. **SSH needs a real terminal the first time**, to accept the `ssh.railway.com` host key. Neither the agent shell nor `!` has a TTY.
+6. **SSH needs a real terminal the first time**, to accept the `ssh.railway.com` host key. Neither the agent shell nor `!` has a TTY. The same applies to `createsuperuser`, which skips itself without a TTY.
+
+### Verification (Step 10), deploy `8331c90`
+- Build: Railpack 0.40.0, Python 3.14.7 (from `.python-version`), `uv sync --locked --no-dev`.
+- Pre-deploy migrate ran; `showmigrations` shows 18 applied and 0 pending. The `/healthz/` health check passed.
+- gunicorn 26.2.0 runs 2 gthread workers.
+- HTTP checks:
+  - `/healthz/` returns 200.
+  - `http://` redirects with 301 to `https://`.
+  - `/admin/login/` returns 200.
+  - Static CSS returns 200 with an `immutable` cache header (WhiteNoise).
+  - A 404 shows no debug page.
+- The superuser was created in a real terminal, and the browser admin login succeeded. That confirms CSRF and sessions behind the proxy and Postgres writes.
+- Open item: turn on the Postgres Backups schedules in the dashboard (manual).
