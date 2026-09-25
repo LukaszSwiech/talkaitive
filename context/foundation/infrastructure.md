@@ -151,7 +151,7 @@ It is $0 for private use and has official Django support. It is third because of
 | Risk | Source | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
 | Gunicorn single sync worker + 30 s timeout → queued requests and 502 on slow LLM calls | Devil's advocate | H | M | Explicit start command: `gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120` |
-| Loss of error memory: unmanaged Postgres, in-platform backups deleted with the volume | Devil's advocate / Pre-mortem | M | H | Enable the daily and weekly backup schedules (confirm in the Backups tab on Hobby); add a daily off-platform `pg_dump` (e.g. a GitHub Actions cron to a private artifact or bucket); test a restore once |
+| Loss of error memory: unmanaged Postgres, in-platform backups deleted with the volume | Devil's advocate / Pre-mortem | M | H | **Checked 2026-09-25: Railway backups and PITR are Pro-only, so Hobby has none.** Until Pro, the daily off-platform `pg_dump` (e.g. a GitHub Actions cron to a private artifact or bucket) is the only backup, so it is top priority; test a restore once. After upgrading to Pro, also turn on the daily and weekly backup schedules. |
 | Production runs Python 3.13.2 instead of 3.14 | Unknown unknowns | H | M | Commit `.python-version` with `3.14`; confirm the version in the build log |
 | Migration hangs and blocks all deploys | Unknown unknowns / Pre-mortem | L | M | Set a Pre-deploy Timeout (e.g. 300 s) after adding `preDeployCommand` |
 | Migrations run on every start (Railpack default) | Devil's advocate | H | L | Override `startCommand`; run `migrate` only in `preDeployCommand` |

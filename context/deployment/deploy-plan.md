@@ -146,4 +146,10 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
   - Static CSS returns 200 with an `immutable` cache header (WhiteNoise).
   - A 404 shows no debug page.
 - The superuser was created in a real terminal, and the browser admin login succeeded. That confirms CSRF and sessions behind the proxy and Postgres writes.
-- Open item: turn on the Postgres Backups schedules in the dashboard (manual).
+- Postgres backups could not be turned on: in the dashboard, backups and PITR are **Pro-plan only**, so Hobby has no Railway backups (checked 2026-09-25).
+
+### TODO
+- [ ] **Off-platform daily `pg_dump`** (GitHub Actions cron to a private artifact or bucket), plus one test restore. **Top priority:** while on Hobby, the database has no backup at all.
+- [ ] **After upgrading to Pro:** Postgres → Backups → turn on the daily and weekly schedules and consider PITR. Keep the `pg_dump` anyway, because Railway backups are deleted along with the volume.
+- [ ] GitHub Actions test workflow on PRs.
+- [ ] Move `web` service settings to Infrastructure as Code (`.railway/railway.ts`) and review `railway config plan` before any apply.
