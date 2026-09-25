@@ -1,0 +1,106 @@
+# First deploy of TalkAItive to Railway
+
+## Context
+
+`context/foundation/infrastructure.md` picked **Railway (Hobby, EU West/Amsterdam)** with Postgres in the same project, and `tech-stack.md` set GitHub auto-deploy on merge to `main`. The repo is still a bare `startproject`:
+- `settings.py` has a hard-coded `SECRET_KEY`, `DEBUG = True`, `ALLOWED_HOSTS = []` and SQLite.
+- Only `/admin/` is routed.
+- There are no git commits and no remote.
+- `railway` and `gh` are not installed.
+
+This plan makes the app production-ready according to the infrastructure risk register, pushes it to a new private GitHub repo, and wires up Railway so a merge to `main` deploys. The approved plan is also saved as `context/deployment/deploy-plan.md` as the audit trail.
+
+Decisions made: GitHub + auto-deploy (I install `gh`); the first commit contains only the core app and `context/`.
+
+**Human gates** (you do these; I stop and tell you exactly what to do): `gh auth login`, `railway login`, the Railway dashboard steps (region, GitHub connection, pre-deploy timeout, backups), approving production variable writes, and `createsuperuser`.
+
+## Step 0: Save the plan
+- Copy this plan to `context/deployment/deploy-plan.md`.
+
+## Step 1: Pin the runtime and add dependencies (automated)
+- Create `.python-version` containing `3.14`. Railpack reads this file and ignores `requires-python`; without it production would run 3.13.2.
+- Run `uv add gunicorn "psycopg[binary]" whitenoise dj-database-url`.
+
+## Step 2: Make `talkaitive/settings.py` environment-driven (automated)
+- `import os`, `import dj_database_url`.
+- `DEBUG`: read from the `DEBUG` env var. It defaults to `"False"` when `RAILWAY_ENVIRONMENT` is present (Railway injects it) and to `"True"` locally. This fails safe if `DEBUG` is forgotten in production, and `runserver` works locally with no env setup.
+- `SECRET_KEY`: `os.environ["SECRET_KEY"]` when not DEBUG, so a missing key crashes the app instead of silently using the dev key. Keep the existing dev key as the fallback only when DEBUG is on.
+- `ALLOWED_HOSTS` / `CSRF_TRUSTED_ORIGINS`: comma-separated env vars. Locally they default to `localhost,127.0.0.1` and empty.
+- `DATABASES["default"] = dj_database_url.config(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600, conn_health_checks=True)`.
+- Static files:
+  - `STATIC_ROOT = BASE_DIR / "staticfiles"`, which is already in `.gitignore`.
+  - Add `whitenoise.middleware.WhiteNoiseMiddleware` right after `SecurityMiddleware`.
+  - Set `STORAGES` with `staticfiles` → `whitenoise.storage.CompressedManifestStaticFilesStorage`.
+- When not DEBUG:
+  - `SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")`
+  - `SECURE_SSL_REDIRECT = True`
+  - `SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]`, because Railway's health probe is plain HTTP and a 301 would fail it
+  - `SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = True`
+- HSTS is left out for now, since `*.up.railway.app` is not our domain.
+
+## Step 3: Health-check endpoint (automated)
+- In `talkaitive/urls.py`, add `path("healthz/", ...)`, a tiny function view returning `HttpResponse("ok")`. It is unauthenticated, makes no database call, and responds fast.
+- Add a type hint (`HttpRequest -> HttpResponse`), per CLAUDE.md.
+
+## Step 4: `railway.json` at the repo root (automated)
+```json
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": { "builder": "RAILPACK" },
+  "deploy": {
+    "preDeployCommand": ["python manage.py migrate --noinput"],
+    "startCommand": "python manage.py collectstatic --noinput && gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120",
+    "healthcheckPath": "/healthz/",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
+```
+This covers four risk-register rows: the single sync worker with its 30 s timeout, migrations running on every start, `collectstatic` in pre-deploy not reaching the app, and the health check.
+
+## Step 5: Verify locally before committing (automated)
+- `uv run ruff check . && uv run ruff format --check .`
+- `uv run python manage.py check`, then `uv run python manage.py runserver` and `curl localhost:8000/healthz/` → `ok`.
+- Simulate production: `DEBUG=False SECRET_KEY=x ALLOWED_HOSTS=localhost uv run python manage.py check --deploy`. Expect only the HSTS warning (accepted, see Step 2).
+- `DEBUG=False SECRET_KEY=x uv run python manage.py collectstatic --noinput --dry-run` to confirm WhiteNoise storage works.
+- `uv run gunicorn talkaitive.wsgi --bind 127.0.0.1:8001` as a smoke test, then stop it.
+
+## Step 6: First commit and GitHub repo
+- (automated) `git add` explicitly: `manage.py talkaitive/ pyproject.toml uv.lock .python-version railway.json CLAUDE.md context/`. This excludes `.DS_Store`, the mega-assessment files, `.10x-cli.json` and `skills-lock.json`. Commit on `main` with the attribution trailer.
+- (automated) `brew install gh railway`. Using brew instead of the curl installer avoids its side-effecting `railway setup agent`.
+- **(you)** `! gh auth login`.
+- (automated) `gh repo create talkaitive --private --source . --push`.
+
+## Step 7: Create the Railway project (mix)
+- **(you)** `! railway login`.
+- **(you, dashboard)** Account settings → set the **preferred region to EU West (Amsterdam)** before creating anything.
+- (automated) `railway init --name talkaitive`, then `railway add --database postgres`.
+- (automated) Create an empty web service named `web` with `railway add --service web`. I'll check `railway add --help` first, because the exact flags depend on the CLI version.
+- **(you, dashboard)** Confirm both services show region `europe-west4-drams3a`.
+
+## Step 8: Variables and domain (automated, you approve each command)
+- `railway domain --service web`, which generates `web-xxxx.up.railway.app`.
+- Set on `web`:
+  - `DATABASE_URL='${{Postgres.DATABASE_URL}}'` (single-quoted so the shell doesn't expand it)
+  - `SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key as g; print(g())')"`, so the key never appears in the command text
+  - `DEBUG=False`
+  - `ALLOWED_HOSTS=<domain>,healthcheck.railway.app`
+  - `CSRF_TRUSTED_ORIGINS=https://<domain>`
+- The LLM API key is not set now; no LLM code exists yet.
+
+## Step 9: Connect GitHub and deploy (you, dashboard)
+- In the `web` service → Settings → Source → connect `talkaitive`, branch `main`. This triggers the first deploy.
+- In Settings → Deploy → **Pre-deploy Timeout = 300 s** (this field appears once `preDeployCommand` is known from `railway.json`).
+- Leave **Serverless** off.
+- In the Postgres service → Backups → enable the daily and weekly schedules.
+
+## Step 10: Verify the deploy (automated, read-only)
+- `railway logs --build`: confirm Python **3.14.x**, uv install from `uv.lock`, Railpack builder.
+- `railway logs`: migrations ran in pre-deploy, gunicorn started with 2 workers, health check passed.
+- `curl -sI https://<domain>/healthz/` → 200; `curl -sI http://<domain>/admin/` → 301 to https.
+- `curl -s https://<domain>/admin/login/` → 200, the login form served with static CSS. Checking `/static/admin/css/base.*.css` → 200 confirms WhiteNoise.
+- **(you)** `! railway ssh --service web`, then `python manage.py createsuperuser`, then log in to `/admin/` in the browser. This end-to-end check confirms CSRF behind the proxy and the Postgres writes.
+
+## Out of scope / follow-ups
+- Daily off-platform `pg_dump` (GitHub Actions cron) and a GitHub Actions test workflow. The infra doc lists both as out of scope; they are the next change.
+- Custom domain + HSTS, LLM API key, and a usage alert after the first month.
