@@ -104,3 +104,33 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ## Out of scope / follow-ups
 - Daily off-platform `pg_dump` (GitHub Actions cron) and a GitHub Actions test workflow. The infra doc lists both as out of scope; they are the next change.
 - Custom domain + HSTS, LLM API key, and a usage alert after the first month.
+
+---
+
+## Execution log (2026-09-25): what actually happened
+
+### Live resources
+| Item | Value |
+|---|---|
+| GitHub repo | `LukaszSwiech/talkaitive` (private), `main` auto-deploys |
+| Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), Hobby, workspace preferred region `europe-west4-drams3a` |
+| Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
+| Services | `web` (`9e0786d6-5cc8-4f28-9724-81c55c7e1dcf`, EU West, 1 replica); `Postgres` (template `postgres-ssl:18`, volume `postgres-volume` in `europe-west4-drams3a`) |
+| Public URL | `https://web-production-5e685.up.railway.app` |
+| `web` variables | `SECRET_KEY` (generated, set via `--stdin`, never displayed), `DATABASE_URL=${{Postgres.DATABASE_URL}}` (resolves to `postgres.railway.internal`), `DEBUG=False`, `ALLOWED_HOSTS=web-production-5e685.up.railway.app,healthcheck.railway.app`, `CSRF_TRUSTED_ORIGINS=https://web-production-5e685.up.railway.app` |
+| SSH | Key `talkaitive-mac` (`~/.ssh/id_ed25519_railway`). Always pass `-i ~/.ssh/id_ed25519_railway`, because the default `id_ed25519` belongs to another Railway account |
+
+### Deviations from the plan
+1. **`railway.json` is ignored for new services.** Railway deprecated Config as Code: new services cannot use it, and legacy services lose it on 2026-12-01. The first deploy therefore ran with `preDeployCommand`, `healthcheckPath` and the timeout all unset. As a result, **no migrations ran**, and `createsuperuser` failed with `relation "auth_user" does not exist`. Railpack picked up `startCommand` from the file only at build time.
+   The fix: the `web` service settings are now set through the GraphQL API (`serviceInstanceUpdate`), and `railway.json` is deleted. Current service settings:
+   - `preDeployCommand = ["python manage.py migrate --noinput"]`, `preDeployTimeoutSeconds = 300`
+   - `startCommand = sh -c 'python manage.py collectstatic --noinput && exec gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120'`
+   - `healthcheckPath = /healthz/`, `healthcheckTimeout = 120`, `restartPolicyType = ON_FAILURE`
+
+   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @web-settings.json`, with the IDs above and this input.
+   **Follow-up:** move this into Infrastructure as Code (`.railway/railway.ts` via `railway config init`, then `railway config plan`). Review the plan carefully first, because a whole-project file deletes resources it doesn't declare, such as Postgres.
+2. **GitHub was connected from the CLI** (`railway service source connect --repo … --branch main --service web`) after you installed the Railway GitHub App for this repo only. The dashboard source step was not needed.
+3. **Region:** the workspace `preferredRegion` was verified through the API before anything was created. `web` was pinned with `railway service scale --service web eu-west=1`.
+4. **`check --deploy` reports `mail.E001`** (console email backend). Nothing sends email in the MVP, so this is accepted for now.
+5. **The local gunicorn smoke test** was replaced by Django test-client checks plus `gunicorn --check-config`.
+6. **SSH needs a real terminal the first time**, to accept the `ssh.railway.com` host key. Neither the agent shell nor `!` has a TTY.
