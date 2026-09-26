@@ -10,6 +10,17 @@ The user writes in English but is a junior developer: **every chat response must
 - Keep code, commands, file paths, identifiers and error messages as they are (don't translate them); explain around them in Polish.
 - Code, code comments, commit messages and files written to disk keep the repo's existing language unless the user asks otherwise.
 
+## Explain every tool call before making it
+
+The user is still building trust in agents and wants to understand each action before approving it. The short tool-call description is not enough. Before **every** Bash command and every file change (Edit / Write), write a short Polish block in the chat:
+
+- **Komendy** — list each CLI command in the call (including every part of a `&&` / `|` chain) with a one-line note on what it does and what its key flags mean.
+- **Co i jak** — what will happen, step by step: which files or systems are touched, and whether it only reads or also changes something.
+- **Dlaczego** — why this step is needed for the current task.
+- **Ryzyko** — only when something changes: what could go wrong and whether it can be undone (e.g. "commit można cofnąć `git reset`", "push jest publiczny").
+
+Also write the Bash tool's `description` field in Polish, and let it run to one full sentence instead of 5–10 words. For a plain read (e.g. `cat`, `ls`, `git status`), one or two sentences covering the same points are enough.
+
 ## TalkAItive — project notes
 
 Django 6.1 web app for German conversation practice (B1–B2). Spec: `context/foundation/prd.md` (in Polish); stack rationale: `context/foundation/tech-stack.md`.
