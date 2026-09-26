@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Response language — always Polish, always simple
+
+The user writes in English but is a junior developer: **every chat response must be in Polish**, in every conversation, even when the question, the skill instructions or the source material are in English.
+
+- Use plain, simple Polish: short sentences, one idea at a time. Explain each technical term the first time it appears (e.g. "zmienna środowiskowa (env var) — ustawienie trzymane poza kodem").
+- Keep code, commands, file paths, identifiers and error messages as they are (don't translate them); explain around them in Polish.
+- Code, code comments, commit messages and files written to disk keep the repo's existing language unless the user asks otherwise.
+
 ## TalkAItive — project notes
 
 Django 6.1 web app for German conversation practice (B1–B2). Spec: `context/foundation/prd.md` (in Polish); stack rationale: `context/foundation/tech-stack.md`.
