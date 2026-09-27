@@ -113,7 +113,8 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 | Item | Value |
 |---|---|
 | GitHub repo | `LukaszSwiech/talkaitive` (private), `main` auto-deploys |
-| Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), Hobby, workspace preferred region `europe-west4-drams3a` |
+| Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), workspace preferred region `europe-west4-drams3a` |
+| Railway plan | **Trial, not Hobby** (corrected 2026-09-27; the 2026-09-25 run assumed Hobby). $4.90 credit left on 2026-09-27, so the Trial ends about **2026-10-25**, or earlier if the credit runs out. After that the account drops to Free ($1/month, not enough to keep `web` + Postgres running), and Railway deletes Trial volumes 30 days after the credit expires. Target plan: Hobby. |
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
 | Services | `web` (`9e0786d6-5cc8-4f28-9724-81c55c7e1dcf`, EU West, 1 replica); `Postgres` (template `postgres-ssl:18`, volume `postgres-volume` in `europe-west4-drams3a`) |
 | Public URL | `https://web-production-5e685.up.railway.app` |
@@ -127,7 +128,8 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
    - `startCommand = sh -c 'python manage.py collectstatic --noinput && exec gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120'`
    - `healthcheckPath = /healthz/`, `healthcheckTimeout = 120`, `restartPolicyType = ON_FAILURE`
 
-   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @web-settings.json`, with the IDs above and this input.
+   These settings live only in Railway. Their copy is `context/deployment/web-settings.json` (IDs + input, read back from the live service on 2026-09-27; `preDeployTimeoutSeconds` taken from this log). Update the file whenever the settings change.
+   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first.
    **Follow-up:** move this into Infrastructure as Code (`.railway/railway.ts` via `railway config init`, then `railway config plan`). Review the plan carefully first, because a whole-project file deletes resources it doesn't declare, such as Postgres.
 2. **GitHub was connected from the CLI** (`railway service source connect --repo … --branch main --service web`) after you installed the Railway GitHub App for this repo only. The dashboard source step was not needed.
 3. **Region:** the workspace `preferredRegion` was verified through the API before anything was created. `web` was pinned with `railway service scale --service web eu-west=1`.
@@ -146,10 +148,11 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
   - Static CSS returns 200 with an `immutable` cache header (WhiteNoise).
   - A 404 shows no debug page.
 - The superuser was created in a real terminal, and the browser admin login succeeded. That confirms CSRF and sessions behind the proxy and Postgres writes.
-- Postgres backups could not be turned on: in the dashboard, backups and PITR are **Pro-plan only**, so Hobby has no Railway backups (checked 2026-09-25).
+- Postgres backups could not be turned on: the dashboard showed backups and PITR as locked (checked 2026-09-25). **Correction (2026-09-27):** the account was on **Trial**, so this says nothing about Hobby. Railway's docs (backups, plans, pricing pages) name no plan restriction for backups, and in a May 2026 Hobby-plan thread Railway staff pointed the user to the Backups tab. Hobby availability is unconfirmed until checked after the upgrade.
 
 ### TODO
-- [ ] **Off-platform daily `pg_dump`** (GitHub Actions cron to a private artifact or bucket), plus one test restore. **Top priority:** while on Hobby, the database has no backup at all.
-- [ ] **After upgrading to Pro:** Postgres → Backups → turn on the daily and weekly schedules and consider PITR. Keep the `pg_dump` anyway, because Railway backups are deleted along with the volume.
+- [ ] **Upgrade to Hobby before the Trial ends (about 2026-10-25).** Top priority: until then the database has no backup, and a lapsed Trial means the volume is deleted.
+- [ ] **After upgrading to Hobby:** Postgres → Backups → check whether schedules can be turned on. If yes, turn on daily and weekly, then record the result here.
+- **Decision (2026-09-27, user):** if Hobby offers scheduled Railway backups, the off-platform `pg_dump` is skipped. Accepted risk: backups live on Railway and are deleted with the volume or the project, and a move off Railway needs a manual dump. If Hobby does not offer them, the daily `pg_dump` (GitHub Actions cron) becomes top priority again.
 - [ ] GitHub Actions test workflow on PRs.
 - [ ] Move `web` service settings to Infrastructure as Code (`.railway/railway.ts`) and review `railway config plan` before any apply.

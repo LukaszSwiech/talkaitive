@@ -29,7 +29,8 @@ Django 6.1 web app for German conversation practice (B1–B2). Spec: `context/fo
 - Every query for conversations, errors or memory must be filtered to `request.user`. No user may ever see another user's data (PRD guardrail).
 - No tests or type checker yet. Ruff (config in `pyproject.toml`) auto-formats and lints each edited `.py` file via a PostToolUse hook; whole-repo run: `uv run ruff check . && uv run ruff format .`. `mypy` + `django-stubs` are planned to make up for Django's weak typing, so type-hint new models, views and services.
 - Dependency audit: `uv export --format requirements-txt --no-hashes > /tmp/req.txt && uvx pip-audit -r /tmp/req.txt`. Bare `uvx pip-audit` checks uvx's own environment, not the project's, and wrongly reports it clean.
-- `talkaitive/settings.py` still has the generated `SECRET_KEY`, `DEBUG = True` and SQLite. The deploy target is Railway + Postgres, so treat these as dev-only and move them to env vars before any deploy.
+- `talkaitive/settings.py` reads `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` and `DATABASE_URL` from env vars. Locally, with none set, it falls back to DEBUG on, a dev key and SQLite. On Railway (`RAILWAY_ENVIRONMENT` is set) DEBUG defaults to off and a missing `SECRET_KEY` crashes on purpose.
+- Production runs on Railway (`web` + Postgres, EU West) and `main` auto-deploys. Live resources, IDs, plan status and open TODOs are in `context/deployment/deploy-plan.md`. Railway ignores `railway.json`, so the `web` service settings (pre-deploy `migrate`, start command, health check) live only in Railway; their copy is `context/deployment/web-settings.json`. Update it whenever you change them.
 - `.gitignore` excludes `.claude/`, `.agents/` and `.gitignore` itself, so edits to skills or settings there are not committed.
 
 <!-- BEGIN @przeprogramowani/10x-cli -->

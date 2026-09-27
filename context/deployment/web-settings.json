@@ -1,0 +1,13 @@
+{
+  "serviceId": "9e0786d6-5cc8-4f28-9724-81c55c7e1dcf",
+  "environmentId": "3a4465d3-f273-472e-a82c-0441375014a5",
+  "input": {
+    "preDeployCommand": ["python manage.py migrate --noinput"],
+    "preDeployTimeoutSeconds": 300,
+    "startCommand": "sh -c 'python manage.py collectstatic --noinput && exec gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120'",
+    "healthcheckPath": "/healthz/",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
