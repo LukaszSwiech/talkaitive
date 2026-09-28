@@ -40,13 +40,13 @@ What must exist before the deploy (or a redeploy from scratch) can run. "You" = 
 - There are no git commits and no remote.
 - `railway` and `gh` are not installed.
 
-This plan makes the app production-ready according to the infrastructure risk register, pushes it to a new private GitHub repo, and wires up Railway so a merge to `main` deploys. The approved plan is saved as this file, `context/changes/deployment/deploy-plan.md`, as the audit trail. (It was first saved under `context/deployment/` and moved here on 2026-09-28.)
+This plan makes the app production-ready according to the infrastructure risk register, pushes it to a new private GitHub repo, and wires up Railway so a merge to `main` deploys. The approved plan is saved as this file, `context/deployment/deploy-plan.md`, as the audit trail. (On 2026-09-28 it briefly lived under `context/changes/deployment/` and was moved back here to match the course convention.)
 
 Decisions made: GitHub + auto-deploy (I install `gh`); the first commit contains only the core app and `context/`.
 
 **Human gates** (you do these; I stop and tell you exactly what to do; their current status is in [Prerequisites](#prerequisites)): `gh auth login`, `railway login`, the Railway dashboard steps (region, GitHub connection, pre-deploy timeout, backups), approving production variable writes, and `createsuperuser`.
 
-## Step 0: Save the plan — ✅ done (now at `context/changes/deployment/deploy-plan.md`)
+## Step 0: Save the plan — ✅ done (now at `context/deployment/deploy-plan.md`)
 - Copy this plan to `context/deployment/deploy-plan.md`.
 
 ## Step 1: Pin the runtime and add dependencies (automated) — ✅ done
@@ -160,8 +160,8 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
    - `startCommand = sh -c 'python manage.py collectstatic --noinput && exec gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120'`
    - `healthcheckPath = /healthz/`, `healthcheckTimeout = 120`, `restartPolicyType = ON_FAILURE`
 
-   These settings live only in Railway. Their copy is `context/changes/deployment/web-settings.json` (IDs + input, read back from the live service on 2026-09-27; `preDeployTimeoutSeconds` taken from this log). Update the file whenever the settings change.
-   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/changes/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first.
+   These settings live only in Railway. Their copy is `context/deployment/web-settings.json` (IDs + input, read back from the live service on 2026-09-27; `preDeployTimeoutSeconds` taken from this log). Update the file whenever the settings change.
+   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first.
    **Follow-up:** move this into Infrastructure as Code (`.railway/railway.ts` via `railway config init`, then `railway config plan`). Review the plan carefully first, because a whole-project file deletes resources it doesn't declare, such as Postgres.
 2. **GitHub was connected from the CLI** (`railway service source connect --repo … --branch main --service web`) after you installed the Railway GitHub App for this repo only. The dashboard source step was not needed.
 3. **Region:** the workspace `preferredRegion` was verified through the API before anything was created. `web` was pinned with `railway service scale --service web eu-west=1`.
