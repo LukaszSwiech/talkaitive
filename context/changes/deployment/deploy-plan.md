@@ -8,7 +8,7 @@
 - There are no git commits and no remote.
 - `railway` and `gh` are not installed.
 
-This plan makes the app production-ready according to the infrastructure risk register, pushes it to a new private GitHub repo, and wires up Railway so a merge to `main` deploys. The approved plan is also saved as `context/deployment/deploy-plan.md` as the audit trail.
+This plan makes the app production-ready according to the infrastructure risk register, pushes it to a new private GitHub repo, and wires up Railway so a merge to `main` deploys. The approved plan is also saved as `context/deployment/deploy-plan.md` as the audit trail. (Moved to `context/changes/deployment/` on 2026-09-28.)
 
 Decisions made: GitHub + auto-deploy (I install `gh`); the first commit contains only the core app and `context/`.
 
@@ -112,7 +112,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ### Live resources
 | Item | Value |
 |---|---|
-| GitHub repo | `LukaszSwiech/talkaitive` (private), `main` auto-deploys |
+| GitHub repo | `LukaszSwiech/talkaitive` (private). A push to `main` auto-deploys `web` (trigger checked 2026-09-28: branch `main`, `checkSuites` off, so no CI gate). No GitHub Actions for now; CI/CD comes in a later stage (user decision 2026-09-28). |
 | Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), workspace preferred region `europe-west4-drams3a` |
 | Railway plan | **Hobby** since 2026-09-28. Before that the account was on Trial; the 2026-09-25 run wrongly assumed Hobby. The Postgres volume (`4fd1fea4-0e5e-49a5-a92d-adaf64c1d18c` in `production`) is still 500 MB, the Trial size; Hobby allows up to 5 GB. |
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
@@ -128,8 +128,8 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
    - `startCommand = sh -c 'python manage.py collectstatic --noinput && exec gunicorn talkaitive.wsgi --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120'`
    - `healthcheckPath = /healthz/`, `healthcheckTimeout = 120`, `restartPolicyType = ON_FAILURE`
 
-   These settings live only in Railway. Their copy is `context/deployment/web-settings.json` (IDs + input, read back from the live service on 2026-09-27; `preDeployTimeoutSeconds` taken from this log). Update the file whenever the settings change.
-   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first.
+   These settings live only in Railway. Their copy is `context/changes/deployment/web-settings.json` (IDs + input, read back from the live service on 2026-09-27; `preDeployTimeoutSeconds` taken from this log). Update the file whenever the settings change.
+   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/changes/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first.
    **Follow-up:** move this into Infrastructure as Code (`.railway/railway.ts` via `railway config init`, then `railway config plan`). Review the plan carefully first, because a whole-project file deletes resources it doesn't declare, such as Postgres.
 2. **GitHub was connected from the CLI** (`railway service source connect --repo … --branch main --service web`) after you installed the Railway GitHub App for this repo only. The dashboard source step was not needed.
 3. **Region:** the workspace `preferredRegion` was verified through the API before anything was created. `web` was pinned with `railway service scale --service web eu-west=1`.
@@ -153,8 +153,10 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ### TODO
 - [x] Upgrade to Hobby (done 2026-09-28).
 - [x] Check Railway backups on Hobby (2026-09-28): not available, Pro only (see Verification).
-- [ ] **Daily off-platform `pg_dump`** (GitHub Actions cron), plus one test restore. **Top priority:** Hobby has no Railway backups, so the database has no backup at all. This follows the 2026-09-27 user decision: skip `pg_dump` only if Hobby had backups.
+- [ ] **Daily off-platform `pg_dump`**, plus one test restore. Hobby has no Railway backups, so the database has no backup at all. Do this before the app holds real data; on 2026-09-28 it holds only the admin account. This follows the 2026-09-27 user decision: skip `pg_dump` only if Hobby had backups.
+  - Not via GitHub Actions for now (user decision 2026-09-28): the mechanism is chosen in the later CI/CD stage.
+  - Postgres has no public TCP proxy (checked 2026-09-28). A runner outside Railway needs one enabled first, or the dump must run inside Railway.
 - [ ] Grow the Postgres volume from 500 MB before the data nears it (about 116 MB used on 2026-09-28; Hobby allows up to 5 GB).
 - [ ] If upgrading to Pro later: turn on the daily and weekly backup schedules and consider PITR. Keep the `pg_dump`, because Railway backups are deleted with the volume.
-- [ ] GitHub Actions test workflow on PRs.
+- [ ] Tests on PRs (CI). Deferred to the later CI/CD stage (user decision 2026-09-28); until then nothing runs tests before a deploy.
 - [ ] Move `web` service settings to Infrastructure as Code (`.railway/railway.ts`) and review `railway config plan` before any apply.
