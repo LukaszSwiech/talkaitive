@@ -114,7 +114,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 |---|---|
 | GitHub repo | `LukaszSwiech/talkaitive` (private), `main` auto-deploys |
 | Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), workspace preferred region `europe-west4-drams3a` |
-| Railway plan | **Trial, not Hobby** (corrected 2026-09-27; the 2026-09-25 run assumed Hobby). $4.90 credit left on 2026-09-27, so the Trial ends about **2026-10-25**, or earlier if the credit runs out. After that the account drops to Free ($1/month, not enough to keep `web` + Postgres running), and Railway deletes Trial volumes 30 days after the credit expires. Target plan: Hobby. |
+| Railway plan | **Hobby** since 2026-09-28. Before that the account was on Trial; the 2026-09-25 run wrongly assumed Hobby. The Postgres volume (`4fd1fea4-0e5e-49a5-a92d-adaf64c1d18c` in `production`) is still 500 MB, the Trial size; Hobby allows up to 5 GB. |
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
 | Services | `web` (`9e0786d6-5cc8-4f28-9724-81c55c7e1dcf`, EU West, 1 replica); `Postgres` (template `postgres-ssl:18`, volume `postgres-volume` in `europe-west4-drams3a`) |
 | Public URL | `https://web-production-5e685.up.railway.app` |
@@ -148,11 +148,13 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
   - Static CSS returns 200 with an `immutable` cache header (WhiteNoise).
   - A 404 shows no debug page.
 - The superuser was created in a real terminal, and the browser admin login succeeded. That confirms CSRF and sessions behind the proxy and Postgres writes.
-- Postgres backups could not be turned on: the dashboard showed backups and PITR as locked (checked 2026-09-25). **Correction (2026-09-27):** the account was on **Trial**, so this says nothing about Hobby. Railway's docs (backups, plans, pricing pages) name no plan restriction for backups, and in a May 2026 Hobby-plan thread Railway staff pointed the user to the Backups tab. Hobby availability is unconfirmed until checked after the upgrade.
+- Postgres backups could not be turned on: the dashboard showed backups and PITR as locked (checked 2026-09-25, on Trial). **Confirmed on Hobby (2026-09-28):** the Backups tab says "Creating backups and enabling point-in-time recovery (PITR) are only available for customers on the Pro plan. Backups you already have … can always be restored." `volumeInstanceBackupScheduleUpdate` through `railway api` returns `Not Authorized`. Railway's docs pages (backups, plans, pricing) do not state this restriction. There are no existing backups.
 
 ### TODO
-- [ ] **Upgrade to Hobby before the Trial ends (about 2026-10-25).** Top priority: until then the database has no backup, and a lapsed Trial means the volume is deleted.
-- [ ] **After upgrading to Hobby:** Postgres → Backups → check whether schedules can be turned on. If yes, turn on daily and weekly, then record the result here.
-- **Decision (2026-09-27, user):** if Hobby offers scheduled Railway backups, the off-platform `pg_dump` is skipped. Accepted risk: backups live on Railway and are deleted with the volume or the project, and a move off Railway needs a manual dump. If Hobby does not offer them, the daily `pg_dump` (GitHub Actions cron) becomes top priority again.
+- [x] Upgrade to Hobby (done 2026-09-28).
+- [x] Check Railway backups on Hobby (2026-09-28): not available, Pro only (see Verification).
+- [ ] **Daily off-platform `pg_dump`** (GitHub Actions cron), plus one test restore. **Top priority:** Hobby has no Railway backups, so the database has no backup at all. This follows the 2026-09-27 user decision: skip `pg_dump` only if Hobby had backups.
+- [ ] Grow the Postgres volume from 500 MB before the data nears it (about 116 MB used on 2026-09-28; Hobby allows up to 5 GB).
+- [ ] If upgrading to Pro later: turn on the daily and weekly backup schedules and consider PITR. Keep the `pg_dump`, because Railway backups are deleted with the volume.
 - [ ] GitHub Actions test workflow on PRs.
 - [ ] Move `web` service settings to Infrastructure as Code (`.railway/railway.ts`) and review `railway config plan` before any apply.
