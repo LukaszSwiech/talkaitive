@@ -16,10 +16,12 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.contrib.auth.decorators import login_not_required
 from django.http import HttpRequest, HttpResponse
-from django.urls import path
+from django.urls import include, path
 
 
+@login_not_required
 def healthz(request: HttpRequest) -> HttpResponse:
     """Railway health check: no auth, no DB, fast."""
     return HttpResponse("ok", content_type="text/plain")
@@ -28,4 +30,5 @@ def healthz(request: HttpRequest) -> HttpResponse:
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz/", healthz, name="healthz"),
+    path("", include("accounts.urls")),
 ]
