@@ -438,15 +438,15 @@ Brak istotnych: dwóch użytkowników, `email` ma indeks unikalny; `email__iexac
 
 #### Automated
 
-- [ ] 4.1 Brak niezacommitowanych zmian i commity faz 1–3 tylko lokalnie
-- [ ] 4.2 Health check na produkcji zwraca 200
-- [ ] 4.3 Niezalogowany na / dostaje przekierowanie na logowanie
-- [ ] 4.4 Strona logowania zwraca 200
+- [x] 4.1 Brak niezacommitowanych zmian i commity faz 1–3 tylko lokalnie
+- [x] 4.2 Health check na produkcji zwraca 200
+- [x] 4.3 Niezalogowany na / dostaje przekierowanie na logowanie
+- [x] 4.4 Strona logowania zwraca 200
 
 #### Manual
 
-- [ ] 4.5 Reset schematu wykonany bez błędów
-- [ ] 4.6 createsuperuser na produkcji zakończony powodzeniem
-- [ ] 4.7 Właściciel loguje się na produkcji e-mailem z wielkimi literami i widzi stronę powitalną
-- [ ] 4.8 Konto drugiej osoby założone i logowanie nim działa
-- [ ] 4.9 /admin/ pokazuje tylko konta użytkowników i grupy
+- [x] 4.5 Reset schematu wykonany bez błędów
+- [x] 4.6 createsuperuser na produkcji zakończony powodzeniem
+- [x] 4.7 Właściciel loguje się na produkcji e-mailem z wielkimi literami i widzi stronę powitalną
+- [x] 4.8 Konto drugiej osoby założone i logowanie nim działa
+- [x] 4.9 /admin/ pokazuje tylko konta użytkowników i grupy

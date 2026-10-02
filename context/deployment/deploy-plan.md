@@ -7,6 +7,7 @@ Legend used on the step headings below: ✅ done as planned · ⚠️ done, but 
 - **Deployed and working** at `https://web-production-5e685.up.railway.app`, verified on deploy `8331c90` (2026-09-25). A push to `main` auto-deploys, with no CI gate.
 - **Biggest open risk: the database has no backup at all.** Railway backups are Pro only, and the off-platform `pg_dump` is not set up yet. See [TODO](#todo).
 - All plan steps (0–10) are finished. Steps 4, 5, 7 and 9 went differently from the plan; the step headings link to the matching deviation.
+- **2026-10-02:** the production database schema was reset because of `AUTH_USER_MODEL = "accounts.User"` (e-mail login); the superuser was recreated. See [Auth change: database reset](#auth-change-database-reset-2026-10-02).
 - Open work: [TODO](#todo).
 
 ## Prerequisites
@@ -181,6 +182,15 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
   - A 404 shows no debug page.
 - The superuser was created in a real terminal, and the browser admin login succeeded. That confirms CSRF and sessions behind the proxy and Postgres writes.
 - Postgres backups could not be turned on: the dashboard showed backups and PITR as locked (checked 2026-09-25, on Trial). **Confirmed on Hobby (2026-09-28):** the Backups tab says "Creating backups and enabling point-in-time recovery (PITR) are only available for customers on the Pro plan. Backups you already have … can always be restored." `volumeInstanceBackupScheduleUpdate` through `railway api` returns `Not Authorized`. Railway's docs pages (backups, plans, pricing) do not state this restriction. There are no existing backups.
+
+### Auth change: database reset (2026-10-02)
+Change `auth-and-access-scaffold` (F-01) replaced the default `auth.User` with a custom `accounts.User` (`AUTH_USER_MODEL = "accounts.User"`, e-mail as login). Django cannot swap the user model on a database that already has the `auth` migration history, so the production schema had to be reset.
+- **Before:** 18 applied migrations and one admin account; no other data and no backup (see TODO below), which was accepted.
+- **Reset (you, own terminal):** `railway ssh --service web -i ~/.ssh/id_ed25519_railway`, then `DROP SCHEMA public CASCADE` + `CREATE SCHEMA public` through `manage.py shell`.
+- **Order was fixed:** schema reset → `git push origin main` (commit `5ca2e59`, deploy `29ad32cc`) → `createsuperuser`. Between the reset and the end of the deploy the old version ran without tables.
+- **After:** the pre-deploy `migrate` applied **19 migrations** from scratch, including `accounts.0001_initial`. `/healthz/` returned 200, `/` redirects to `/login/?next=/`, `/login/` returns 200.
+- **Accounts:** the superuser was recreated with `createsuperuser` in a real terminal, and a second (non-staff) account was added in `/admin/`. Both can log in; `/admin/` lists only Users and Groups.
+- `web-settings.json` is unchanged: the service settings did not change.
 
 ### TODO
 - [x] Upgrade to Hobby (done 2026-09-28).
