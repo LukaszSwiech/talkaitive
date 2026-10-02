@@ -204,6 +204,6 @@ Change `auth-and-access-scaffold` (F-01) replaced the default `auth.User` with a
 - [ ] If upgrading to Pro later: turn on the daily and weekly backup schedules and consider PITR. Keep the `pg_dump`, because Railway backups are deleted with the volume.
   - **Needs:** the Pro plan.
 - [ ] Tests on PRs (CI). Deferred to the later CI/CD stage (user decision 2026-09-28); until then nothing runs tests before a deploy.
-  - **Needs:** tests in the repo (none exist yet) and the CI/CD stage.
+  - **Needs:** the CI/CD stage. Tests now exist (`uv run pytest`, pytest-django, added 2026-10-02 with F-01), but nothing runs them automatically yet.
 - [ ] Move `web` service settings to Infrastructure as Code (`.railway/railway.ts`) and review `railway config plan` before any apply.
   - **Needs:** a config file that also declares Postgres, so an apply doesn't delete it.
