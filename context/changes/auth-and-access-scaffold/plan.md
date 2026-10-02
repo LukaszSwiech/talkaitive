@@ -425,14 +425,14 @@ Brak istotnych: dwóch użytkowników, `email` ma indeks unikalny; `email__iexac
 
 #### Automated
 
-- [x] 3.1 Wszystkie testy przechodzą
-- [x] 3.2 Migracje produkcyjne bez zmian do zapisania
-- [x] 3.3 Migracje testowe bez zmian do zapisania
-- [x] 3.4 Lint i format są czyste
+- [x] 3.1 Wszystkie testy przechodzą — 4d1aa18
+- [x] 3.2 Migracje produkcyjne bez zmian do zapisania — 4d1aa18
+- [x] 3.3 Migracje testowe bez zmian do zapisania — 4d1aa18
+- [x] 3.4 Lint i format są czyste — 4d1aa18
 
 #### Manual
 
-- [x] 3.5 Wpis w lessons.md i zmiany w CLAUDE.md są zrozumiałe i zgodne z decyzjami
+- [x] 3.5 Wpis w lessons.md i zmiany w CLAUDE.md są zrozumiałe i zgodne z decyzjami — 4d1aa18
 
 ### Phase 4: Wdrożenie na produkcję z resetem bazy
 
