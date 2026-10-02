@@ -12,6 +12,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
     "ruff>=0.16.8",
 ]
 
@@ -23,3 +25,9 @@ extend-exclude = ["**/migrations/*"]
 # E/F: pycodestyle + pyflakes, I: import order, B: bugbear, UP: pyupgrade, DJ: Django-specific
 select = ["E", "F", "I", "B", "UP", "DJ"]
 ignore = ["E501"]  # line length is handled by ruff format
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "talkaitive.settings_test"
+python_files = ["test_*.py"]
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -397,15 +397,15 @@ Brak istotnych: dwóch użytkowników, `email` ma indeks unikalny; `email__iexac
 
 #### Automated
 
-- [ ] 1.1 Migracje generują się bez zmian do zapisania
-- [ ] 1.2 Lokalna baza migruje od zera
-- [ ] 1.3 Testy fazy 1 przechodzą
-- [ ] 1.4 Lint i format są czyste
-- [ ] 1.5 Django nie zgłasza problemów
+- [x] 1.1 Migracje generują się bez zmian do zapisania
+- [x] 1.2 Lokalna baza migruje od zera
+- [x] 1.3 Testy fazy 1 przechodzą
+- [x] 1.4 Lint i format są czyste
+- [x] 1.5 Django nie zgłasza problemów
 
 #### Manual
 
-- [ ] 1.6 Logowanie do /admin/ e-mailem i założenie konta z wielkimi literami zapisuje e-mail małymi literami
+- [x] 1.6 Logowanie do /admin/ e-mailem i założenie konta z wielkimi literami zapisuje e-mail małymi literami
 
 ### Phase 2: Logowanie i wymóg logowania na każdej stronie
 
