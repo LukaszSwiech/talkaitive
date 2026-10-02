@@ -18,6 +18,7 @@ Etykiety utworzone dla pozycji z roadmapy (reguła też opisana w `context/found
 | `type:slice` | `#0E8A16` | Pionowy, widoczny dla usera slice z roadmapy |
 | `status:ready` | `#0E8A16` | Gotowe do rozpoczęcia (`/10x-plan`) |
 | `status:proposed` | `#FBCA04` | Zaproponowane, czeka na inne zadania lub doprecyzowanie |
+| `status:planning` | `#5319E7` | Zaplanowane (/10x-plan), implementacja jeszcze nie ruszyła |
 | `status:in-progress` | `#0052CC` | W trakcie realizacji |
 | `north-star` | `#FBCA04` | Pierwszy kompletny fragment produktu (north star) |
 | `roadmap-question` | `#C5DEF5` | Otwarte pytanie z roadmapy do rozstrzygnięcia |
@@ -30,11 +31,11 @@ W przeciwieństwie do Linear, GitHub **zachowuje prefiksy** `type:`/`status:`/`s
 
 GitHub Issues (utworzone przez `gh issue create`) **nie mają** tu ustawionych natywnych relacji „blocked by” (w przeciwieństwie do Linear, gdzie są to prawdziwe relacje — patrz `tasks-linear.md`). Zależność jest wyrażona wyłącznie tekstowo: w polu `## Prerequisites` treści issue oraz przez odwołania do numerów innych issues (np. „F-01 (#1)”).
 
-## Aktualne mapowanie (stan na 2026-09-29)
+## Aktualne mapowanie (stan na 2026-10-01)
 
 | Roadmap ID | Change ID | GitHub Issue | Etykiety | Stan |
 | --- | --- | --- | --- | --- |
-| F-01 | auth-and-access-scaffold | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | `type:foundation`, `status:ready`, `stream:conversation-loop` | open |
+| F-01 | auth-and-access-scaffold | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | `type:foundation`, `status:in-progress`, `stream:conversation-loop` | open |
 | S-01 | first-corrected-conversation | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | `type:slice`, `north-star`, `status:proposed`, `stream:conversation-loop` | open |
 | S-02 | post-conversation-error-list | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | `type:slice`, `status:proposed`, `stream:conversation-loop` | open |
 | S-03 | cross-session-error-memory | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | `type:slice`, `status:proposed`, `stream:conversation-loop` | open |
@@ -63,7 +64,8 @@ Jak opisano w `roadmap.md`: GitHub Issue to ręcznie utrzymywane lustro roadmapy
 
 - `proposed` → etykieta `status:proposed`, issue pozostaje `open`
 - `ready` → etykieta `status:ready`, issue pozostaje `open` (`gh issue edit <n> --remove-label status:proposed --add-label status:ready`)
-- `in-progress` → etykieta `status:in-progress`, issue pozostaje `open` (`gh issue edit <n> --remove-label status:ready --add-label status:in-progress`)
+- `planning` → etykieta `status:planning`, issue pozostaje `open` (`gh issue edit <n> --remove-label status:ready --add-label status:planning`)
+- `in-progress` → etykieta `status:in-progress`, issue pozostaje `open` (`gh issue edit <n> --remove-label <poprzednia status:*> --add-label status:in-progress`)
 - `done` → `gh issue close <n>`
 - `blocked` → brak dedykowanej etykiety `status:blocked` obecnie utworzonej; jeśli potrzebna, utwórz ją analogicznie do kroku 1 wyżej
 

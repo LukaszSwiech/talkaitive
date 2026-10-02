@@ -3,7 +3,7 @@ project: "TalkAItive"
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-10-01
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -41,7 +41,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 
 | ID   | Change ID                    | Outcome (user can …)                                                                                         | Prerequisites | PRD refs                                | Status   |
 | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------- | -------- |
-| F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | ready    |
+| F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | in-progress |
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | proposed |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | proposed |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
@@ -81,7 +81,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** wszystko poniżej potrzebuje logowania i izolacji danych per użytkownik; zrobienie tego jako pierwsze unika domieszania kontroli prywatności do już napisanego kodu rozmów, co byłoby ryzykowniejsze dla tej gwarancji.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Slices
 
@@ -145,7 +145,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | no                     | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | Czeka na S-01, S-02                      |
 | S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | no                     | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | Czeka na F-01; może ruszyć równolegle z S-01 |
 
-**Dozwolone wartości `Status:`:** `proposed`, `ready`, `in-progress`, `blocked`, `done`.
+**Dozwolone wartości `Status:`:** `proposed`, `ready`, `planning`, `in-progress`, `blocked`, `done`. (`planning` = jest `plan.md` z `/10x-plan`, implementacja jeszcze nie ruszyła.)
 
 **Synchronizacja statusów (ręczna, nie automatyczna):** Pole `Status:` przy każdym F-NN/S-NN w sekcjach `## Foundations` / `## Slices` powyżej jest jedynym źródłem prawdy (single source of truth). GitHub Issues i Linear to dwa **niezależne** ręcznie utrzymywane lustra roadmapy — nie synchronizują się ani same, ani między sobą (świadoma decyzja: brak cross-linków/integracji Linear↔GitHub). Gdy zmienisz status zadania (np. S-01 z `proposed` na `done`), poproś agenta: *"zaktualizuj status S-01 w roadmapie, GitHub i Linear"* — agent zaktualizuje `Status:` tutaj, zamknie/zaktualizuje odpowiedni GitHub Issue z tej tabeli (`gh issue close/edit`) i osobno przestawi stan w Linear (`mcp__linear__save_issue`, pole `state`). Pełna mechanika: `context/foundation/tasks-github.md` (GitHub), `context/foundation/tasks-linear.md` (Linear).
 

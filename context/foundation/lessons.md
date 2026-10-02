@@ -43,3 +43,10 @@
 - **Problem**: Dozwolone wartości `Status:` nie były nigdzie zebrane w jednym miejscu. `tasks-linear.md` znał wartość `in-progress`, ale `tasks-github.md` nie miał dla niej żadnej etykiety ani reguły synchronizacji — przy realnej zmianie statusu na `in-progress` GitHub Issue zostałby nie zaktualizowany.
 - **Rule**: `Status:` pozycji w roadmap.md może przyjąć jedną z wartości: `proposed`, `ready`, `in-progress`, `blocked`, `done`. Przy `in-progress`: w GitHub ustaw etykietę `status:in-progress` (usuwając poprzednią `status:*`), issue zostaje `open`; w Linear ustaw `state` na `In Progress`. Pełne tabele synchronizacji: `context/foundation/tasks-github.md`, `context/foundation/tasks-linear.md`.
 - **Applies to**: all
+
+## Status planning: dodany do dozwolonych wartości Status: (uzupełnia regułę wyżej)
+
+- **Context**: `/10x-plan` po zapisaniu `plan.md` przestawia pozycję roadmapy na `planning`, a reguła „Dozwolone wartości Status:…” wyżej nie znała tej wartości ani jej odpowiedników w GitHub/Linear.
+- **Problem**: Bez `planning` na liście skill albo łamie listę dozwolonych wartości, albo pomija synchronizację roadmapy po planowaniu; GitHub nie miał też etykiety `status:in-progress`, choć dokumentacja ją opisywała.
+- **Rule**: Dozwolone wartości `Status:` to `proposed`, `ready`, `planning`, `in-progress`, `blocked`, `done` (ta lista zastępuje listę z reguły wyżej). Przy `planning`: w GitHub etykieta `status:planning` (usuwając poprzednią `status:*`), issue zostaje `open`; w Linear `state` = `Todo` (Linear nie ma stanu „Planning”). Etykiety `status:planning` i `status:in-progress` istnieją w GitHub od 2026-10-01. Tabele: `context/foundation/tasks-github.md`, `context/foundation/tasks-linear.md`.
+- **Applies to**: all
