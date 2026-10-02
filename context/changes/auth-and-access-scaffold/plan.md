@@ -411,28 +411,28 @@ Brak istotnych: dwóch użytkowników, `email` ma indeks unikalny; `email__iexac
 
 #### Automated
 
-- [x] 2.1 Wszystkie testy przechodzą
-- [x] 2.2 Lint i format są czyste
-- [x] 2.3 Django nie zgłasza problemów
-- [x] 2.4 Kontrola produkcyjna nie zgłasza nowych ostrzeżeń
+- [x] 2.1 Wszystkie testy przechodzą — 1c466da
+- [x] 2.2 Lint i format są czyste — 1c466da
+- [x] 2.3 Django nie zgłasza problemów — 1c466da
+- [x] 2.4 Kontrola produkcyjna nie zgłasza nowych ostrzeżeń — 1c466da
 
 #### Manual
 
-- [x] 2.5 Okno prywatne przekierowuje na logowanie, po zalogowaniu widać stronę powitalną z e-mailem
-- [x] 2.6 Formularz logowania czytelny na wąskim ekranie
+- [x] 2.5 Okno prywatne przekierowuje na logowanie, po zalogowaniu widać stronę powitalną z e-mailem — 1c466da
+- [x] 2.6 Formularz logowania czytelny na wąskim ekranie — 1c466da
 
 ### Phase 3: Wzorzec izolacji danych per użytkownik
 
 #### Automated
 
-- [ ] 3.1 Wszystkie testy przechodzą
-- [ ] 3.2 Migracje produkcyjne bez zmian do zapisania
-- [ ] 3.3 Migracje testowe bez zmian do zapisania
-- [ ] 3.4 Lint i format są czyste
+- [x] 3.1 Wszystkie testy przechodzą
+- [x] 3.2 Migracje produkcyjne bez zmian do zapisania
+- [x] 3.3 Migracje testowe bez zmian do zapisania
+- [x] 3.4 Lint i format są czyste
 
 #### Manual
 
-- [ ] 3.5 Wpis w lessons.md i zmiany w CLAUDE.md są zrozumiałe i zgodne z decyzjami
+- [x] 3.5 Wpis w lessons.md i zmiany w CLAUDE.md są zrozumiałe i zgodne z decyzjami
 
 ### Phase 4: Wdrożenie na produkcję z resetem bazy
 

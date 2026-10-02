@@ -50,3 +50,10 @@
 - **Problem**: Bez `planning` na liście skill albo łamie listę dozwolonych wartości, albo pomija synchronizację roadmapy po planowaniu; GitHub nie miał też etykiety `status:in-progress`, choć dokumentacja ją opisywała.
 - **Rule**: Dozwolone wartości `Status:` to `proposed`, `ready`, `planning`, `in-progress`, `blocked`, `done` (ta lista zastępuje listę z reguły wyżej). Przy `planning`: w GitHub etykieta `status:planning` (usuwając poprzednią `status:*`), issue zostaje `open`; w Linear `state` = `Todo` (Linear nie ma stanu „Planning”). Etykiety `status:planning` i `status:in-progress` istnieją w GitHub od 2026-10-01. Tabele: `context/foundation/tasks-github.md`, `context/foundation/tasks-linear.md`.
 - **Applies to**: all
+
+## Dane per użytkownik dziedziczą po UserOwned i są czytane tylko przez for_user
+
+- **Context**: Modele danych należących do jednego użytkownika (rozmowy, błędy, pamięć z S-01…S-03) w aplikacji Django `talkaitive`. PRD: nikt, w tym właściciel, nie widzi cudzych danych.
+- **Problem**: Bez jednego wspólnego wzorca każdy slice wymyśla własne filtrowanie po właścicielu; jedno zapomniane `filter(user=...)` albo rejestracja modelu w `/admin/` ujawnia dane jednej osoby innej osobie.
+- **Rule**: Model z danymi użytkownika dziedziczy po `accounts.ownership.UserOwned` (pole `user`, `on_delete=CASCADE`) i jest czytany wyłącznie przez `Model.objects.for_user(request.user)` (dla niezalogowanego zwraca pusty wynik). Takich modeli nigdy nie rejestrujemy w adminie — `tests/test_ownership.py` pilnuje rejestru admina (dozwolone tylko `accounts.User` i `auth.Group`), więc nowy slice, który doda dane do admina, wywróci ten test; nie rozszerzaj listy dozwolonych modeli, tylko usuń rejestrację.
+- **Applies to**: all

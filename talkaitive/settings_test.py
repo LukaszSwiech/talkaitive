@@ -8,3 +8,6 @@ STORAGES = {
     **STORAGES,  # noqa: F405
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
+
+# Throwaway app with a model used only to test the UserOwned pattern.
+INSTALLED_APPS = [*INSTALLED_APPS, "tests.ownership_testapp"]  # noqa: F405
