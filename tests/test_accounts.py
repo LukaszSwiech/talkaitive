@@ -7,14 +7,6 @@ from django.test import Client
 User = get_user_model()
 
 
-@pytest.fixture
-def admin_client(db) -> Client:
-    User.objects.create_superuser("boss@example.de", "pass-12345-xyz")
-    client = Client()
-    assert client.login(username="boss@example.de", password="pass-12345-xyz")
-    return client
-
-
 @pytest.mark.django_db
 def test_create_user_lowercases_email() -> None:
     user = User.objects.create_user("Anna@Example.DE", "pass-12345-xyz")
