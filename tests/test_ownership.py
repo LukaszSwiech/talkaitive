@@ -1,28 +1,25 @@
 import pytest
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 
-from accounts.models import User as AccountsUser
+from accounts.models import User
 from tests.ownership_testapp.models import OwnedNote
 
-User = get_user_model()
-
-ADMIN_ALLOWED_MODELS = {AccountsUser, Group}
+ADMIN_ALLOWED_MODELS = {User, Group}
 
 
 @pytest.fixture
-def anna(db):
+def anna(db) -> User:
     return User.objects.create_user("anna@example.de", "pass-12345-xyz")
 
 
 @pytest.fixture
-def lukasz(db):
+def lukasz(db) -> User:
     return User.objects.create_user("lukasz@example.de", "pass-12345-xyz")
 
 
 @pytest.mark.django_db
-def test_for_user_returns_only_own_notes(anna, lukasz) -> None:
+def test_for_user_returns_only_own_notes(anna: User, lukasz: User) -> None:
     anna_note = OwnedNote.objects.create(user=anna, text="Annas Notiz")
     lukasz_note = OwnedNote.objects.create(user=lukasz, text="Lukasz Notiz")
 
@@ -31,14 +28,14 @@ def test_for_user_returns_only_own_notes(anna, lukasz) -> None:
 
 
 @pytest.mark.django_db
-def test_for_user_anonymous_returns_nothing(anna) -> None:
+def test_for_user_anonymous_returns_nothing(anna: User) -> None:
     OwnedNote.objects.create(user=anna, text="Annas Notiz")
 
     assert not OwnedNote.objects.for_user(AnonymousUser()).exists()
 
 
 @pytest.mark.django_db
-def test_deleting_user_deletes_only_their_notes(anna, lukasz) -> None:
+def test_deleting_user_deletes_only_their_notes(anna: User, lukasz: User) -> None:
     OwnedNote.objects.create(user=anna, text="Annas Notiz")
     lukasz_note = OwnedNote.objects.create(user=lukasz, text="Lukasz Notiz")
 

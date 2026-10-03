@@ -8,11 +8,12 @@ registered in the admin.
 from typing import Self
 
 from django.conf import settings
+from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 from django.db import models
 
 
 class UserOwnedQuerySet(models.QuerySet):
-    def for_user(self, user) -> Self:
+    def for_user(self, user: AbstractBaseUser | AnonymousUser) -> Self:
         if not user.is_authenticated:
             return self.none()
         return self.filter(user=user)

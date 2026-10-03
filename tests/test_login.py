@@ -1,14 +1,13 @@
 import pytest
-from django.contrib.auth import get_user_model
 from django.test import Client
 
-User = get_user_model()
+from accounts.models import User
 
 PASSWORD = "pass-12345-xyz"
 
 
 @pytest.fixture
-def anna(db) -> "User":
+def anna(db) -> User:
     return User.objects.create_user("anna@example.de", PASSWORD)
 
 
@@ -37,9 +36,7 @@ def test_anonymous_admin_is_not_served(client: Client) -> None:
 
 
 @pytest.mark.django_db
-def test_login_is_case_insensitive_and_shows_email(
-    client: Client, anna: "User"
-) -> None:
+def test_login_is_case_insensitive_and_shows_email(client: Client, anna: User) -> None:
     response = client.post(
         "/login/", {"username": "Anna@Example.DE", "password": PASSWORD}
     )
@@ -52,7 +49,7 @@ def test_login_is_case_insensitive_and_shows_email(
 
 
 @pytest.mark.django_db
-def test_login_wrong_password_shows_error(client: Client, anna: "User") -> None:
+def test_login_wrong_password_shows_error(client: Client, anna: User) -> None:
     response = client.post(
         "/login/", {"username": "anna@example.de", "password": "wrong-pass"}
     )
@@ -62,7 +59,7 @@ def test_login_wrong_password_shows_error(client: Client, anna: "User") -> None:
 
 
 @pytest.mark.django_db
-def test_inactive_user_cannot_log_in(client: Client, anna: "User") -> None:
+def test_inactive_user_cannot_log_in(client: Client, anna: User) -> None:
     anna.is_active = False
     anna.save()
     response = client.post(
@@ -73,7 +70,7 @@ def test_inactive_user_cannot_log_in(client: Client, anna: "User") -> None:
 
 
 @pytest.mark.django_db
-def test_logged_in_login_page_redirects_home(client: Client, anna: "User") -> None:
+def test_logged_in_login_page_redirects_home(client: Client, anna: User) -> None:
     assert client.login(username="anna@example.de", password=PASSWORD)
     response = client.get("/login/")
     assert response.status_code == 302
