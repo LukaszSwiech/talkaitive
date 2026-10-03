@@ -74,9 +74,9 @@ Gdy w `roadmap.md` pojawi się nowy `F-NN`/`S-NN` (w `## Foundations`/`## Slices
 4. **Zaktualizuj mapowanie**: dopisz wiersz w tabeli wyżej w tym pliku ORAZ w odpowiedniej tabeli (`## Backlog Handoff` albo `## Open Roadmap Questions`) w `roadmap.md`.
 5. **Zweryfikuj**: `mcp__linear__list_issues` z `project="TalkAItive"` i/lub `mcp__linear__get_issue` (`includeRelations: true`) dla nowego issue.
 
-## Synchronizacja statusu (ręczna, nie automatyczna, niezależna od GitHub)
+## Synchronizacja statusu (bez integracji, wykonywana przez agenta, niezależna od GitHub)
 
-Jak opisano w `roadmap.md`: Linear to ręcznie utrzymywane lustro roadmapy — nic go nie synchronizuje automatycznie, ani z `roadmap.md`, ani z GitHub. Gdy `Status:` pozycji w `roadmap.md` się zmienia, zaktualizuj Linear issue **niezależnie** od tego, czy/kiedy aktualizujesz GitHub (`mcp__linear__save_issue`, pole `state`):
+Jak opisano w `roadmap.md`: żadna integracja nie synchronizuje Linear ani z `roadmap.md`, ani z GitHub (świadoma decyzja). Dlatego agent, który zmienia `Status:` pozycji w `roadmap.md` (na prośbę użytkownika albo w ramach skilla, np. `/10x-plan`, `/10x-implement`, `/10x-archive`), w tej samej turze i bez osobnej prośby przestawia Linear issue według listy niżej (`mcp__linear__save_issue`, pole `state`) — **niezależnie** od GitHub (ten aktualizuje osobno, patrz `tasks-github.md`) — a potem poprawia wiersz w tabeli „Aktualne mapowanie” wyżej i jej datę „stan na”. Rozstrzygnięte pytanie Q-NN → `Done`.
 
 - `proposed` → `Backlog`
 - `ready` → `Todo`

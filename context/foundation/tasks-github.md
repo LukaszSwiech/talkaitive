@@ -58,15 +58,15 @@ Gdy w `roadmap.md` pojawi się nowy `F-NN`/`S-NN` (w `## Foundations`/`## Slices
 3. **Zaktualizuj mapowanie**: dopisz wiersz w tabeli wyżej w tym pliku ORAZ w odpowiedniej tabeli (`## Backlog Handoff` albo `## Open Roadmap Questions`) w `roadmap.md`.
 4. **Zweryfikuj**: `gh issue view <n> --repo LukaszSwiech/talkaitive` lub `gh issue list --repo LukaszSwiech/talkaitive --state all`.
 
-## Synchronizacja statusu (ręczna, nie automatyczna, niezależna od Linear)
+## Synchronizacja statusu (bez integracji, wykonywana przez agenta, niezależna od Linear)
 
-Jak opisano w `roadmap.md`: GitHub Issue to ręcznie utrzymywane lustro roadmapy — nic go nie synchronizuje automatycznie, ani z `roadmap.md`, ani z Linear. Gdy `Status:` pozycji w `roadmap.md` się zmienia, zaktualizuj GitHub Issue **niezależnie** od tego, czy/kiedy aktualizujesz Linear:
+Jak opisano w `roadmap.md`: żadna integracja nie synchronizuje GitHub Issues ani z `roadmap.md`, ani z Linear (świadoma decyzja). Dlatego agent, który zmienia `Status:` pozycji w `roadmap.md` (na prośbę użytkownika albo w ramach skilla, np. `/10x-plan`, `/10x-implement`, `/10x-archive`), w tej samej turze i bez osobnej prośby aktualizuje GitHub Issue według listy niżej — **niezależnie** od Linear (ten aktualizuje osobno, patrz `tasks-linear.md`) — a potem poprawia wiersz w tabeli „Aktualne mapowanie” wyżej i jej datę „stan na”:
 
 - `proposed` → etykieta `status:proposed`, issue pozostaje `open`
 - `ready` → etykieta `status:ready`, issue pozostaje `open` (`gh issue edit <n> --remove-label status:proposed --add-label status:ready`)
 - `planning` → etykieta `status:planning`, issue pozostaje `open` (`gh issue edit <n> --remove-label status:ready --add-label status:planning`)
 - `in-progress` → etykieta `status:in-progress`, issue pozostaje `open` (`gh issue edit <n> --remove-label <poprzednia status:*> --add-label status:in-progress`)
-- `done` → `gh issue close <n>`
+- `done` → zdejmij etykietę `status:*` i zamknij issue jako ukończone: `gh issue edit <n> --remove-label <poprzednia status:*>`, potem `gh issue close <n> --reason completed --comment "<krótkie podsumowanie + ścieżka w context/archive/>"`
 - `blocked` → brak dedykowanej etykiety `status:blocked` obecnie utworzonej; jeśli potrzebna, utwórz ją analogicznie do kroku 1 wyżej
 
-Po uzyskaniu odpowiedzi na pytanie z `## Open Roadmap Questions`: `gh issue close <n>` i usuń/oznacz jako rozwiązany odpowiedni wiersz w `roadmap.md`.
+Gdy pytanie z `## Open Roadmap Questions` zostaje rozstrzygnięte, agent w tej samej turze: `gh issue close <n>`, usuwa/oznacza jako rozwiązany odpowiedni wiersz w `roadmap.md` i poprawia wiersz w tabeli „Aktualne mapowanie” wyżej.
