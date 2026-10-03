@@ -57,3 +57,10 @@
 - **Problem**: Bez jednego wspólnego wzorca każdy slice wymyśla własne filtrowanie po właścicielu; jedno zapomniane `filter(user=...)` albo rejestracja modelu w `/admin/` ujawnia dane jednej osoby innej osobie.
 - **Rule**: Model z danymi użytkownika dziedziczy po `accounts.ownership.UserOwned` (pole `user`, `on_delete=CASCADE`) i jest czytany wyłącznie przez `Model.objects.for_user(request.user)` (dla niezalogowanego zwraca pusty wynik). Takich modeli nigdy nie rejestrujemy w adminie — `tests/test_ownership.py` pilnuje rejestru admina (dozwolone tylko `accounts.User` i `auth.Group`), więc nowy slice, który doda dane do admina, wywróci ten test; nie rozszerzaj listy dozwolonych modeli, tylko usuń rejestrację.
 - **Applies to**: all
+
+## Widoki szczegółów pobierają obiekt przez for_user, nie przez zwykłe objects
+
+- **Context**: Widoki Django (S-01…S-04), które pobierają pojedynczy rekord danych użytkownika po `pk` z URL-a (np. `/conversations/<pk>/`), oraz modele podrzędne (np. `Message` → `Conversation`). `accounts/ownership.py:26`.
+- **Problem**: `UserOwned.objects` jest też zwykłym domyślnym managerem, więc `Model.objects.get(pk=pk)` i `get_object_or_404(Model, pk=pk)` nie filtrują po właścicielu. Użytkownik B, zmieniając id w adresie, zobaczy rekord użytkownika A (IDOR). Model podrzędny bez własnego pola `user`, pobierany po `pk`, ma tę samą lukę. Reguła „czytaj przez for_user” wyżej tego nie wymusza mechanicznie.
+- **Rule**: Pojedynczy rekord pobieraj zawsze przez zawężony queryset: `get_object_or_404(Model.objects.for_user(request.user), pk=pk)` — cudzy obiekt daje 404, nie 403 (nie zdradzamy, że istnieje). Model podrzędny filtruj przez właściciela rodzica (np. `Message.objects.filter(conversation__in=Conversation.objects.for_user(request.user))`). Każdy widok z `pk` w URL-u ma test „użytkownik B dostaje 404 na obiekt użytkownika A”.
+- **Applies to**: all
