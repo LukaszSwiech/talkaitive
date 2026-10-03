@@ -3,7 +3,7 @@ project: "TalkAItive"
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-01
+updated: 2026-10-03
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -41,7 +41,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 
 | ID   | Change ID                    | Outcome (user can …)                                                                                         | Prerequisites | PRD refs                                | Status   |
 | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------- | -------- |
-| F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | in-progress |
+| F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | proposed |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | proposed |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
@@ -81,7 +81,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** wszystko poniżej potrzebuje logowania i izolacji danych per użytkownik; zrobienie tego jako pierwsze unika domieszania kontroli prywatności do już napisanego kodu rozmów, co byłoby ryzykowniejsze dla tej gwarancji.
-- **Status:** in-progress
+- **Status:** done
 
 ## Slices
 
@@ -181,4 +181,4 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 
 ## Done
 
-(Puste — `/10x-archive` doda tu wpis, gdy pierwsza zmiana zostanie zarchiwizowana.)
+- **F-01: (foundation) zaproszony użytkownik może zalogować się e-mailem i hasłem; każda strona poza logowaniem przekierowuje do logowania; każde zapytanie o rozmowy/błędy/pamięć jest ograniczone do zalogowanego użytkownika.** — Archived 2026-10-03 → `context/archive/2026-10-01-auth-and-access-scaffold/`. Lesson: —.
