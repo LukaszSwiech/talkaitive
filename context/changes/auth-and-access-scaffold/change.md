@@ -1,9 +1,9 @@
 ---
 change_id: auth-and-access-scaffold
 title: Auth i izolacja danych między użytkownikami
-status: implemented
+status: impl_reviewed
 created: 2026-10-01
-updated: 2026-10-02
+updated: 2026-10-03
 archived_at: null
 ---
 
