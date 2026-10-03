@@ -6,7 +6,12 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
+
+
+def canonical_email(email: str) -> str:
+    return email.strip().lower()
 
 
 class UserManager(BaseUserManager["User"]):
@@ -37,7 +42,7 @@ class UserManager(BaseUserManager["User"]):
         return self._create_user(email, password, **extra_fields)
 
     def get_by_natural_key(self, email: str | None) -> "User":
-        return self.get(email__iexact=email)
+        return self.get(email=canonical_email(email or ""))
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -52,11 +57,18 @@ class User(AbstractBaseUser, PermissionsMixin):
     EMAIL_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                Lower("email"), name="accounts_user_email_ci_unique"
+            ),
+        ]
+
     def __str__(self) -> str:
         return self.email
 
     def _normalize_email(self) -> None:
-        self.email = self.email.strip().lower()
+        self.email = canonical_email(self.email)
 
     def clean(self) -> None:
         super().clean()

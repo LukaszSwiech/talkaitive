@@ -174,14 +174,14 @@ Ryzyko świadomie zaakceptowane: `LOWER()` w SQLite (lokalnie) składa tylko ASC
 
 #### Automated
 
-- [ ] 1.1 Wszystkie testy przechodzą, w tym istniejące `get_by_natural_key("ANNA@example.de")` i logowanie `Anna@Example.DE`: `uv run pytest`
-- [ ] 1.2 Brak brakujących migracji (ustawienia domyślne): `uv run python manage.py makemigrations --check --dry-run`
-- [ ] 1.3 Brak brakujących migracji (ustawienia testowe): `DJANGO_SETTINGS_MODULE=talkaitive.settings_test uv run python manage.py makemigrations --check --dry-run`
-- [ ] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 1.1 Wszystkie testy przechodzą, w tym istniejące `get_by_natural_key("ANNA@example.de")` i logowanie `Anna@Example.DE`: `uv run pytest`
+- [x] 1.2 Brak brakujących migracji (ustawienia domyślne): `uv run python manage.py makemigrations --check --dry-run`
+- [x] 1.3 Brak brakujących migracji (ustawienia testowe): `DJANGO_SETTINGS_MODULE=talkaitive.settings_test uv run python manage.py makemigrations --check --dry-run`
+- [x] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 1.5 Przegląd wygenerowanej migracji `0002`: jedna operacja `AddConstraint` na `Lower("email")`, nic więcej
+- [x] 1.5 Przegląd wygenerowanej migracji `0002`: jedna operacja `AddConstraint` na `Lower("email")`, nic więcej
 
 ### Phase 2: Wdrożenie na produkcję
 

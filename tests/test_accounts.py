@@ -21,6 +21,14 @@ def test_duplicate_email_different_case_raises() -> None:
 
 
 @pytest.mark.django_db
+def test_db_blocks_case_variant_duplicate_bypassing_save() -> None:
+    User.objects.create_user("anna@example.de", "pass-12345-xyz")
+    other = User.objects.create_user("other@example.de", "pass-12345-xyz")
+    with pytest.raises(IntegrityError):
+        User.objects.filter(pk=other.pk).update(email="Anna@Example.DE")
+
+
+@pytest.mark.django_db
 def test_get_by_natural_key_is_case_insensitive() -> None:
     user = User.objects.create_user("anna@example.de", "pass-12345-xyz")
     assert User.objects.get_by_natural_key("ANNA@example.de") == user
@@ -75,5 +83,6 @@ def test_admin_add_duplicate_email_shows_form_error(admin_client: Client) -> Non
         },
     )
     assert response.status_code == 200
-    assert response.context["adminform"].form.errors
+    form = response.context["adminform"].form
+    assert list(form.errors) == ["email"]
     assert User.objects.count() == count
