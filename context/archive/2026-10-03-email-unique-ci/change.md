@@ -1,10 +1,10 @@
 ---
 change_id: email-unique-ci
 title: Email unique ci
-status: implemented
+status: archived
 created: 2026-10-03
 updated: 2026-10-03
-archived_at: null
+archived_at: 2026-10-03T17:56:35Z
 ---
 
 ## Notes
