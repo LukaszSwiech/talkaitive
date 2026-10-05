@@ -3,7 +3,7 @@ project: "TalkAItive"
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-03
+updated: 2026-10-05
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -42,7 +42,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | ID   | Change ID                    | Outcome (user can …)                                                                                         | Prerequisites | PRD refs                                | Status   |
 | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------- | -------- |
 | F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
-| S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | proposed |
+| S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | ready |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | proposed |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
 | S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
@@ -97,7 +97,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
   - Jaka jest dokładna wartość dziennego limitu (minuty / liczba wypowiedzi) i od której godziny liczy się nowy dzień? — Owner: user. Block: no (można ruszyć z rozsądną wartością domyślną i dopracować na etapie `/10x-plan`).
   - Czy tekstowa rozmowa w MVP przenosi się na umiejętność mówienia? — Owner: user. Block: no (ryzyko świadomie zaakceptowane w PRD jako scope-down; do zweryfikowania po realnym użyciu, nie blokuje budowy).
 - **Risk:** to jest gwiazda przewodnia. FR-003/004/005/006/007/012 zostały celowo utrzymane w jednym zadaniu (nie rozbite na mniejsze), bo opisują jedną, niepodzielną czynność użytkownika — „odbyć rozmowę od początku do końca” — a każdy mniejszy podział (np. „rozmowa bez korekty” albo „rozmowa bez możliwości zakończenia”) dawałby fragment niemożliwy do sensownego pokazania czy przetestowania. PRD samo ma tu tylko jedną historyjkę użytkownika (US-01) obejmującą ten sam zakres.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-02: Lista błędów po zakończeniu rozmowy
 
@@ -140,7 +140,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | Roadmap ID | Change ID                   | Suggested issue title                                         | Ready for `/10x-plan` | GitHub Issue | Linear Issue | Notes                                   |
 | ---------- | ----------------------------- | ---------------------------------------------------------------- | ---------------------- | ------------- | ------------- | ------------------------------------------ |
 | F-01       | auth-and-access-scaffold      | Auth i izolacja danych między użytkownikami                     | yes                    | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | [LUK-16](https://linear.app/lukaszswiech/issue/LUK-16/f-01-auth-i-izolacja-danych-miedzy-uzytkownikami) | Fundament pod wszystkie zadania poniżej |
-| S-01       | first-corrected-conversation  | Pierwsza rozmowa po niemiecku z korektą na bieżąco (gwiazda przewodnia) | no                     | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | Czeka na F-01. Uruchom `/10x-plan first-corrected-conversation`, gdy F-01 będzie `done`. |
+| S-01       | first-corrected-conversation  | Pierwsza rozmowa po niemiecku z korektą na bieżąco (gwiazda przewodnia) | yes                    | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | F-01 `done` (2026-10-03). Następny krok: `/10x-plan first-corrected-conversation`. |
 | S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | no                     | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | Czeka na S-01                            |
 | S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | no                     | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | Czeka na S-01, S-02                      |
 | S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | no                     | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | Czeka na F-01; może ruszyć równolegle z S-01 |
