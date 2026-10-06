@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+from decimal import Decimal
 from pathlib import Path
 
 import dj_database_url
@@ -44,6 +45,37 @@ if DEBUG:
 else:
     SECRET_KEY = os.environ["SECRET_KEY"]
 
+# LLM and daily budget. Production must provide OPENAI_API_KEY; in DEBUG it may
+# be missing (llm.py then raises a clear configuration error on first call).
+if DEBUG:
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+else:
+    OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+
+# EU data residency: a key from an OpenAI project in the EU region only works
+# with this endpoint.
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://eu.api.openai.com/v1")
+LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5.4")
+# Lowest reasoning effort GPT-5.4 supports -> shortest chat response time.
+LLM_REASONING_EFFORT = os.environ.get("LLM_REASONING_EFFORT", "none")
+LLM_TIMEOUT_SECONDS = 30
+LLM_MAX_RETRIES = 1
+
+# USD per 1M tokens. gpt-5.4: standard 2.50 / 0.25 / 15.00 plus 10% for EU data
+# residency.
+LLM_PRICES_USD_PER_MTOK = {
+    "gpt-5.4": {
+        "input": Decimal("2.75"),
+        "cached_input": Decimal("0.275"),
+        "output": Decimal("16.50"),
+    },
+}
+
+DAILY_BUDGET_USD = Decimal(os.environ.get("DAILY_BUDGET_USD", "1.00"))
+BUDGET_TIME_ZONE = "Europe/Berlin"
+# Estimated cost of one agent turn, used when a conversation has no agent turn yet.
+LLM_TURN_COST_ESTIMATE_USD = Decimal("0.03")
+
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
@@ -67,6 +99,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "accounts",
+    "conversations",
 ]
 
 MIDDLEWARE = [
