@@ -433,12 +433,12 @@ Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angiel
 - [x] 4.1 Pełny zestaw przed pushem: `uv run pytest && uv run ruff check . && uv run ruff format --check .` — c602ec2
 - [x] 4.2 Symulacja produkcji: `check --deploy` bez nowych ostrzeżeń — c602ec2
 - [x] 4.3 Brak klucza poza DEBUG wywala start (`KeyError: 'OPENAI_API_KEY'`) — c602ec2
-- [x] 4.4 Po deployu: `/healthz/` → 200
+- [x] 4.4 Po deployu: `/healthz/` → 200 — b903d87
 
 #### Manual
 
 - [x] 4.5 Lokalnie z prawdziwym kluczem: pełna rozmowa na 2 tematy, naturalny recast max 1–2 poprawki, akceptowalny czas odpowiedzi — c602ec2
 - [x] 4.6 Pożegnanie → agent pyta o zakończenie; potwierdzenie kończy rozmowę — c602ec2
 - [x] 4.7 Test limitu lokalnie z `DAILY_BUDGET_USD=0.05`: pożegnanie z informacją o limicie i godzina resetu — c602ec2
-- [x] 4.8 `OPENAI_API_KEY` ustawiony na Railway przed pushem; rozmowa działa na produkcji
-- [x] 4.9 Koszt w panelu OpenAI zgadza się z grubsza z sumą `cost_usd` w bazie
+- [x] 4.8 `OPENAI_API_KEY` ustawiony na Railway przed pushem; rozmowa działa na produkcji — b903d87
+- [x] 4.9 Koszt w panelu OpenAI zgadza się z grubsza z sumą `cost_usd` w bazie — b903d87
