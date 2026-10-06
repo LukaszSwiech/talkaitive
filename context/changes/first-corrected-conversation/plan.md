@@ -395,10 +395,10 @@ Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angiel
 
 #### Automated
 
-- [ ] 2.1 Testy budżetu przechodzą: `uv run pytest tests/test_budget.py`
-- [ ] 2.2 Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py`
-- [ ] 2.3 Cały zestaw: `uv run pytest`
-- [ ] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy budżetu przechodzą: `uv run pytest tests/test_budget.py`
+- [x] 2.2 Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py`
+- [x] 2.3 Cały zestaw: `uv run pytest`
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 ### Phase 3: Ekrany i przepływ rozmowy
 
