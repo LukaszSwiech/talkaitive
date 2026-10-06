@@ -15,6 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,6 +71,12 @@ LLM_PRICES_USD_PER_MTOK = {
         "output": Decimal("16.50"),
     },
 }
+# Fail at startup, not after a paid call: an unpriced model cannot be budgeted.
+if LLM_MODEL not in LLM_PRICES_USD_PER_MTOK:
+    raise ImproperlyConfigured(
+        f"LLM_MODEL={LLM_MODEL!r} has no entry in LLM_PRICES_USD_PER_MTOK; "
+        "add its prices before switching the model."
+    )
 
 DAILY_BUDGET_USD = Decimal(os.environ.get("DAILY_BUDGET_USD", "1.00"))
 BUDGET_TIME_ZONE = "Europe/Berlin"

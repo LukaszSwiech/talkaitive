@@ -1,7 +1,11 @@
+import importlib
+
 import pytest
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError, transaction
 
+import talkaitive.settings
 from accounts.models import PracticeLanguage, User
 from conversations.models import Conversation, Message
 from conversations.topics import TOPICS, get_topic
@@ -138,3 +142,13 @@ def test_get_topic_returns_known_topic_and_none_for_unknown() -> None:
 def test_llm_model_has_a_price_entry() -> None:
     prices = settings.LLM_PRICES_USD_PER_MTOK[settings.LLM_MODEL]
     assert set(prices) == {"input", "cached_input", "output"}
+
+
+def test_unpriced_llm_model_fails_at_startup(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LLM_MODEL", "model-without-prices")
+    try:
+        with pytest.raises(ImproperlyConfigured):
+            importlib.reload(talkaitive.settings)
+    finally:
+        monkeypatch.undo()
+        importlib.reload(talkaitive.settings)

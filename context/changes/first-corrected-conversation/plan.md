@@ -381,15 +381,15 @@ Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angiel
 
 #### Automated
 
-- [x] 1.1 Migracje bez rozjazdu: `uv run python manage.py makemigrations --check --dry-run`
-- [x] 1.2 Testy przechodzą: `uv run pytest` (modele, ograniczenie 1 aktywnej, kaskada, `practice_language`, tematy, cennik)
-- [x] 1.3 Test rejestru admina nadal przechodzi: `uv run pytest tests/test_ownership.py`
-- [x] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 1.5 `uv run python manage.py check`
+- [x] 1.1 Migracje bez rozjazdu: `uv run python manage.py makemigrations --check --dry-run` — 8d8d845
+- [x] 1.2 Testy przechodzą: `uv run pytest` (modele, ograniczenie 1 aktywnej, kaskada, `practice_language`, tematy, cennik) — 8d8d845
+- [x] 1.3 Test rejestru admina nadal przechodzi: `uv run pytest tests/test_ownership.py` — 8d8d845
+- [x] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 8d8d845
+- [x] 1.5 `uv run python manage.py check` — 8d8d845
 
 #### Manual
 
-- [x] 1.6 W `/admin/` widać i da się zmienić „Practice language”; modele rozmów nie pojawiają się w adminie
+- [x] 1.6 W `/admin/` widać i da się zmienić „Practice language”; modele rozmów nie pojawiają się w adminie — 8d8d845
 
 ### Phase 2: Moduł LLM i budżet
 
