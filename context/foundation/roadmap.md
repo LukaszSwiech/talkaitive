@@ -42,7 +42,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | ID   | Change ID                    | Outcome (user can …)                                                                                         | Prerequisites | PRD refs                                | Status   |
 | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------- | -------- |
 | F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
-| S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | in-progress |
+| S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | proposed |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
 | S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
@@ -97,7 +97,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
   - Jaka jest dokładna wartość dziennego limitu (minuty / liczba wypowiedzi) i od której godziny liczy się nowy dzień? — Owner: user. Block: no (można ruszyć z rozsądną wartością domyślną i dopracować na etapie `/10x-plan`).
   - Czy tekstowa rozmowa w MVP przenosi się na umiejętność mówienia? — Owner: user. Block: no (ryzyko świadomie zaakceptowane w PRD jako scope-down; do zweryfikowania po realnym użyciu, nie blokuje budowy).
 - **Risk:** to jest gwiazda przewodnia. FR-003/004/005/006/007/012 zostały celowo utrzymane w jednym zadaniu (nie rozbite na mniejsze), bo opisują jedną, niepodzielną czynność użytkownika — „odbyć rozmowę od początku do końca” — a każdy mniejszy podział (np. „rozmowa bez korekty” albo „rozmowa bez możliwości zakończenia”) dawałby fragment niemożliwy do sensownego pokazania czy przetestowania. PRD samo ma tu tylko jedną historyjkę użytkownika (US-01) obejmującą ten sam zakres.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-02: Lista błędów po zakończeniu rozmowy
 
@@ -182,3 +182,4 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 ## Done
 
 - **F-01: (foundation) zaproszony użytkownik może zalogować się e-mailem i hasłem; każda strona poza logowaniem przekierowuje do logowania; każde zapytanie o rozmowy/błędy/pamięć jest ograniczone do zalogowanego użytkownika.** — Archived 2026-10-03 → `context/archive/2026-10-01-auth-and-access-scaffold/`. Lesson: —.
+- **S-01: zalogowany użytkownik może wybrać jeden z 20 tematów, prowadzić tekstową rozmowę po niemiecku, otrzymywać korektę błędnych wypowiedzi wplecioną w odpowiedź agenta (recast) bez przerywania rozmowy, i zakończyć rozmowę przyciskiem „Zakończ” albo przez agenta (pożegnanie / wyczerpany dzienny limit, z komunikatem o limicie).** — Archived 2026-10-06 → `context/archive/2026-10-05-first-corrected-conversation/`. Lesson: —.

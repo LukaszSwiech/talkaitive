@@ -1,10 +1,10 @@
 ---
 change_id: first-corrected-conversation
 title: First corrected conversation
-status: implemented
+status: archived
 created: 2026-10-05
 updated: 2026-10-06
-archived_at: null
+archived_at: 2026-10-06T17:30:12Z
 ---
 
 ## Notes
