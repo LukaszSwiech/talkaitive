@@ -53,22 +53,22 @@ if DEBUG:
 else:
     OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
-# EU data residency: a key from an OpenAI project in the EU region only works
-# with this endpoint.
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://eu.api.openai.com/v1")
+# Global endpoint. EU data residency (eu.api.openai.com) needs an OpenAI
+# organization approved for it, which this account is not.
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5.4")
 # Lowest reasoning effort GPT-5.4 supports -> shortest chat response time.
 LLM_REASONING_EFFORT = os.environ.get("LLM_REASONING_EFFORT", "none")
 LLM_TIMEOUT_SECONDS = 30
 LLM_MAX_RETRIES = 1
 
-# USD per 1M tokens. gpt-5.4: standard 2.50 / 0.25 / 15.00 plus 10% for EU data
-# residency.
+# USD per 1M tokens, standard (global endpoint) prices. EU data residency
+# would add 10%.
 LLM_PRICES_USD_PER_MTOK = {
     "gpt-5.4": {
-        "input": Decimal("2.75"),
-        "cached_input": Decimal("0.275"),
-        "output": Decimal("16.50"),
+        "input": Decimal("2.50"),
+        "cached_input": Decimal("0.25"),
+        "output": Decimal("15.00"),
     },
 }
 # Fail at startup, not after a paid call: an unpriced model cannot be budgeted.

@@ -138,7 +138,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ## Out of scope / follow-ups
 - Daily off-platform `pg_dump` (GitHub Actions cron) and a GitHub Actions test workflow. The infra doc lists both as out of scope; they are the next change.
 - Custom domain + HSTS (still open).
-- ~~LLM API key, and a usage alert after the first month.~~ Done 2026-10-06 with change `first-corrected-conversation`: OpenAI project `talkaitive` with the EU data region (endpoint `eu.api.openai.com`) and its own key. The usage alert is covered by the project's monthly spend limit/alert in the OpenAI dashboard, so no separate alert is planned.
+- ~~LLM API key, and a usage alert after the first month.~~ Done 2026-10-06 with change `first-corrected-conversation`: OpenAI project `talkaitive` on the global endpoint `api.openai.com` with its own keys. EU data residency (`eu.api.openai.com`) was planned but is not available: it needs an OpenAI organization approved for it (sales contact, abuse-monitoring controls), and both our keys got a 401 there. The PRD does not require EU residency. The usage alert is covered by the project's monthly spend limit/alert in the OpenAI dashboard, so no separate alert is planned.
 
 ---
 
@@ -153,7 +153,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
 | Services | `web` (`9e0786d6-5cc8-4f28-9724-81c55c7e1dcf`, EU West, 1 replica); `Postgres` (template `postgres-ssl:18`, volume `postgres-volume` in `europe-west4-drams3a`) |
 | Public URL | `https://web-production-5e685.up.railway.app` |
-| `web` variables | `SECRET_KEY` (generated, set via `--stdin`, never displayed), `DATABASE_URL=${{Postgres.DATABASE_URL}}` (resolves to `postgres.railway.internal`), `DEBUG=False`, `ALLOWED_HOSTS=web-production-5e685.up.railway.app,healthcheck.railway.app`, `CSRF_TRUSTED_ORIGINS=https://web-production-5e685.up.railway.app`, `OPENAI_API_KEY` (OpenAI project `talkaitive`, EU data region; a separate key from the local `.env` one, so OpenAI usage shows production and local runs apart; set by hand, never displayed; added 2026-10-06 for S-01). It must be set before pushing code that reads it: outside DEBUG a missing key crashes startup. |
+| `web` variables | `SECRET_KEY` (generated, set via `--stdin`, never displayed), `DATABASE_URL=${{Postgres.DATABASE_URL}}` (resolves to `postgres.railway.internal`), `DEBUG=False`, `ALLOWED_HOSTS=web-production-5e685.up.railway.app,healthcheck.railway.app`, `CSRF_TRUSTED_ORIGINS=https://web-production-5e685.up.railway.app`, `OPENAI_API_KEY` (OpenAI project `talkaitive`, global endpoint; `OPENAI_BASE_URL` is not set, so the code default `https://api.openai.com/v1` applies; a separate key from the local `.env` one, so OpenAI usage shows production and local runs apart; set by hand, never displayed; added 2026-10-06 for S-01). It must be set before pushing code that reads it: outside DEBUG a missing key crashes startup. |
 | SSH | Key `talkaitive-mac` (`~/.ssh/id_ed25519_railway`). Always pass `-i ~/.ssh/id_ed25519_railway`, because the default `id_ed25519` belongs to another Railway account |
 
 ### Deviations from the plan
