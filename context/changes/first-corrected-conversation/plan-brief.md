@@ -32,7 +32,7 @@ Na `/` użytkownik wybiera temat; agent otwiera scenkę w języku ustawionym prz
 | Limit w trakcie rozmowy | Gdy kolejna tura przekroczy budżet, agent się w niej żegna i wspomina o limicie | Zgodne z PRD („agent komunikuje”); przekroczenie max o koszt ok. dwóch tur; po pożegnaniu z limitem dzień jest zamknięty do północy. |
 | Oczekiwanie | Formularz POST + mały skrypt: zablokowany przycisk, spinner CSS, „Agent is typing…” | Zero nowych zależności, zgodne z `has_realtime: false`; widoczny ruch zamiast samego tekstu. |
 | Powrót do rozmowy | Max 1 aktywna rozmowa na osobę (ograniczenie w bazie); `/` proponuje „Continue conversation” | Zamknięta karta nie traci rozmowy ani transkryptu. |
-| Tematy | 20 codziennych sytuacji z życia w Niemczech jako stała w kodzie (lista w planie) | Zero tabel i ekranów; nie rusza testu rejestru admina. |
+| Tematy | 20 codziennych sytuacji z życia w Niemczech jako stała w kodzie (lista w planie) | Zero tabel i ekranów; nie rusza testu rejestru admina. Pole `topic` bez `choices` (zmiana listy bez migracji), a rozmowa trzyma kopię tytułu i scenariusza. |
 | Błąd API | Wiadomość zostaje zapisana, komunikat + „Try again” | Nic nie przepada, użytkownik decyduje. |
 | Prywatność po stronie OpenAI | `store=False` w każdym wywołaniu | Responses API domyślnie przechowuje odpowiedzi; PRD wymaga prywatności rozmów. |
 | Rezydencja danych | Projekt OpenAI w regionie EU, endpoint `eu.api.openai.com` (env `OPENAI_BASE_URL`), cennik +10% | Prywatne rozmowy zostają w EEA, spójnie z bazą na Railway w EU West; obejmie też przyszłe Realtime API. |
