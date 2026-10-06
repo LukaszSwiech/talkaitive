@@ -36,7 +36,7 @@ GitHub Issues (utworzone przez `gh issue create`) **nie mają** tu ustawionych n
 | Roadmap ID | Change ID | GitHub Issue | Etykiety | Stan |
 | --- | --- | --- | --- | --- |
 | F-01 | auth-and-access-scaffold | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | `type:foundation`, `stream:conversation-loop` | closed |
-| S-01 | first-corrected-conversation | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | `type:slice`, `north-star`, `status:planning`, `stream:conversation-loop` | open |
+| S-01 | first-corrected-conversation | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | `type:slice`, `north-star`, `stream:conversation-loop` | closed |
 | S-02 | post-conversation-error-list | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | `type:slice`, `status:proposed`, `stream:conversation-loop` | open |
 | S-03 | cross-session-error-memory | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | `type:slice`, `status:proposed`, `stream:conversation-loop` | open |
 | S-04 | account-and-data-deletion | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | `type:slice`, `status:proposed`, `stream:account` | open |
