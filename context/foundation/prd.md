@@ -111,7 +111,7 @@ Aplikacja ocenia poprawność każdego zdania użytkownika, a do kolejnych rozm�
 - **Logowanie:** e-mail + hasło.
 - **Rejestracja:** wyłącznie na zaproszenie. Brak publicznego formularza rejestracji. Zaproszenia / konta tworzy właściciel aplikacji poza produktem (bez roli administratora w produkcie).
 - **Role:** płaskie — jeden typ użytkownika. Każdy użytkownik widzi i modyfikuje wyłącznie własne rozmowy, błędy i pamięć. Nikt, w tym właściciel, nie ma w produkcie wglądu w dane innych użytkowników.
-- **Koszty modeli:** ponosi aplikacja. Każdy użytkownik ma dzienny limit. Gdy limit zostanie przekroczony w trakcie rozmowy, agent komunikuje, że musi zakończyć rozmowę, i rozmowa się kończy (bez otwartego „dokończenia”). Po wyczerpaniu limitu użytkownik widzi komunikat, od kiedy może rozmawiać ponownie.
+- **Koszty modeli:** ponosi aplikacja. Każdy użytkownik ma dzienny limit $1 kosztu modeli, odnawiany o północy czasu niemieckiego (Europe/Berlin). Gdy limit zostanie przekroczony w trakcie rozmowy, agent komunikuje, że musi zakończyć rozmowę, i rozmowa się kończy (bez otwartego „dokończenia”). Po wyczerpaniu limitu użytkownik widzi komunikat, od kiedy może rozmawiać ponownie.
 - **Niezalogowany użytkownik:** każda strona poza logowaniem przekierowuje do logowania.
 - **Zapomniane hasło:** reset wykonuje właściciel poza produktem; brak samodzielnego resetu w MVP.
 - **Widoczność danych we własnym koncie:** użytkownik widzi tylko bieżącą rozmowę i listę błędów po jej zakończeniu; nie ma wglądu w poprzednie rozmowy ani w pamięć i nie może ich edytować. Może usunąć konto wraz ze wszystkimi danymi.
@@ -136,7 +136,7 @@ Aplikacja ocenia poprawność każdego zdania użytkownika, a do kolejnych rozm�
 ## Open Questions
 
 1. **Jak Praktika rozwiązuje pamięć między sesjami, kontrolę poziomu CEFR i informację zwrotną o błędach?** — Autor nie znalazł dokładnych informacji; od odpowiedzi zależy, na ile wgląd odróżnia produkt. Owner: user.
-2. **Jaka jest wartość dziennego limitu (minuty / liczba wypowiedzi) i od której godziny liczy się nowy dzień?** — Owner: user.
+2. **Jaka jest wartość dziennego limitu (minuty / liczba wypowiedzi) i od której godziny liczy się nowy dzień?** — Owner: user. **Rozstrzygnięte:** limit to $1 kosztu modeli dziennie na użytkownika; nowy dzień zaczyna się o północy czasu niemieckiego (Europe/Berlin).
 3. **Czy MVP zdąży przed terminem miękkim (2026-11-04)?** — Przyjęty szacunek to 10 tygodni (pod termin twardy 2026-12-06); termin miękki wypada po ok. 6,5 tygodnia przy ~10 h tygodniowo dzielonych z nauką. Owner: user.
 4. **Ile razy w tygodniu oznacza „regularne używanie” w kryterium Primary?** — Kryterium nie ma jeszcze progu liczbowego. Owner: user.
 5. **Czy tekstowa rozmowa w MVP przenosi się na umiejętność mówienia?** — Ryzyko z rundy sokratejskiej (FR-004): pisanie może nie przenosić się na mowę, więc MVP może nie sprawdzić głównej hipotezy produktu. Owner: user.
