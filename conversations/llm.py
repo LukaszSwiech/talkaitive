@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from django.conf import settings
 from openai import APIError, OpenAI
 from openai.types.responses import EasyInputMessageParam
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from accounts.models import PracticeLanguage
 
@@ -140,6 +140,11 @@ def generate_turn(
             getattr(exc, "status_code", None),
         )
         raise LLMError("The model call failed.") from exc
+    except ValidationError:
+        # Truncated or malformed structured output. The error text quotes the
+        # model's output, so log only that it happened.
+        logger.error("LLM output does not match the AgentTurn schema.")
+        raise LLMError("The model returned no usable answer.") from None
 
     parsed = response.output_parsed
     if parsed is None:

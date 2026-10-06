@@ -11,9 +11,10 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Sum
+
+from accounts.models import User
 
 from .models import Conversation, Message
 
@@ -54,7 +55,7 @@ def next_reset(now: datetime) -> datetime:
     return _midnight(now, 1)
 
 
-def spent_today(user: AbstractBaseUser, now: datetime) -> Decimal:
+def spent_today(user: User, now: datetime) -> Decimal:
     total = Message.objects.filter(
         conversation__in=Conversation.objects.for_user(user),
         created_at__gte=day_start(now),
@@ -62,7 +63,7 @@ def spent_today(user: AbstractBaseUser, now: datetime) -> Decimal:
     return total or Decimal(0)
 
 
-def is_exhausted(user: AbstractBaseUser, now: datetime) -> bool:
+def is_exhausted(user: User, now: datetime) -> bool:
     """The only "budget exhausted" predicate (home page, starting, reset notice).
 
     A conversation ended by the daily limit closes the day even when the spent sum
@@ -85,9 +86,7 @@ def is_exhausted(user: AbstractBaseUser, now: datetime) -> bool:
     )
 
 
-def is_final_turn(
-    user: AbstractBaseUser, conversation: Conversation, now: datetime
-) -> bool:
+def is_final_turn(user: User, conversation: Conversation, now: datetime) -> bool:
     """True when the budget would not cover one more turn like the last one."""
     last_agent_turn = (
         Message.objects.filter(

@@ -1,9 +1,11 @@
 from collections.abc import Callable
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from accounts.models import PracticeLanguage, User
 from conversations import services
@@ -380,6 +382,24 @@ def test_empty_message_does_not_call_the_model_and_shows_a_notice(
 
 
 @pytest.mark.django_db
+def test_too_long_message_does_not_call_the_model_and_shows_a_notice(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+    page = anna_client.get(detail_url(conversation)).content.decode()
+    assert f'maxlength="{services.MAX_MESSAGE_LENGTH}"' in page
+
+    response = send(
+        anna_client, conversation, "a" * (services.MAX_MESSAGE_LENGTH + 1), follow=True
+    )
+
+    assert response.redirect_chain == [(detail_url(conversation), 302)]
+    assert "Please keep your message under" in response.content.decode()
+    assert len(fake_llm.calls) == 1
+    assert roles(conversation) == ["assistant"]
+
+
+@pytest.mark.django_db
 def test_reply_is_dropped_when_another_request_already_answered(
     anna_client: Client, fake_llm: FakeGenerateTurn
 ) -> None:
@@ -402,6 +422,66 @@ def test_reply_is_dropped_when_another_request_already_answered(
     assert roles(conversation) == ["assistant", "user", "assistant"]
     assert conversation.messages.last().text == "Parallel reply"
     assert not conversation.messages.filter(text="Late reply").exists()
+
+
+@pytest.mark.django_db
+def test_page_shows_agent_typing_while_a_turn_is_running(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+    fake_llm.outcomes.append(LLMError("down"))
+    send(anna_client, conversation, "Hallo")
+    retry_url = f"/conversations/{conversation.pk}/retry/"
+    # Another request is generating the agent's turn right now.
+    Conversation.objects.filter(pk=conversation.pk).update(
+        agent_turn_started_at=timezone.now()
+    )
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert '<div class="typing">' in page
+    assert 'http-equiv="refresh"' in page
+    assert "Try again" not in page
+
+    response = anna_client.post(retry_url, follow=True)
+
+    assert len(fake_llm.calls) == 2
+    assert roles(conversation) == ["assistant", "user"]
+    assert "The agent is still replying." in response.content.decode()
+
+    # A marker left behind by a killed worker expires.
+    Conversation.objects.filter(pk=conversation.pk).update(
+        agent_turn_started_at=timezone.now() - timedelta(minutes=2)
+    )
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert "Try again" in page
+    assert 'http-equiv="refresh"' not in page
+
+
+@pytest.mark.django_db
+def test_retry_while_the_model_is_replying_does_not_call_it_again(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+
+    def parallel_retry(**kwargs: Any) -> TurnResult:
+        # A refresh + "Try again" arrives while this model call is still running.
+        with pytest.raises(services.ConversationError, match="still replying"):
+            services.run_agent_turn(
+                Conversation.objects.get(pk=conversation.pk), timezone.now()
+            )
+        return make_result("The only reply")
+
+    fake_llm.outcomes.append(parallel_retry)
+
+    send(anna_client, conversation, "Hallo")
+
+    assert len(fake_llm.calls) == 2
+    assert roles(conversation) == ["assistant", "user", "assistant"]
+    assert conversation.messages.last().text == "The only reply"
+    conversation.refresh_from_db()
+    assert conversation.agent_turn_started_at is None
 
 
 @pytest.mark.django_db

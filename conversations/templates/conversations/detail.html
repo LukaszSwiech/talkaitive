@@ -2,6 +2,11 @@
 
 {% block title %}{{ conversation.topic_title }} - TalkAItive{% endblock %}
 
+{% block head %}
+  {# The model is still replying: reload until the reply is there (works without JS). #}
+  {% if awaiting_agent_reply and agent_turn_in_progress %}<meta http-equiv="refresh" content="5">{% endif %}
+{% endblock %}
+
 {% block content %}
   <p><a href="{% url 'home' %}">&larr; Home</a></p>
   <h1>{{ conversation.topic_title }}</h1>
@@ -16,7 +21,16 @@
   </div>
 
   {% if conversation.status == "active" %}
-    {% if awaiting_agent_reply %}
+    {% if awaiting_agent_reply and agent_turn_in_progress %}
+      <div class="typing">
+        <span class="spinner" aria-hidden="true"></span>
+        <span role="status">Agent is typing…</span>
+      </div>
+      <form method="post" action="{% url 'conversation_end' pk=conversation.pk %}">
+        {% csrf_token %}
+        <button type="submit">End</button>
+      </form>
+    {% elif awaiting_agent_reply %}
       <p class="error">The agent could not reply. Please try again.</p>
       <div class="actions">
         <form method="post" action="{% url 'conversation_retry' pk=conversation.pk %}" data-waits-for-agent>
@@ -32,7 +46,7 @@
       <form method="post" action="{% url 'conversation_send' pk=conversation.pk %}" data-waits-for-agent>
         {% csrf_token %}
         <label for="message-text">Your message</label>
-        <textarea id="message-text" name="text" rows="3" required enterkeyhint="send" data-enter-sends></textarea>
+        <textarea id="message-text" name="text" rows="3" required maxlength="{{ max_message_length }}" enterkeyhint="send" data-enter-sends></textarea>
         <button type="submit">Send</button>
       </form>
       <form method="post" action="{% url 'conversation_end' pk=conversation.pk %}">

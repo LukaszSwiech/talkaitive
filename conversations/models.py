@@ -29,6 +29,9 @@ class Conversation(UserOwned):
     end_reason = models.CharField(max_length=20, choices=EndReason, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    # Set while the model generates the agent's turn, so a refresh shows "Agent is
+    # typing" and a parallel retry is refused. It expires on its own (see services).
+    agent_turn_started_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [

@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import openai
+import pydantic
 import pytest
 
 from conversations import llm
@@ -247,4 +248,19 @@ def test_error_log_does_not_contain_conversation_text(
         call()
 
     assert "APIConnectionError" in caplog.text
+    assert "Brötchen" not in caplog.text
+
+
+def test_malformed_structured_output_becomes_llm_error(
+    fake_openai: SimpleNamespace, caplog: pytest.LogCaptureFixture
+) -> None:
+    # The SDK parses the output with pydantic; a truncated answer fails like this.
+    with pytest.raises(pydantic.ValidationError) as truncated:
+        AgentTurn.model_validate_json('{"reply": "Gerne, zwei Brötchen')
+    fake_openai.responses.outcome = truncated.value
+
+    with pytest.raises(LLMError), caplog.at_level("ERROR", logger="conversations.llm"):
+        call()
+
+    assert "AgentTurn" in caplog.text
     assert "Brötchen" not in caplog.text

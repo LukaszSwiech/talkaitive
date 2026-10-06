@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from accounts.models import User
+
 from . import services
 from .budget import is_exhausted, next_reset
 from .llm import LLMError
@@ -19,7 +21,13 @@ from .services import ConversationError
 from .topics import TOPICS
 
 
-def _get_conversation(request: HttpRequest, pk: int) -> Conversation:
+class AuthenticatedHttpRequest(HttpRequest):
+    """A request behind LoginRequiredMiddleware: `user` is always a signed-in `User`."""
+
+    user: User
+
+
+def _get_conversation(request: AuthenticatedHttpRequest, pk: int) -> Conversation:
     return get_object_or_404(Conversation.objects.for_user(request.user), pk=pk)
 
 
@@ -28,7 +36,7 @@ def _to_detail(conversation: Conversation) -> HttpResponse:
 
 
 @require_GET
-def home(request: HttpRequest) -> HttpResponse:
+def home(request: AuthenticatedHttpRequest) -> HttpResponse:
     now = timezone.now()
     active = (
         Conversation.objects.for_user(request.user)
@@ -50,7 +58,7 @@ def home(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-def conversation_start(request: HttpRequest) -> HttpResponse:
+def conversation_start(request: AuthenticatedHttpRequest) -> HttpResponse:
     try:
         conversation = services.start_conversation(
             request.user, request.POST.get("topic", ""), timezone.now()
@@ -70,7 +78,7 @@ def conversation_start(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-def conversation_detail(request: HttpRequest, pk: int) -> HttpResponse:
+def conversation_detail(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
     conversation = _get_conversation(request, pk)
     reset_at = (
         next_reset(conversation.ended_at)
@@ -86,14 +94,18 @@ def conversation_detail(request: HttpRequest, pk: int) -> HttpResponse:
             # Not "messages": that name belongs to django.contrib.messages.
             "transcript": conversation.messages.all(),
             "awaiting_agent_reply": conversation.awaiting_agent_reply,
+            "agent_turn_in_progress": services.agent_turn_in_progress(
+                conversation, timezone.now()
+            ),
             "reset_at": reset_at,
             "budget_time_zone": settings.BUDGET_TIME_ZONE,
+            "max_message_length": services.MAX_MESSAGE_LENGTH,
         },
     )
 
 
 @require_POST
-def conversation_send(request: HttpRequest, pk: int) -> HttpResponse:
+def conversation_send(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
     conversation = _get_conversation(request, pk)
     try:
         services.send_message(
@@ -107,7 +119,7 @@ def conversation_send(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-def conversation_retry(request: HttpRequest, pk: int) -> HttpResponse:
+def conversation_retry(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
     conversation = _get_conversation(request, pk)
     try:
         services.run_agent_turn(conversation, timezone.now())
@@ -119,7 +131,7 @@ def conversation_retry(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-def conversation_end(request: HttpRequest, pk: int) -> HttpResponse:
+def conversation_end(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
     conversation = _get_conversation(request, pk)
     services.end_conversation(conversation, Conversation.EndReason.USER, timezone.now())
     return _to_detail(conversation)
