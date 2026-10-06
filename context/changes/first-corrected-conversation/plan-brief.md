@@ -29,7 +29,7 @@ Na `/` użytkownik wybiera temat; agent otwiera scenkę w języku ustawionym prz
 | Zakres S-01 | Rozmowa + pełny transkrypt; analiza i lista błędów w S-02 | S-01 zostaje w zakresie roadmapy; zapisane transkrypty pozwolą S-02 przeanalizować wcześniejsze rozmowy. |
 | Recast | Max 1–2 najważniejsze błędy na odpowiedź, bez literówek i interpunkcji | Guardrail z PRD: korekta nie zamienia rozmowy w wykład. |
 | Pożegnanie (FR-007) | Agent pyta, czy kończyć; koniec dopiero po potwierdzeniu | Chroni przed „fałszywym pożegnaniem” w scence. |
-| Limit w trakcie rozmowy | Gdy kolejna tura przekroczy budżet, agent się w niej żegna i wspomina o limicie | Zgodne z PRD („agent komunikuje”); przekroczenie max o koszt jednej tury. |
+| Limit w trakcie rozmowy | Gdy kolejna tura przekroczy budżet, agent się w niej żegna i wspomina o limicie | Zgodne z PRD („agent komunikuje”); przekroczenie max o koszt ok. dwóch tur; po pożegnaniu z limitem dzień jest zamknięty do północy. |
 | Oczekiwanie | Formularz POST + mały skrypt: zablokowany przycisk, spinner CSS, „Agent is typing…” | Zero nowych zależności, zgodne z `has_realtime: false`; widoczny ruch zamiast samego tekstu. |
 | Powrót do rozmowy | Max 1 aktywna rozmowa na osobę (ograniczenie w bazie); `/` proponuje „Continue conversation” | Zamknięta karta nie traci rozmowy ani transkryptu. |
 | Tematy | 20 codziennych sytuacji z życia w Niemczech jako stała w kodzie (lista w planie) | Zero tabel i ekranów; nie rusza testu rejestru admina. |
@@ -72,11 +72,11 @@ Widoki (POST → redirect → GET) wołają `services.py`, który sprawdza budż
 - Nie ma aktualnego porównania modeli w recaście po niemiecku (`research.md`, Open Question 1) — model jest wymienny przez `LLM_MODEL`, ocena jakości po realnym użyciu.
 - Ceny i nazwy modeli OpenAI pochodzą ze stanu na 2026-10; cennik w ustawieniach trzeba zaktualizować przy zmianie modelu, inaczej budżet liczy źle (twardy limit w panelu OpenAI to druga linia obrony).
 - Jakość recastu i trafność pożegnania zależą od promptu — strojenie po ręcznym teście w fazie 4.
-- Szacunek kosztu tury (koszt poprzedniej tury) może minimalnie przepuścić budżet o koszt jednej tury — świadomie zaakceptowane.
+- Szacunek kosztu tury (koszt poprzedniej tury) jest lekko zaniżony, bo historia rośnie z każdą turą — budżet może zostać przekroczony o koszt ok. dwóch tur — świadomie zaakceptowane.
 - Wiedza o API OpenAI pochodzi z dokumentacji (Context7), nie z doświadczenia w tym repo — implementacja weryfikuje parametry (`reasoning.effort`, `store`) przed użyciem.
 
 ## Success Criteria (Summary)
 
 - Autor przeprowadza po angielsku pełną rozmowę na wybrany temat i widzi naturalnie wplecione poprawki, bez wykładu.
 - Rozmowa kończy się poprawnie każdą z trzech dróg (przycisk, potwierdzone pożegnanie, limit) z czytelnym komunikatem.
-- Żaden użytkownik nie widzi rozmów innego (404), a koszty nie przekraczają $1/dzień/osobę (± jedna tura).
+- Żaden użytkownik nie widzi rozmów innego (404), a koszty nie przekraczają $1/dzień/osobę (± ok. dwie tury).

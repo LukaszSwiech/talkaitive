@@ -102,7 +102,7 @@ Zależności, ustawienia LLM i budżetu, pole języka przy użytkowniku, aplikac
 
 **Intent**: Każdy użytkownik ma swój język rozmów; autor testuje po angielsku, żona ćwiczy niemiecki równolegle. Ustawia go właściciel w `/admin/`.
 
-**Contract**: `PracticeLanguage(models.TextChoices)` z wartościami `en` („English”), `de` („German”), zdefiniowane w `accounts/models.py` (używane też przez `Conversation`). Pole `User.practice_language = CharField(max_length=2, choices=PracticeLanguage, default="de")`. W `UserAdmin`: pole w `fieldsets` (np. sekcja „Practice”) i w `list_display`.
+**Contract**: `PracticeLanguage(models.TextChoices)` z wartościami `en` („English”), `de` („German”), zdefiniowane w `accounts/models.py` (używane też przez `Conversation`). Pole `User.practice_language = CharField(max_length=2, choices=PracticeLanguage, default="de", db_default="de")` — `db_default` zostawia DEFAULT w kolumnie, więc revert kodu bez cofnięcia migracji nie psuje tworzenia użytkowników (NOT NULL). W `UserAdmin`: pole w `fieldsets` (np. sekcja „Practice”) i w `list_display`.
 
 #### 4. Aplikacja `conversations` i modele
 
@@ -149,7 +149,7 @@ Zależności, ustawienia LLM i budżetu, pole języka przy użytkowniku, aplikac
 #### Automated Verification:
 
 - Migracje bez rozjazdu: `uv run python manage.py makemigrations --check --dry-run`
-- Testy przechodzą: `uv run pytest` (w tym nowe: rozmowa użytkownika A niewidoczna przez `for_user` dla B; druga aktywna rozmowa tego samego użytkownika → `IntegrityError`, zakończona + nowa aktywna → OK; usunięcie użytkownika usuwa jego rozmowy i wiadomości; `practice_language` domyślnie `de`; `TOPICS` ma 20 unikalnych kluczy; `LLM_MODEL` ma wpis w `LLM_PRICES_USD_PER_MTOK`)
+- Testy przechodzą: `uv run pytest` (w tym nowe: rozmowa użytkownika A niewidoczna przez `for_user` dla B; druga aktywna rozmowa tego samego użytkownika → `IntegrityError` (sprawdzane w `pytest.raises` + `transaction.atomic()`), zakończona + nowa aktywna → OK; usunięcie użytkownika usuwa jego rozmowy i wiadomości; `practice_language` domyślnie `de`; `TOPICS` ma 20 unikalnych kluczy; `LLM_MODEL` ma wpis w `LLM_PRICES_USD_PER_MTOK`)
 - Test rejestru admina nadal przechodzi: `uv run pytest tests/test_ownership.py`
 - Lint i format: `uv run ruff check . && uv run ruff format --check .`
 - `uv run python manage.py check`
@@ -180,7 +180,7 @@ Logika bez widoków: wywołanie modelu z promptem rozmowy i logika budżetu dzie
 - `turn_cost(model, input_tokens, cached_input_tokens, output_tokens) -> Decimal` = `(input − cached) × input + cached × cached_input + output × output`, ceny za 1M z `LLM_PRICES_USD_PER_MTOK`; brak modelu w cenniku → `ImproperlyConfigured`.
 - `day_start(now) -> datetime` — ostatnia północ w `BUDGET_TIME_ZONE` (aware). `next_reset(now) -> datetime` — następna północ.
 - `spent_today(user, now) -> Decimal` — suma `Message.cost_usd` z rozmów użytkownika (`Conversation.objects.for_user(user)`) dla wiadomości z `created_at >= day_start(now)`.
-- `is_exhausted(user, now) -> bool` — `spent_today >= DAILY_BUDGET_USD`.
+- `is_exhausted(user, now) -> bool` — `True`, gdy od `day_start(now)` jest rozmowa użytkownika zakończona z `daily_limit` (`ended_at >= day_start(now)`) **lub** `spent_today + LLM_TURN_COST_ESTIMATE_USD >= DAILY_BUDGET_USD`. To jedyny predykat „budżet wyczerpany” — używają go `/`, `start_conversation` i komunikat o resecie. Bez tego po zakończeniu z `daily_limit` przy `spent_today` tuż poniżej budżetu `/` znów pokazałby tematy, a nowa rozmowa żegnałaby się już w turze otwierającej.
 - `is_final_turn(user, conversation, now) -> bool` — `spent_today + szacunek >= DAILY_BUDGET_USD`, gdzie szacunek = koszt ostatniej tury agenta w tej rozmowie albo `LLM_TURN_COST_ESTIMATE_USD`, gdy jej brak.
 
 #### 2. Moduł LLM
@@ -202,7 +202,7 @@ Logika bez widoków: wywołanie modelu z promptem rozmowy i logika budżetu dzie
 
 #### Automated Verification:
 
-- Testy budżetu przechodzą: `uv run pytest tests/test_budget.py` (koszt tury z cached tokens; `day_start` / `next_reset` dla godzin tuż przed i po północy Europe/Berlin, także w dniu zmiany czasu; wiadomości z wczoraj nie liczą się do dziś; wydatki innego użytkownika się nie liczą; `is_final_turn` z i bez wcześniejszej tury; brak modelu w cenniku → `ImproperlyConfigured`)
+- Testy budżetu przechodzą: `uv run pytest tests/test_budget.py` (koszt tury z cached tokens; `day_start` / `next_reset` dla godzin tuż przed i po północy Europe/Berlin, także w dniu zmiany czasu; wiadomości z wczoraj nie liczą się do dziś; wydatki innego użytkownika się nie liczą; `is_final_turn` z i bez wcześniejszej tury; `is_exhausted` jest `True` po zakończeniu rozmowy z `daily_limit` dziś, nawet gdy `spent_today` < budżetu, i `False` po północy; `is_exhausted` jest `True`, gdy budżetu nie starcza na `LLM_TURN_COST_ESTIMATE_USD`; brak modelu w cenniku → `ImproperlyConfigured`)
 - Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py` (klient dostaje `base_url` z `OPENAI_BASE_URL`; przekazuje `store=False`, model, effort i język do wywołania; język `en` vs `de` trafia do instrukcji; `final_turn` dodaje instrukcję pożegnania na końcu `input`; mapuje `usage` na `TurnResult`; wyjątek SDK i pusty wynik → `LLMError`)
 - Cały zestaw: `uv run pytest`
 - Lint i format: `uv run ruff check . && uv run ruff format --check .`
@@ -226,10 +226,11 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 **Intent**: Jedna ścieżka dla „wygeneruj odpowiedź agenta” używana przez start, wysłanie i ponowienie: sprawdza budżet, woła `llm.generate_turn`, zapisuje wiadomość agenta z kosztem i kończy rozmowę, gdy trzeba.
 
 **Contract**:
-- `start_conversation(user, topic_key, now) -> Conversation` — odmawia, gdy `is_exhausted`; odmawia, gdy użytkownik ma już aktywną rozmowę (łapie `IntegrityError` z ograniczenia); kopiuje `user.practice_language` do `language`; potem `run_agent_turn`.
+- `start_conversation(user, topic_key, now) -> Conversation` — odmawia, gdy `is_exhausted`; odmawia, gdy użytkownik ma już aktywną rozmowę (`try: with transaction.atomic(): Conversation.objects.create(...)` / `except IntegrityError` — bez zagnieżdżonego `atomic()` złapany błąd psuje bieżącą transakcję i kolejne zapytania rzucają `TransactionManagementError`); kopiuje `user.practice_language` do `language`; potem `run_agent_turn`.
 - `send_message(conversation, text, now)` — tylko dla aktywnej rozmowy, która nie czeka na odpowiedź; zapisuje wiadomość użytkownika, potem `run_agent_turn`.
 - `run_agent_turn(conversation, now)` — `final = is_final_turn(...)`; `generate_turn(..., final_turn=final)`; zapisuje `Message(role=assistant, …, cost_usd=turn_cost(...))`; jeśli `final` → koniec z `daily_limit`, w przeciwnym razie jeśli `end_conversation` → koniec z `agent_goodbye`. `LLMError` przepuszcza wyżej, nie zapisując niczego poza wiadomością użytkownika.
 - `end_conversation(conversation, reason, now)` — ustawia `status=ended`, `end_reason`, `ended_at`; idempotentne.
+- Ochrona przed podwójnym wysłaniem po stronie serwera (JS to tylko wygoda): `send_message` sprawdza „czeka na odpowiedź” i zapisuje wiadomość użytkownika w jednym krótkim `transaction.atomic()` z `Conversation.objects.select_for_update()`; `run_agent_turn` woła `generate_turn` **poza** transakcją, a przed zapisem odpowiedzi agenta w nowym `atomic()` + `select_for_update()` ponownie sprawdza, że rozmowa jest aktywna i nadal czeka na odpowiedź — jeśli nie (równoległe retry/wysłanie już odpowiedziało), wynik odrzuca bez zapisu. Koszt odrzuconej tury nie trafia do budżetu (max jedna tura; twardy limit w panelu OpenAI zostaje drugą linią obrony).
 
 #### 2. Widoki i URL-e
 
@@ -252,13 +253,13 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 **Intent**: Proste, czytelne ekrany w stylu obecnego `base.html`. Podczas czekania na model użytkownik widzi ruch, nie tylko tekst (NFR z PRD).
 
-**Contract**: przy wysłaniu formularza (wiadomość, start tematu, „Try again”) kilka linii JS w szablonie blokuje przycisk i pokazuje element z **animowanym spinnerem w czystym CSS** (`@keyframes`, bez pliku GIF i bez zależności) oraz tekstem „Agent is typing…”; bez JS formularze nadal działają. Wiadomości agenta i użytkownika wizualnie rozróżnione; po załadowaniu strona przewija się do ostatniej wiadomości. Style w `base.html` (jedno miejsce na CSS).
+**Contract**: przy wysłaniu formularza (wiadomość, start tematu, „Try again”) kilka linii JS w szablonie blokuje przycisk i pokazuje element z **animowanym spinnerem w czystym CSS** (`@keyframes`, bez pliku GIF i bez zależności) oraz tekstem „Agent is typing…”; bez JS formularze nadal działają. Wiadomości agenta i użytkownika wizualnie rozróżnione; po załadowaniu strona przewija się do ostatniej wiadomości. Style w `base.html` (jedno miejsce na CSS). `base.html` dostaje blok `{% for message in messages %}` (dziś go nie ma), żeby komunikaty z `django.contrib.messages` po przekierowaniach (pusta wiadomość, rozmowa zakończona, start odrzucony) były widoczne.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- Testy widoków przechodzą z atrapą `generate_turn`: `uv run pytest tests/test_conversation_views.py` (start tworzy rozmowę z wiadomością otwierającą i językiem użytkownika; wysłanie zapisuje obie wiadomości i koszt; `end_conversation=true` kończy z `agent_goodbye`; tura przy wyczerpywanym budżecie dostaje `final_turn=true` i kończy z `daily_limit`; start przy wyczerpanym budżecie odrzucony i `/` pokazuje godzinę resetu; druga aktywna rozmowa niemożliwa, `/` pokazuje „Continue conversation”; `LLMError` zostawia wiadomość użytkownika i pokazuje „Try again”, a retry kończy turę; wysłanie do zakończonej lub czekającej rozmowy nie woła modelu; „End” kończy z `user`; użytkownik B dostaje 404 na GET i każdy POST rozmowy użytkownika A; niezalogowany jest przekierowany do logowania)
+- Testy widoków przechodzą z atrapą `generate_turn`: `uv run pytest tests/test_conversation_views.py` (start tworzy rozmowę z wiadomością otwierającą i językiem użytkownika; wysłanie zapisuje obie wiadomości i koszt; `end_conversation=true` kończy z `agent_goodbye`; tura przy wyczerpywanym budżecie dostaje `final_turn=true` i kończy z `daily_limit`; start przy wyczerpanym budżecie odrzucony i `/` pokazuje godzinę resetu; druga aktywna rozmowa niemożliwa, `/` pokazuje „Continue conversation”; `LLMError` zostawia wiadomość użytkownika i pokazuje „Try again”, a retry kończy turę; wysłanie do zakończonej lub czekającej rozmowy nie woła modelu; pusta wiadomość nie woła modelu, a strona po przekierowaniu pokazuje komunikat; gdy w trakcie `generate_turn` (atrapa z efektem ubocznym) inna ścieżka zapisze już odpowiedź agenta, druga odpowiedź nie jest zapisywana; „End” kończy z `user`; użytkownik B dostaje 404 na GET i każdy POST rozmowy użytkownika A; niezalogowany jest przekierowany do logowania)
 - Istniejące testy logowania przechodzą bez zmian asercji: `uv run pytest tests/test_login.py`
 - Cały zestaw: `uv run pytest`
 - Lint i format: `uv run ruff check . && uv run ruff format --check .`
@@ -266,7 +267,7 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 #### Manual Verification:
 
-- Lokalnie z atrapą/bez klucza: przejście po ekranach (lista tematów, rozmowa, „End”, komunikat o limicie) wygląda czytelnie na telefonie i desktopie
+- Lokalnie z prawdziwym kluczem z `.env` (najpierw kroki 1–2 z fazy 4: konto OpenAI i `.env`; bez klucza każdy start kończy się od razu na „Try again”): przejście po ekranach (lista tematów, rozmowa, „End”, komunikat o limicie) wygląda czytelnie na telefonie i desktopie
 - Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
@@ -277,7 +278,7 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 ### Overview
 
-Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angielsku, deploy i ustawienie języków kont. Kroki z „(you)” wykonuje użytkownik; agent nie robi `git push`.
+Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angielsku, deploy i ustawienie języków kont. Kroki z „(you)” wykonuje użytkownik; agent nie robi `git push`. Kroki 1–2 (konto OpenAI, `.env`) wykonuje się już przed ręcznym testem fazy 3 — tam są potrzebne do zobaczenia ekranu rozmowy i spinnera.
 
 ### Changes Required:
 
@@ -355,7 +356,10 @@ Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angiel
 ## Migration Notes
 
 - Dwie nowe migracje: `accounts.0003` (pole z wartością domyślną `de` — istniejące konta dostają `de`) i `conversations.0001`. Obie bezpieczne dla istniejących danych; stosuje je pre-deploy `migrate` na Railway.
-- Rollback: odwrócenie commitu + `migrate conversations zero` i cofnięcie `accounts` do `0002` (dane rozmów przepadają — akceptowalne na tym etapie).
+- Rollback, w tej kolejności (dane rozmów przepadają — akceptowalne na tym etapie):
+  1. Póki wdrożony kod ma jeszcze pliki migracji: na produkcji `railway ssh --service web -i ~/.ssh/id_ed25519_railway` → `python manage.py migrate conversations zero` i `python manage.py migrate accounts 0002`. Po revercie tych plików już nie ma i migracji nie da się cofnąć (pre-deploy robi tylko `migrate` w przód).
+  2. Odwrócenie commitu; push wykonuje użytkownik.
+  Pominięcie kroku 1 zostawia osierocone tabele `conversations_*` i kolumnę `practice_language` (z `db_default`, więc nieszkodliwą).
 
 ## References
 
