@@ -255,6 +255,8 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 **Contract**: przy wysłaniu formularza (wiadomość, start tematu, „Try again”) kilka linii JS w szablonie blokuje przycisk i pokazuje element z **animowanym spinnerem w czystym CSS** (`@keyframes`, bez pliku GIF i bez zależności) oraz tekstem „Agent is typing…”; bez JS formularze nadal działają. Wiadomości agenta i użytkownika wizualnie rozróżnione; po załadowaniu strona przewija się do ostatniej wiadomości. Style w `base.html` (jedno miejsce na CSS). `base.html` dostaje blok `{% for message in messages %}` (dziś go nie ma), żeby komunikaty z `django.contrib.messages` po przekierowaniach (pusta wiadomość, rozmowa zakończona, start odrzucony) były widoczne.
 
+**Dodane 2026-10-06 (decyzja użytkownika w trakcie fazy 3)**: w polu wiadomości **Enter wysyła** wiadomość, **Shift+Enter** wstawia nową linię — na wszystkich urządzeniach, także na telefonie (tam nowej linii nie da się wpisać; akceptujemy, wiadomości w czacie są krótkie). Wysyłka przez `form.requestSubmit()` (ta sama ścieżka co przycisk „Send”: spinner, blokada przycisku, walidacja `required`), Enter w trakcie składania znaku (`event.isComposing`) nie wysyła. `<textarea>` dostaje `enterkeyhint="send"`. Bez JS Enter dalej wstawia nową linię, a wysyła przycisk. Brak testu automatycznego (brak narzędzia do testów JS) — sprawdzane ręcznie.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -269,6 +271,7 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 - Lokalnie z prawdziwym kluczem z `.env` (najpierw kroki 1–2 z fazy 4: konto OpenAI i `.env`; bez klucza każdy start kończy się od razu na „Try again”): przejście po ekranach (lista tematów, rozmowa, „End”, komunikat o limicie) wygląda czytelnie na telefonie i desktopie
 - Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi
+- Enter wysyła wiadomość (ze spinnerem i blokadą jak przycisk „Send”), Shift+Enter wstawia nową linię, pusty Enter nic nie wysyła; na telefonie klawisz Enter ma etykietę „Send”/„Wyślij”
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -395,25 +398,26 @@ Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angiel
 
 #### Automated
 
-- [x] 2.1 Testy budżetu przechodzą: `uv run pytest tests/test_budget.py`
-- [x] 2.2 Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py`
-- [x] 2.3 Cały zestaw: `uv run pytest`
-- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy budżetu przechodzą: `uv run pytest tests/test_budget.py` — 897d81c
+- [x] 2.2 Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py` — 897d81c
+- [x] 2.3 Cały zestaw: `uv run pytest` — 897d81c
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 897d81c
 
 ### Phase 3: Ekrany i przepływ rozmowy
 
 #### Automated
 
-- [ ] 3.1 Testy widoków przechodzą z atrapą `generate_turn`: `uv run pytest tests/test_conversation_views.py`
-- [ ] 3.2 Istniejące testy logowania przechodzą bez zmian asercji: `uv run pytest tests/test_login.py`
-- [ ] 3.3 Cały zestaw: `uv run pytest`
-- [ ] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 3.5 `uv run python manage.py check`
+- [x] 3.1 Testy widoków przechodzą z atrapą `generate_turn`: `uv run pytest tests/test_conversation_views.py`
+- [x] 3.2 Istniejące testy logowania przechodzą bez zmian asercji: `uv run pytest tests/test_login.py`
+- [x] 3.3 Cały zestaw: `uv run pytest`
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.5 `uv run python manage.py check`
 
 #### Manual
 
-- [ ] 3.6 Przejście po ekranach wygląda czytelnie na telefonie i desktopie
-- [ ] 3.7 Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi
+- [x] 3.6 Przejście po ekranach wygląda czytelnie na telefonie i desktopie
+- [x] 3.7 Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi
+- [x] 3.8 Enter wysyła wiadomość, Shift+Enter wstawia nową linię (także na telefonie)
 
 ### Phase 4: Wdrożenie z prawdziwym modelem
 

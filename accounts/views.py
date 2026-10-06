@@ -1,7 +1,4 @@
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+"""The accounts app has no own views yet; login uses Django's LoginView (urls.py).
 
-
-def home(request: HttpRequest) -> HttpResponse:
-    """Temporary welcome page; S-01 replaces it with the conversation screen."""
-    return render(request, "accounts/home.html")
+The home page lives in `conversations.views.home`.
+"""

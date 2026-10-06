@@ -31,4 +31,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz/", healthz, name="healthz"),
     path("", include("accounts.urls")),
+    path("", include("conversations.urls")),
 ]

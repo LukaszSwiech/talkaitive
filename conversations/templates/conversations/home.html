@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>TalkAItive</h1>
+  <p>Signed in as {{ user.email }}</p>
+
+  {% if active_conversation %}
+    <p>You have a conversation in progress: <strong>{{ active_conversation.topic_title }}</strong></p>
+    <p><a class="button" href="{% url 'conversation_detail' pk=active_conversation.pk %}">Continue conversation</a></p>
+  {% elif exhausted %}
+    <p class="notice">
+      You have used today's conversation limit.
+      {% include "conversations/_reset_notice.html" %}
+    </p>
+  {% else %}
+    <h2>Choose a topic</h2>
+    <ul class="topics">
+      {% for topic in topics %}
+        <li>
+          <form method="post" action="{% url 'conversation_start' %}" data-waits-for-agent>
+            {% csrf_token %}
+            <input type="hidden" name="topic" value="{{ topic.key }}">
+            <button type="submit">{{ topic.title }}</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}
