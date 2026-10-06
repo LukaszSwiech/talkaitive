@@ -41,7 +41,7 @@ Pole `Prerequisites:` z roadmapy jest odwzorowane jako natywna relacja Linear `b
 
 Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest informacyjne, nie blokujące).
 
-## Aktualne mapowanie (stan na 2026-10-05)
+## Aktualne mapowanie (stan na 2026-10-06)
 
 | Roadmap ID | Change ID | Linear Issue | Etykiety | Status |
 | --- | --- | --- | --- | --- |
