@@ -255,6 +255,15 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 **Contract**: przy wysłaniu formularza (wiadomość, start tematu, „Try again”) kilka linii JS w szablonie blokuje przycisk i pokazuje element z **animowanym spinnerem w czystym CSS** (`@keyframes`, bez pliku GIF i bez zależności) oraz tekstem „Agent is typing…”; bez JS formularze nadal działają. Wiadomości agenta i użytkownika wizualnie rozróżnione; po załadowaniu strona przewija się do ostatniej wiadomości. Style w `base.html` (jedno miejsce na CSS). `base.html` dostaje blok `{% for message in messages %}` (dziś go nie ma), żeby komunikaty z `django.contrib.messages` po przekierowaniach (pusta wiadomość, rozmowa zakończona, start odrzucony) były widoczne.
 
+**Dodane 2026-10-06 (decyzja użytkownika w trakcie fazy 3)**: w polu wiadomości **Enter wysyła** wiadomość, **Shift+Enter** wstawia nową linię — na wszystkich urządzeniach, także na telefonie (tam nowej linii nie da się wpisać; akceptujemy, wiadomości w czacie są krótkie). Wysyłka przez `form.requestSubmit()` (ta sama ścieżka co przycisk „Send”: spinner, blokada przycisku, walidacja `required`), Enter w trakcie składania znaku (`event.isComposing`) nie wysyła. `<textarea>` dostaje `enterkeyhint="send"`. Bez JS Enter dalej wstawia nową linię, a wysyła przycisk. Brak testu automatycznego (brak narzędzia do testów JS) — sprawdzane ręcznie.
+
+**Dodane 2026-10-06 (po przeglądzie fazy 3, `reviews/impl-review-phase-3.md`)**:
+- Dodatki z implementacji: wspólny fragment `conversations/templates/conversations/_reset_notice.html` (godzina resetu na `/` i na ekranie rozmowy); skrypt w `base.html` działa na każdej stronie i przy wysyłce blokuje wszystkie przyciski; po powrocie z back/forward cache strona się odblokowuje.
+- F1 — tura w toku: `Conversation.agent_turn_started_at` (migracja `conversations/0002`; rollback `migrate conversations zero` obejmuje ją). Znacznik ustawiany pod blokadą wiersza razem z utworzeniem rozmowy / zapisem wiadomości użytkownika / sprawdzeniem retry, czyszczony po zapisie odpowiedzi lub po dowolnym wyjątku (tylko własny). Ważny `LLM_TIMEOUT_SECONDS × (LLM_MAX_RETRIES + 1) + 30` s. W tym czasie retry jest odrzucany bez wywołania modelu, a ekran rozmowy pokazuje spinner „Agent is typing…” zamiast błędu i odświeża się co 5 s (`<meta http-equiv="refresh">` w nowym `{% block head %}` w `base.html`).
+- F2 — wiadomość użytkownika max `services.MAX_MESSAGE_LENGTH = 2000` znaków (po `strip()`), ten sam `maxlength` na `<textarea>`.
+- F3 — `pydantic.ValidationError` z `responses.parse` (ucięty/niepoprawny JSON) → `LLMError` w `llm.py`, bez łańcucha wyjątku i bez treści w logu. Błąd nie trafia do historii wysyłanej do modelu; retry wysyła tę samą historię.
+- F4 — widoki typowane `AuthenticatedHttpRequest` (`user: User`, w `conversations/views.py`); `budget.py` przyjmuje `User`.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -269,6 +278,7 @@ Strona główna, start rozmowy, ekran czatu, wysyłanie, ponawianie, kończenie 
 
 - Lokalnie z prawdziwym kluczem z `.env` (najpierw kroki 1–2 z fazy 4: konto OpenAI i `.env`; bez klucza każdy start kończy się od razu na „Try again”): przejście po ekranach (lista tematów, rozmowa, „End”, komunikat o limicie) wygląda czytelnie na telefonie i desktopie
 - Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi
+- Enter wysyła wiadomość (ze spinnerem i blokadą jak przycisk „Send”), Shift+Enter wstawia nową linię, pusty Enter nic nie wysyła; na telefonie klawisz Enter ma etykietę „Send”/„Wyślij”
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -381,53 +391,54 @@ Prawdziwy klucz lokalnie i na produkcji, ręczny test jakości rozmowy po angiel
 
 #### Automated
 
-- [ ] 1.1 Migracje bez rozjazdu: `uv run python manage.py makemigrations --check --dry-run`
-- [ ] 1.2 Testy przechodzą: `uv run pytest` (modele, ograniczenie 1 aktywnej, kaskada, `practice_language`, tematy, cennik)
-- [ ] 1.3 Test rejestru admina nadal przechodzi: `uv run pytest tests/test_ownership.py`
-- [ ] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 1.5 `uv run python manage.py check`
+- [x] 1.1 Migracje bez rozjazdu: `uv run python manage.py makemigrations --check --dry-run` — 8d8d845
+- [x] 1.2 Testy przechodzą: `uv run pytest` (modele, ograniczenie 1 aktywnej, kaskada, `practice_language`, tematy, cennik) — 8d8d845
+- [x] 1.3 Test rejestru admina nadal przechodzi: `uv run pytest tests/test_ownership.py` — 8d8d845
+- [x] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 8d8d845
+- [x] 1.5 `uv run python manage.py check` — 8d8d845
 
 #### Manual
 
-- [ ] 1.6 W `/admin/` widać i da się zmienić „Practice language”; modele rozmów nie pojawiają się w adminie
+- [x] 1.6 W `/admin/` widać i da się zmienić „Practice language”; modele rozmów nie pojawiają się w adminie — 8d8d845
 
 ### Phase 2: Moduł LLM i budżet
 
 #### Automated
 
-- [ ] 2.1 Testy budżetu przechodzą: `uv run pytest tests/test_budget.py`
-- [ ] 2.2 Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py`
-- [ ] 2.3 Cały zestaw: `uv run pytest`
-- [ ] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy budżetu przechodzą: `uv run pytest tests/test_budget.py` — 897d81c
+- [x] 2.2 Testy LLM przechodzą z atrapą klienta, bez sieci: `uv run pytest tests/test_llm.py` — 897d81c
+- [x] 2.3 Cały zestaw: `uv run pytest` — 897d81c
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 897d81c
 
 ### Phase 3: Ekrany i przepływ rozmowy
 
 #### Automated
 
-- [ ] 3.1 Testy widoków przechodzą z atrapą `generate_turn`: `uv run pytest tests/test_conversation_views.py`
-- [ ] 3.2 Istniejące testy logowania przechodzą bez zmian asercji: `uv run pytest tests/test_login.py`
-- [ ] 3.3 Cały zestaw: `uv run pytest`
-- [ ] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 3.5 `uv run python manage.py check`
+- [x] 3.1 Testy widoków przechodzą z atrapą `generate_turn`: `uv run pytest tests/test_conversation_views.py` — 9594f51
+- [x] 3.2 Istniejące testy logowania przechodzą bez zmian asercji: `uv run pytest tests/test_login.py` — 9594f51
+- [x] 3.3 Cały zestaw: `uv run pytest` — 9594f51
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 9594f51
+- [x] 3.5 `uv run python manage.py check` — 9594f51
 
 #### Manual
 
-- [ ] 3.6 Przejście po ekranach wygląda czytelnie na telefonie i desktopie
-- [ ] 3.7 Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi
+- [x] 3.6 Przejście po ekranach wygląda czytelnie na telefonie i desktopie — 9594f51
+- [x] 3.7 Spinner się kręci i przycisk jest zablokowany do czasu odpowiedzi — 9594f51
+- [x] 3.8 Enter wysyła wiadomość, Shift+Enter wstawia nową linię (także na telefonie) — 9594f51
 
 ### Phase 4: Wdrożenie z prawdziwym modelem
 
 #### Automated
 
-- [ ] 4.1 Pełny zestaw przed pushem: `uv run pytest && uv run ruff check . && uv run ruff format --check .`
-- [ ] 4.2 Symulacja produkcji: `check --deploy` bez nowych ostrzeżeń
-- [ ] 4.3 Brak klucza poza DEBUG wywala start (`KeyError: 'OPENAI_API_KEY'`)
+- [x] 4.1 Pełny zestaw przed pushem: `uv run pytest && uv run ruff check . && uv run ruff format --check .` — c602ec2
+- [x] 4.2 Symulacja produkcji: `check --deploy` bez nowych ostrzeżeń — c602ec2
+- [x] 4.3 Brak klucza poza DEBUG wywala start (`KeyError: 'OPENAI_API_KEY'`) — c602ec2
 - [ ] 4.4 Po deployu: `/healthz/` → 200
 
 #### Manual
 
-- [ ] 4.5 Lokalnie z prawdziwym kluczem: pełna rozmowa na 2 tematy, naturalny recast max 1–2 poprawki, akceptowalny czas odpowiedzi
-- [ ] 4.6 Pożegnanie → agent pyta o zakończenie; potwierdzenie kończy rozmowę
-- [ ] 4.7 Test limitu lokalnie z `DAILY_BUDGET_USD=0.05`: pożegnanie z informacją o limicie i godzina resetu
+- [x] 4.5 Lokalnie z prawdziwym kluczem: pełna rozmowa na 2 tematy, naturalny recast max 1–2 poprawki, akceptowalny czas odpowiedzi — c602ec2
+- [x] 4.6 Pożegnanie → agent pyta o zakończenie; potwierdzenie kończy rozmowę — c602ec2
+- [x] 4.7 Test limitu lokalnie z `DAILY_BUDGET_USD=0.05`: pożegnanie z informacją o limicie i godzina resetu — c602ec2
 - [ ] 4.8 `OPENAI_API_KEY` ustawiony na Railway przed pushem; rozmowa działa na produkcji
 - [ ] 4.9 Koszt w panelu OpenAI zgadza się z grubsza z sumą `cost_usd` w bazie

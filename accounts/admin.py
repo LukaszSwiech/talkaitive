@@ -10,11 +10,18 @@ class UserAdmin(DjangoUserAdmin):
     form = UserEditForm
     add_form = UserCreationForm
     ordering = ("email",)
-    list_display = ("email", "is_active", "is_staff", "date_joined")
+    list_display = (
+        "email",
+        "practice_language",
+        "is_active",
+        "is_staff",
+        "date_joined",
+    )
     list_filter = ("is_staff", "is_superuser", "is_active")
     search_fields = ("email",)
     fieldsets = (
         (None, {"fields": ("email", "password")}),
+        ("Practice", {"fields": ("practice_language",)}),
         (
             "Permissions",
             {

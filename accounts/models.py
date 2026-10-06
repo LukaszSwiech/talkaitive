@@ -45,8 +45,21 @@ class UserManager(BaseUserManager["User"]):
         return self.get(email=canonical_email(email or ""))
 
 
+class PracticeLanguage(models.TextChoices):
+    ENGLISH = "en", "English"
+    GERMAN = "de", "German"
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField("email address", unique=True)
+    # db_default keeps a DEFAULT in the column, so reverting the code without
+    # reverting the migration does not break creating users (NOT NULL).
+    practice_language = models.CharField(
+        max_length=2,
+        choices=PracticeLanguage,
+        default="de",
+        db_default="de",
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

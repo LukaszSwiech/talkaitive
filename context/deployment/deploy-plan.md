@@ -8,6 +8,7 @@ Legend used on the step headings below: ✅ done as planned · ⚠️ done, but 
 - **Biggest open risk: the database has no backup at all.** Railway backups are Pro only, and the off-platform `pg_dump` is not set up yet. See [TODO](#todo).
 - All plan steps (0–10) are finished. Steps 4, 5, 7 and 9 went differently from the plan; the step headings link to the matching deviation.
 - **2026-10-02:** the production database schema was reset because of `AUTH_USER_MODEL = "accounts.User"` (e-mail login); the superuser was recreated. See [Auth change: database reset](#auth-change-database-reset-2026-10-02).
+- **2026-10-06:** `OPENAI_API_KEY` added on `web` with change `first-corrected-conversation` (S-01, first LLM code). See [Live resources](#live-resources).
 - Open work: [TODO](#todo).
 
 ## Prerequisites
@@ -94,7 +95,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ## Step 5: Verify locally before committing (automated) — ⚠️ done with changes → Deviations 4 (`mail.E001`) and 5 (no gunicorn smoke test)
 - `uv run ruff check . && uv run ruff format --check .`
 - `uv run python manage.py check`, then `uv run python manage.py runserver` and `curl localhost:8000/healthz/` → `ok`.
-- Simulate production: `DEBUG=False SECRET_KEY=x ALLOWED_HOSTS=localhost uv run python manage.py check --deploy`. Expect only the HSTS warning (accepted, see Step 2).
+- Simulate production: `DEBUG=False SECRET_KEY=x OPENAI_API_KEY=x ALLOWED_HOSTS=localhost uv run python manage.py check --deploy`. Expect only the HSTS warning (accepted, see Step 2). (`OPENAI_API_KEY=x` added 2026-10-06 with S-01: outside DEBUG a missing key crashes startup.)
 - `DEBUG=False SECRET_KEY=x uv run python manage.py collectstatic --noinput --dry-run` to confirm WhiteNoise storage works.
 - `uv run gunicorn talkaitive.wsgi --bind 127.0.0.1:8001` as a smoke test, then stop it.
 
@@ -119,7 +120,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
   - `DEBUG=False`
   - `ALLOWED_HOSTS=<domain>,healthcheck.railway.app`
   - `CSRF_TRUSTED_ORIGINS=https://<domain>`
-- The LLM API key is not set now; no LLM code exists yet.
+- The LLM API key is not set now; no LLM code exists yet. (Set on 2026-10-06 with S-01, see [Live resources](#live-resources).)
 
 ## Step 9: Connect GitHub and deploy (you, dashboard) — ⚠️ partly: GitHub connected from the CLI (Deviation 2), pre-deploy timeout set through the API (Deviation 1), ❌ backups not available (Pro only, see Verification)
 - In the `web` service → Settings → Source → connect `talkaitive`, branch `main`. This triggers the first deploy.
@@ -136,7 +137,8 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 
 ## Out of scope / follow-ups
 - Daily off-platform `pg_dump` (GitHub Actions cron) and a GitHub Actions test workflow. The infra doc lists both as out of scope; they are the next change.
-- Custom domain + HSTS, LLM API key, and a usage alert after the first month.
+- Custom domain + HSTS (still open).
+- ~~LLM API key, and a usage alert after the first month.~~ Done 2026-10-06 with change `first-corrected-conversation`: OpenAI project `talkaitive` with the EU data region (endpoint `eu.api.openai.com`) and its own key. The usage alert is covered by the project's monthly spend limit/alert in the OpenAI dashboard, so no separate alert is planned.
 
 ---
 
@@ -151,7 +153,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
 | Services | `web` (`9e0786d6-5cc8-4f28-9724-81c55c7e1dcf`, EU West, 1 replica); `Postgres` (template `postgres-ssl:18`, volume `postgres-volume` in `europe-west4-drams3a`) |
 | Public URL | `https://web-production-5e685.up.railway.app` |
-| `web` variables | `SECRET_KEY` (generated, set via `--stdin`, never displayed), `DATABASE_URL=${{Postgres.DATABASE_URL}}` (resolves to `postgres.railway.internal`), `DEBUG=False`, `ALLOWED_HOSTS=web-production-5e685.up.railway.app,healthcheck.railway.app`, `CSRF_TRUSTED_ORIGINS=https://web-production-5e685.up.railway.app` |
+| `web` variables | `SECRET_KEY` (generated, set via `--stdin`, never displayed), `DATABASE_URL=${{Postgres.DATABASE_URL}}` (resolves to `postgres.railway.internal`), `DEBUG=False`, `ALLOWED_HOSTS=web-production-5e685.up.railway.app,healthcheck.railway.app`, `CSRF_TRUSTED_ORIGINS=https://web-production-5e685.up.railway.app`, `OPENAI_API_KEY` (OpenAI project `talkaitive`, EU data region; a separate key from the local `.env` one, so OpenAI usage shows production and local runs apart; set by hand, never displayed; added 2026-10-06 for S-01). It must be set before pushing code that reads it: outside DEBUG a missing key crashes startup. |
 | SSH | Key `talkaitive-mac` (`~/.ssh/id_ed25519_railway`). Always pass `-i ~/.ssh/id_ed25519_railway`, because the default `id_ed25519` belongs to another Railway account |
 
 ### Deviations from the plan

@@ -11,3 +11,6 @@ STORAGES = {
 
 # Throwaway app with a model used only to test the UserOwned pattern.
 INSTALLED_APPS = [*INSTALLED_APPS, "tests.ownership_testapp"]  # noqa: F405
+
+# Never let tests use a real key: an accidental real call fails with 401, not a bill.
+OPENAI_API_KEY = "test-key"
