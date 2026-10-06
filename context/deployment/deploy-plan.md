@@ -95,7 +95,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ## Step 5: Verify locally before committing (automated) — ⚠️ done with changes → Deviations 4 (`mail.E001`) and 5 (no gunicorn smoke test)
 - `uv run ruff check . && uv run ruff format --check .`
 - `uv run python manage.py check`, then `uv run python manage.py runserver` and `curl localhost:8000/healthz/` → `ok`.
-- Simulate production: `DEBUG=False SECRET_KEY=x ALLOWED_HOSTS=localhost uv run python manage.py check --deploy`. Expect only the HSTS warning (accepted, see Step 2).
+- Simulate production: `DEBUG=False SECRET_KEY=x OPENAI_API_KEY=x ALLOWED_HOSTS=localhost uv run python manage.py check --deploy`. Expect only the HSTS warning (accepted, see Step 2). (`OPENAI_API_KEY=x` added 2026-10-06 with S-01: outside DEBUG a missing key crashes startup.)
 - `DEBUG=False SECRET_KEY=x uv run python manage.py collectstatic --noinput --dry-run` to confirm WhiteNoise storage works.
 - `uv run gunicorn talkaitive.wsgi --bind 127.0.0.1:8001` as a smoke test, then stop it.
 
