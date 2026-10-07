@@ -44,7 +44,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | done |
-| S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | in-progress |
+| S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | done |
 | S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
 
 ## Streams
@@ -121,7 +121,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** to jest dokładnie ta różnica, którą Wizja w PRD nazywa wprost jako przewagę nad zwykłym czatem („nie pamięta, co już było omawiane”) — mocniej testuje główną hipotezę produktu niż sam S-01, ale wymaga najpierw danych z S-01 i S-02, więc nie może być wcześniej; mimo to nie powinno być odkładane bez powodu, bo to druga po S-01 najważniejsza rzecz do zweryfikowania.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-04: Usunięcie konta wraz z danymi
 
@@ -142,7 +142,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | F-01       | auth-and-access-scaffold      | Auth i izolacja danych między użytkownikami                     | yes                    | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | [LUK-16](https://linear.app/lukaszswiech/issue/LUK-16/f-01-auth-i-izolacja-danych-miedzy-uzytkownikami) | Fundament pod wszystkie zadania poniżej |
 | S-01       | first-corrected-conversation  | Pierwsza rozmowa po niemiecku z korektą na bieżąco (gwiazda przewodnia) | yes                    | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `done` (2026-10-06), zarchiwizowane: `context/archive/2026-10-05-first-corrected-conversation/`. |
 | S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | yes                    | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `done` (2026-10-07), zarchiwizowane: `context/archive/2026-10-06-post-conversation-error-list/`. |
-| S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | no                     | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | Czeka na S-01, S-02                      |
+| S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | yes                    | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | `done` (2026-10-07), PR [#17](https://github.com/LukaszSwiech/talkaitive/pull/17); archiwizacja (`/10x-archive`) jeszcze nie zrobiona. |
 | S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | no                     | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | Czeka na F-01; może ruszyć równolegle z S-01 |
 
 **Dozwolone wartości `Status:`:** `proposed`, `ready`, `planning`, `in-progress`, `blocked`, `done`. (`planning` = jest `plan.md` z `/10x-plan`, implementacja jeszcze nie ruszyła.)
