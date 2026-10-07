@@ -420,16 +420,16 @@ Migracja `0003` dodaje tylko pola nullable / z wartością domyślną i nową ta
 
 #### Automated
 
-- [x] 4.1 Testy przechodzą: `uv run pytest`
-- [x] 4.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
-- [x] 4.3 Brak brakujących migracji: `uv run python manage.py makemigrations --check --dry-run`
+- [x] 4.1 Testy przechodzą: `uv run pytest` — dfe3e7d
+- [x] 4.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .` — dfe3e7d
+- [x] 4.3 Brak brakujących migracji: `uv run python manage.py makemigrations --check --dry-run` — dfe3e7d
 
 #### Manual
 
-- [x] 4.4 Lokalnie z prawdziwym kluczem (`uv run --env-file .env python manage.py runserver`): rozmowa (`de`) z celowymi błędami z każdej kategorii, zakończona „End” → spinner, potem lista chronologiczna pod transkryptem; błędy i kategorie są trafne (kryterium sukcesu PRD).
-- [x] 4.5 Ten sam błąd powtórzony dwa razy pokazuje się raz z „×2”; literówka nie pojawia się na liście.
-- [x] 4.6 Rozmowa zakończona pożegnaniem agenta i rozmowa zakończona dziennym limitem (np. tymczasowo niski `DAILY_BUDGET_USD` w `.env`) też dostają listę.
-- [x] 4.7 Czas analizy ok. 20-turowej rozmowy z effort `high` mieści się wyraźnie poniżej 90 s; wynik zapisany w Progress.
-- [x] 4.8 Odświeżenie strony w trakcie analizy nie uruchamia drugiego wywołania (w `manage.py shell`: jeden zestaw `Mistake`, jeden koszt).
-- [x] 4.9 Z wyłączonym JS przycisk „Show my mistakes” działa.
-- [x] 4.10 Strona na szerokości telefonu jest czytelna (lista bez poziomego przewijania).
+- [x] 4.4 Lokalnie z prawdziwym kluczem (`uv run --env-file .env python manage.py runserver`): rozmowa (`de`) z celowymi błędami z każdej kategorii, zakończona „End” → spinner, potem lista chronologiczna pod transkryptem; błędy i kategorie są trafne (kryterium sukcesu PRD). — dfe3e7d
+- [x] 4.5 Ten sam błąd powtórzony dwa razy pokazuje się raz z „×2”; literówka nie pojawia się na liście. — dfe3e7d
+- [x] 4.6 Rozmowa zakończona pożegnaniem agenta i rozmowa zakończona dziennym limitem (np. tymczasowo niski `DAILY_BUDGET_USD` w `.env`) też dostają listę. — dfe3e7d
+- [x] 4.7 Czas analizy ok. 20-turowej rozmowy z effort `high` mieści się wyraźnie poniżej 90 s; wynik zapisany w Progress. — dfe3e7d
+- [x] 4.8 Odświeżenie strony w trakcie analizy nie uruchamia drugiego wywołania (w `manage.py shell`: jeden zestaw `Mistake`, jeden koszt). — dfe3e7d
+- [x] 4.9 Z wyłączonym JS przycisk „Show my mistakes” działa. — dfe3e7d
+- [x] 4.10 Strona na szerokości telefonu jest czytelna (lista bez poziomego przewijania). — dfe3e7d
