@@ -1,0 +1,20 @@
+<section class="mistakes">
+  <h2>Your mistakes</h2>
+  {% if mistakes %}
+    <ol>
+      {% for mistake in mistakes %}
+        <li>
+          <span class="category">{{ mistake.get_category_display }}</span>
+          <p class="fix">
+            <span class="wrong">{{ mistake.wrong }}</span> &rarr; <span class="correct">{{ mistake.correct }}</span>
+            {% if mistake.occurrences > 1 %}<span class="count">×{{ mistake.occurrences }}</span>{% endif %}
+          </p>
+          <p class="sentence">{{ mistake.sentence }}</p>
+          <p>{{ mistake.explanation }}</p>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>No mistakes found in this conversation.</p>
+  {% endif %}
+</section>

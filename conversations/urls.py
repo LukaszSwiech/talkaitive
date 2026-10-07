@@ -23,4 +23,9 @@ urlpatterns = [
     path(
         "conversations/<int:pk>/end/", views.conversation_end, name="conversation_end"
     ),
+    path(
+        "conversations/<int:pk>/analysis/",
+        views.conversation_analyze,
+        name="conversation_analyze",
+    ),
 ]

@@ -16,8 +16,8 @@ from accounts.models import User
 from . import services
 from .budget import is_exhausted, next_reset
 from .llm import LLMError
-from .models import Conversation
-from .services import ConversationError
+from .models import Conversation, Mistake
+from .services import AnalysisNotNeeded, ConversationError
 from .topics import TOPICS
 
 
@@ -80,6 +80,7 @@ def conversation_start(request: AuthenticatedHttpRequest) -> HttpResponse:
 @require_GET
 def conversation_detail(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
     conversation = _get_conversation(request, pk)
+    now = timezone.now()
     reset_at = (
         next_reset(conversation.ended_at)
         if conversation.end_reason == Conversation.EndReason.DAILY_LIMIT
@@ -95,8 +96,12 @@ def conversation_detail(request: AuthenticatedHttpRequest, pk: int) -> HttpRespo
             "transcript": conversation.messages.all(),
             "awaiting_agent_reply": conversation.awaiting_agent_reply,
             "agent_turn_in_progress": services.agent_turn_in_progress(
-                conversation, timezone.now()
+                conversation, now
             ),
+            "mistakes": Mistake.objects.for_user(request.user).filter(
+                conversation=conversation
+            ),
+            "analysis_in_progress": services.analysis_in_progress(conversation, now),
             "reset_at": reset_at,
             "budget_time_zone": settings.BUDGET_TIME_ZONE,
             "max_message_length": services.MAX_MESSAGE_LENGTH,
@@ -134,4 +139,18 @@ def conversation_retry(request: AuthenticatedHttpRequest, pk: int) -> HttpRespon
 def conversation_end(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
     conversation = _get_conversation(request, pk)
     services.end_conversation(conversation, Conversation.EndReason.USER, timezone.now())
+    return _to_detail(conversation)
+
+
+@require_POST
+def conversation_analyze(request: AuthenticatedHttpRequest, pk: int) -> HttpResponse:
+    conversation = _get_conversation(request, pk)
+    try:
+        services.analyze_conversation(conversation, timezone.now())
+    except AnalysisNotNeeded:
+        pass  # Usually a stale page that submitted itself; the page shows the state.
+    except ConversationError as exc:
+        messages.error(request, str(exc))
+    except LLMError:
+        pass  # The page shows the error and "Try again".
     return _to_detail(conversation)

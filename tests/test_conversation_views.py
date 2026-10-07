@@ -9,8 +9,8 @@ from django.utils import timezone
 
 from accounts.models import PracticeLanguage, User
 from conversations import services
-from conversations.llm import LLMError, TurnResult
-from conversations.models import Conversation, Message
+from conversations.llm import AnalysisResult, FoundMistake, LLMError, TurnResult
+from conversations.models import Conversation, Message, Mistake
 from conversations.topics import get_topic
 
 START_URL = "/conversations/start/"
@@ -59,6 +59,39 @@ class FakeGenerateTurn:
 def fake_llm(monkeypatch: pytest.MonkeyPatch) -> FakeGenerateTurn:
     fake = FakeGenerateTurn()
     monkeypatch.setattr(services, "generate_turn", fake)
+    return fake
+
+
+class FakeAnalyzeMistakes:
+    """Stands in for `llm.analyze_mistakes`; queued results or exceptions, else none."""
+
+    def __init__(self) -> None:
+        self.calls: list[dict[str, Any]] = []
+        self.outcomes: list[AnalysisResult | Exception] = []
+
+    def __call__(self, **kwargs: Any) -> AnalysisResult:
+        self.calls.append(kwargs)
+        outcome = self.outcomes.pop(0) if self.outcomes else make_analysis()
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+
+def make_analysis(*mistakes: FoundMistake) -> AnalysisResult:
+    return AnalysisResult(
+        mistakes=list(mistakes),
+        model="test-model",
+        input_tokens=1000,
+        cached_input_tokens=400,
+        output_tokens=200,
+    )
+
+
+@pytest.fixture(autouse=True)
+def fake_analysis(monkeypatch: pytest.MonkeyPatch) -> FakeAnalyzeMistakes:
+    # Autouse: no test in this module may reach the network through the analysis.
+    fake = FakeAnalyzeMistakes()
+    monkeypatch.setattr(services, "analyze_mistakes", fake)
     return fake
 
 
@@ -509,13 +542,20 @@ def test_end_button_ends_with_user_reason_and_is_idempotent(
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     ("method", "suffix"),
-    [("get", ""), ("post", "messages/"), ("post", "retry/"), ("post", "end/")],
+    [
+        ("get", ""),
+        ("post", "messages/"),
+        ("post", "retry/"),
+        ("post", "end/"),
+        ("post", "analysis/"),
+    ],
 )
 def test_other_user_gets_404_on_every_conversation_url(
     client: Client,
     anna: User,
     lukasz: User,
     fake_llm: FakeGenerateTurn,
+    fake_analysis: FakeAnalyzeMistakes,
     method: str,
     suffix: str,
 ) -> None:
@@ -533,6 +573,7 @@ def test_other_user_gets_404_on_every_conversation_url(
     assert conversation.status == Conversation.Status.ACTIVE
     assert roles(conversation) == ["assistant"]
     assert len(fake_llm.calls) == 1
+    assert fake_analysis.calls == []
 
 
 @pytest.mark.django_db
@@ -545,6 +586,7 @@ def test_other_user_gets_404_on_every_conversation_url(
         ("post", "/conversations/1/messages/"),
         ("post", "/conversations/1/retry/"),
         ("post", "/conversations/1/end/"),
+        ("post", "/conversations/1/analysis/"),
     ],
 )
 def test_anonymous_is_redirected_to_login(
@@ -555,3 +597,231 @@ def test_anonymous_is_redirected_to_login(
     assert response.status_code == 302
     assert response["Location"].startswith("/login/?next=")
     assert fake_llm.calls == []
+
+
+def analysis_url(conversation: Conversation) -> str:
+    return f"/conversations/{conversation.pk}/analysis/"
+
+
+def auto_submit_form(conversation: Conversation) -> str:
+    return f'action="{analysis_url(conversation)}" data-auto-submit'
+
+
+def ended(client: Client) -> Conversation:
+    """An ended conversation with one learner message, not analysed yet."""
+    conversation = start(client)
+    send(client, conversation, "Ich habe gegangen.")
+    client.post(f"/conversations/{conversation.pk}/end/")
+    conversation.refresh_from_db()
+    assert conversation.status == Conversation.Status.ENDED
+    return conversation
+
+
+def add_mistake(conversation: Conversation, position: int, **fields: Any) -> None:
+    values: dict[str, Any] = {
+        "category": Mistake.Category.GRAMMAR,
+        "wrong": f"wrong {position}",
+        "correct": f"correct {position}",
+        "sentence": f"Sentence {position}.",
+        "explanation": f"Explanation {position}.",
+    } | fields
+    Mistake.objects.create(
+        user=conversation.user, conversation=conversation, position=position, **values
+    )
+
+
+def mark_analyzed(conversation: Conversation) -> None:
+    Conversation.objects.filter(pk=conversation.pk).update(analyzed_at=timezone.now())
+
+
+@pytest.mark.django_db
+def test_get_on_analysis_url_is_not_allowed(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = ended(anna_client)
+
+    assert anna_client.get(analysis_url(conversation)).status_code == 405
+
+
+@pytest.mark.django_db
+def test_not_analysed_conversation_page_submits_the_analysis_itself(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = ended(anna_client)
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert auto_submit_form(conversation) in page
+    assert "Show my mistakes" in page
+    assert 'http-equiv="refresh"' not in page
+    assert "Back to the home page" in page
+
+
+@pytest.mark.django_db
+def test_analysis_in_progress_page_shows_spinner_and_refreshes(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = ended(anna_client)
+    # Also failed before: "in progress" wins, so no second "Try again".
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analysis_started_at=timezone.now(), analysis_failed_at=timezone.now()
+    )
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert 'http-equiv="refresh"' in page
+    assert '<span role="status">Preparing your list of mistakes…</span>' in page
+    assert analysis_url(conversation) not in page
+    assert "Try again" not in page
+
+
+@pytest.mark.django_db
+def test_failed_analysis_page_offers_try_again_without_auto_submit(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = ended(anna_client)
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analysis_failed_at=timezone.now()
+    )
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert "We could not prepare your list of mistakes. Please try again." in page
+    assert "Try again" in page
+    assert f'action="{analysis_url(conversation)}"' in page
+    assert auto_submit_form(conversation) not in page
+    assert 'http-equiv="refresh"' not in page
+
+
+@pytest.mark.django_db
+def test_analysed_page_lists_mistakes_in_order(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = ended(anna_client)
+    # Created out of order: the page follows `position`.
+    add_mistake(conversation, 2, category=Mistake.Category.WORD_ORDER)
+    add_mistake(
+        conversation, 1, wrong="habe gegangen", correct="bin gegangen", occurrences=2
+    )
+    mark_analyzed(conversation)
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert "Your mistakes" in page
+    assert page.index("habe gegangen") < page.index("wrong 2")
+    assert "bin gegangen" in page
+    assert "×2" in page
+    assert "×1" not in page
+    assert "Word order" in page
+    assert "Sentence 1." in page and "Explanation 1." in page
+    assert analysis_url(conversation) not in page
+    assert 'http-equiv="refresh"' not in page
+    # The list comes after the transcript.
+    assert page.index('class="transcript"') < page.index("Your mistakes")
+
+
+@pytest.mark.django_db
+def test_analysed_page_without_mistakes_says_so(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = ended(anna_client)
+    mark_analyzed(conversation)
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert "No mistakes found in this conversation." in page
+    assert analysis_url(conversation) not in page
+
+
+@pytest.mark.django_db
+def test_active_conversation_page_shows_no_analysis(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert analysis_url(conversation) not in page
+    assert "Your mistakes" not in page
+    assert "Show my mistakes" not in page
+    assert "We could not prepare your list of mistakes" not in page
+    assert '<span role="status">Preparing your list of mistakes…</span>' not in page
+
+
+@pytest.mark.django_db
+def test_analysis_of_active_conversation_shows_an_error(
+    anna_client: Client, fake_llm: FakeGenerateTurn, fake_analysis: FakeAnalyzeMistakes
+) -> None:
+    conversation = start(anna_client)
+
+    response = anna_client.post(analysis_url(conversation), follow=True)
+
+    assert response.redirect_chain == [(detail_url(conversation), 302)]
+    assert "This conversation has not ended yet." in response.content.decode()
+    assert fake_analysis.calls == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("state", ["analyzed", "in_progress"])
+def test_analysis_not_needed_redirects_without_a_notice(
+    anna_client: Client,
+    fake_llm: FakeGenerateTurn,
+    fake_analysis: FakeAnalyzeMistakes,
+    state: str,
+) -> None:
+    conversation = ended(anna_client)
+    field = "analyzed_at" if state == "analyzed" else "analysis_started_at"
+    Conversation.objects.filter(pk=conversation.pk).update(**{field: timezone.now()})
+
+    response = anna_client.post(analysis_url(conversation), follow=True)
+
+    assert response.redirect_chain == [(detail_url(conversation), 302)]
+    assert 'class="flash' not in response.content.decode()
+    assert fake_analysis.calls == []
+
+
+@pytest.mark.django_db
+def test_failed_analysis_redirects_to_the_failure_state(
+    anna_client: Client, fake_llm: FakeGenerateTurn, fake_analysis: FakeAnalyzeMistakes
+) -> None:
+    conversation = ended(anna_client)
+    fake_analysis.outcomes.append(LLMError("down"))
+
+    response = anna_client.post(analysis_url(conversation), follow=True)
+
+    assert response.redirect_chain == [(detail_url(conversation), 302)]
+    page = response.content.decode()
+    assert "We could not prepare your list of mistakes." in page
+    assert 'class="flash' not in page
+
+
+@pytest.mark.django_db
+def test_full_flow_from_end_to_the_list_of_mistakes(
+    anna_client: Client, fake_llm: FakeGenerateTurn, fake_analysis: FakeAnalyzeMistakes
+) -> None:
+    conversation = ended(anna_client)
+    page = anna_client.get(detail_url(conversation)).content.decode()
+    assert auto_submit_form(conversation) in page
+
+    fake_analysis.outcomes.append(
+        make_analysis(
+            FoundMistake(
+                message_number=1,
+                category="grammar",
+                wrong="habe gegangen",
+                correct="bin gegangen",
+                sentence="Ich habe gegangen.",
+                explanation="Gehen takes sein in the Perfekt.",
+            )
+        )
+    )
+    response = anna_client.post(analysis_url(conversation), follow=True)
+
+    assert response.redirect_chain == [(detail_url(conversation), 302)]
+    page = response.content.decode()
+    assert "Your mistakes" in page
+    assert "bin gegangen" in page
+    assert "Gehen takes sein in the Perfekt." in page
+    assert auto_submit_form(conversation) not in page
+    [call] = fake_analysis.calls
+    assert ("user", "Ich habe gegangen.") in call["history"]
