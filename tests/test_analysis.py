@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from django.db import DatabaseError
 
 from accounts.models import PracticeLanguage, User
 from conversations import services
@@ -336,6 +337,29 @@ def test_failure_does_not_mark_a_conversation_a_parallel_request_analysed(
     conversation.refresh_from_db()
     assert conversation.analysis_failed_at is None
     assert conversation.analyzed_at == earlier
+
+
+@pytest.mark.django_db
+def test_save_error_after_model_call_marks_failure(
+    anna: User, fake_llm: FakeAnalyzeMistakes, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    conversation = make_conversation(anna)
+    fake_llm.outcomes.append(make_result(found(1, "habe gegangen", "bin gegangen")))
+
+    def broken_save(*args: Any) -> None:
+        raise DatabaseError("disk full")
+
+    monkeypatch.setattr(services, "_save_mistakes", broken_save)
+
+    with pytest.raises(DatabaseError):
+        services.analyze_conversation(conversation, NOON)
+
+    conversation.refresh_from_db()
+    assert conversation.analysis_failed_at == NOON
+    assert conversation.analysis_started_at is None
+    assert conversation.analyzed_at is None
+    assert conversation.analysis_cost_usd == 0
+    assert saved(conversation) == []
 
 
 @pytest.mark.django_db

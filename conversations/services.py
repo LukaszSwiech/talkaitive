@@ -281,32 +281,47 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
     try:
         result = analyze_mistakes(language=locked.language, history=history)
     except Exception:
-        # Free the conversation at once, so "Try again" works right away.
-        _clear_analysis_marker(locked, now)
-        # A newer request that took over the expired marker decides the state.
-        Conversation.objects.for_user(locked.user).filter(
-            pk=locked.pk, analyzed_at__isnull=True, analysis_started_at__isnull=True
-        ).update(analysis_failed_at=now)
-        conversation.refresh_from_db()
+        _mark_analysis_failed(conversation, now)
         raise
 
-    with transaction.atomic():
-        locked = _lock(conversation)
-        # A late result (a parallel request finished first) is dropped, unpaid.
-        if locked.analyzed_at is None:
-            _save_mistakes(locked, _merge_mistakes(result.mistakes, learner_messages))
-            locked.analyzed_at = now
-            locked.analysis_cost_usd = turn_cost(
-                result.model,
-                result.input_tokens,
-                result.cached_input_tokens,
-                result.output_tokens,
-            )
-            locked.analysis_failed_at = None
-            locked.save(
-                update_fields=["analyzed_at", "analysis_cost_usd", "analysis_failed_at"]
-            )
-        _clear_analysis_marker(locked, now)
+    try:
+        with transaction.atomic():
+            locked = _lock(conversation)
+            # A late result (a parallel request finished first) is dropped, unpaid.
+            if locked.analyzed_at is None:
+                _save_mistakes(
+                    locked, _merge_mistakes(result.mistakes, learner_messages)
+                )
+                locked.analyzed_at = now
+                locked.analysis_cost_usd = turn_cost(
+                    result.model,
+                    result.input_tokens,
+                    result.cached_input_tokens,
+                    result.output_tokens,
+                )
+                locked.analysis_failed_at = None
+                locked.save(
+                    update_fields=[
+                        "analyzed_at",
+                        "analysis_cost_usd",
+                        "analysis_failed_at",
+                    ]
+                )
+            _clear_analysis_marker(locked, now)
+    except Exception:
+        # The save failed after a paid call: show "Try again", not a silent re-run.
+        _mark_analysis_failed(conversation, now)
+        raise
+    conversation.refresh_from_db()
+
+
+def _mark_analysis_failed(conversation: Conversation, started_at: datetime) -> None:
+    # Free the conversation at once, so "Try again" works right away.
+    _clear_analysis_marker(conversation, started_at)
+    # A newer request that took over the expired marker decides the state.
+    Conversation.objects.for_user(conversation.user).filter(
+        pk=conversation.pk, analyzed_at__isnull=True, analysis_started_at__isnull=True
+    ).update(analysis_failed_at=started_at)
     conversation.refresh_from_db()
 
 
