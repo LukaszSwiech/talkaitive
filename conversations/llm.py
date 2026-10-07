@@ -2,16 +2,18 @@
 
 Two calls to the Responses API, both with structured output:
 
-- `generate_turn` builds the prompt from the topic, the language and the history and
-  returns a plain `TurnResult`.
+- `generate_turn` builds the prompt from the topic, the language, the memory block
+  and the history and returns a plain `TurnResult`.
 - `analyze_mistakes` sends the whole transcript after the conversation and returns
-  an `AnalysisResult` with the learner's mistakes.
+  an `AnalysisResult` with the learner's mistakes and, from the same call, short
+  notes for later conversations (facts about the learner, notes about the scene).
 
 Both raise one error type (`LLMError`) that views know how to show, and never log
 conversation text.
 
-Prompt caching: the instructions are fixed text first, then the language and the
-scenario; the variable "final turn" instruction is a separate message at the very end
+Prompt caching: the instructions are fixed text first, then the language, the
+scenario and the memory block (`format_memory`; computed once at the start and fixed
+for the whole conversation); the variable "final turn" instruction is a separate message at the very end
 of `input`, so it does not break the cached prefix. The analysis instructions are
 fixed text first, then only the language.
 """
@@ -28,6 +30,7 @@ from pydantic import BaseModel, ValidationError
 
 from accounts.models import PracticeLanguage
 
+from .memory import Memory
 from .topics import Topic
 
 logger = logging.getLogger(__name__)
@@ -84,6 +87,17 @@ unchanged.
 - Report every occurrence separately with its own message number, even when the \
 same mistake repeats.
 - If the learner made no mistakes, return an empty list.
+
+Notes for later conversations:
+- learner_facts: at most 5 lasting facts the learner said about themselves, e.g. \
+their dog's name and breed, their job, their family, where they live. Only what \
+the learner actually said; never guess.
+- scene_notes: at most 8 notes about this conversation: what was talked about, \
+what questions the partner asked, and what the partner said about their own \
+character, e.g. how the hairdresser cut the learner's hair.
+- Write each note as one short sentence in English.
+- Notes never describe mistakes or the learner's language level.
+- Empty lists are fine when there is nothing worth noting.
 """
 
 
@@ -113,11 +127,15 @@ class FoundMistake(BaseModel):
 
 class MistakeReport(BaseModel):
     mistakes: list[FoundMistake]
+    learner_facts: list[str]
+    scene_notes: list[str]
 
 
 @dataclass(frozen=True)
 class AnalysisResult:
     mistakes: list[FoundMistake]
+    learner_facts: list[str]
+    scene_notes: list[str]
     model: str
     input_tokens: int
     cached_input_tokens: int
@@ -146,12 +164,57 @@ def _language_name(language: str) -> str:
         return language
 
 
-def _build_instructions(topic: Topic, language: str) -> str:
-    return (
+def format_memory(memory: Memory) -> str:
+    """The memory as a prompt block; `""` when there is nothing to remember.
+
+    Only non-empty sections are included.
+    """
+    if memory.is_empty:
+        return ""
+    sections = ["Memory from earlier conversations with this learner:"]
+    if memory.learner_facts:
+        sections.append(
+            "What you know about the learner (newer facts first; when two facts "
+            "contradict each other, trust the newer one). Use a fact only when it "
+            "fits the scene naturally:\n"
+            + "\n".join(f"- {fact}" for fact in memory.learner_facts)
+        )
+    if memory.scene_notes:
+        conversations = []
+        for number, notes in enumerate(memory.scene_notes, start=1):
+            label = " (the most recent)" if number == 1 else ""
+            lines = "\n".join(f"- {note}" for note in notes)
+            conversations.append(f"Conversation {number}{label}:\n{lines}")
+        sections.append(
+            "Earlier conversations in this same scene (the most recent first). You "
+            "are the same person as in them: refer back to them when it feels "
+            "natural, and do not ask again questions that were already asked.\n"
+            + "\n".join(conversations)
+        )
+    if memory.mistakes:
+        sections.append(
+            "Constructions the learner got wrong before (the most important "
+            "first):\n"
+            + "\n".join(
+                f"- {m.wrong} → {m.correct}: {m.explanation}" for m in memory.mistakes
+            )
+            + "\nPick at most one of them: the highest on the list among those that "
+            "fit the scene naturally. Create a natural chance for the learner to use "
+            "it. Never say that this is an exercise or that the learner made this "
+            "mistake before. If none of them fits the scene, ignore this list."
+        )
+    return "\n\n".join(sections)
+
+
+def _build_instructions(topic: Topic, language: str, memory: str) -> str:
+    instructions = (
         f"{_INSTRUCTIONS}\n"
         f"Practice language: {_language_name(language)}\n\n"
         f"Scene: {topic.scenario}"
     )
+    if memory:
+        instructions += f"\n\n{memory}"
+    return instructions
 
 
 def _build_input(
@@ -174,8 +237,12 @@ def generate_turn(
     language: str,
     history: Sequence[tuple[str, str]],
     final_turn: bool,
+    memory: str,
 ) -> TurnResult:
-    """One agent turn. `history` is a list of `(role, text)`, oldest first."""
+    """One agent turn. `history` is a list of `(role, text)`, oldest first.
+
+    `memory` is the conversation's memory block (`format_memory`), `""` for none.
+    """
     client = _get_client(
         timeout=settings.LLM_TIMEOUT_SECONDS,
         max_retries=settings.LLM_MAX_RETRIES,
@@ -183,7 +250,7 @@ def generate_turn(
     try:
         response = client.responses.parse(
             model=settings.LLM_MODEL,
-            instructions=_build_instructions(topic, language),
+            instructions=_build_instructions(topic, language, memory),
             input=_build_input(history, final_turn),
             text_format=AgentTurn,
             reasoning={"effort": settings.LLM_REASONING_EFFORT},
@@ -285,6 +352,8 @@ def analyze_mistakes(
     usage = response.usage
     return AnalysisResult(
         mistakes=list(parsed.mistakes),
+        learner_facts=list(parsed.learner_facts),
+        scene_notes=list(parsed.scene_notes),
         model=settings.LLM_MODEL,
         input_tokens=usage.input_tokens,
         cached_input_tokens=usage.input_tokens_details.cached_tokens,

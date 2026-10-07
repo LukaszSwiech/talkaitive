@@ -36,10 +36,16 @@ def found(
     )
 
 
-def make_result(*mistakes: FoundMistake) -> AnalysisResult:
+def make_result(
+    *mistakes: FoundMistake,
+    learner_facts: tuple[str, ...] = (),
+    scene_notes: tuple[str, ...] = (),
+) -> AnalysisResult:
     # With the test prices: 600 * 2.00 + 400 * 0.50 + 200 * 10.00 = 3400 / 1M.
     return AnalysisResult(
         mistakes=list(mistakes),
+        learner_facts=list(learner_facts),
+        scene_notes=list(scene_notes),
         model="test-model",
         input_tokens=1000,
         cached_input_tokens=400,
@@ -237,7 +243,11 @@ def test_late_result_for_analysed_conversation_is_dropped_unpaid(
         Conversation.objects.filter(pk=conversation.pk).update(
             analyzed_at=earlier, analysis_cost_usd=Decimal("0.001")
         )
-        return make_result(found(1, "habe gegangen", "bin gegangen"))
+        return make_result(
+            found(1, "habe gegangen", "bin gegangen"),
+            learner_facts=("The learner has a dog named Bello.",),
+            scene_notes=("They talked about the weekend.",),
+        )
 
     fake_llm.outcomes.append(parallel_request_finishes_first)
 
@@ -248,6 +258,8 @@ def test_late_result_for_analysed_conversation_is_dropped_unpaid(
     assert conversation.analysis_cost_usd == Decimal("0.001")
     assert conversation.analysis_started_at is None
     assert saved(conversation) == []
+    assert conversation.learner_facts == []
+    assert conversation.scene_notes == []
 
 
 @pytest.mark.django_db
@@ -267,6 +279,36 @@ def test_conversation_without_learner_messages_is_analysed_without_model_call(
     assert conversation.analysis_cost_usd == 0
     assert conversation.analysis_started_at is None
     assert saved(conversation) == []
+    assert conversation.learner_facts == []
+    assert conversation.scene_notes == []
+
+
+@pytest.mark.django_db
+def test_notes_are_saved_trimmed_and_without_empty_entries(
+    anna: User, fake_llm: FakeAnalyzeMistakes
+) -> None:
+    conversation = make_conversation(anna)
+    fake_llm.outcomes.append(
+        make_result(
+            found(1, "habe gegangen", "bin gegangen"),
+            learner_facts=("  The learner has a dog named Bello. ", "", "   "),
+            scene_notes=(
+                "They talked about the weekend.",
+                "\t",
+                " The partner asked about the film. ",
+            ),
+        )
+    )
+
+    services.analyze_conversation(conversation, NOON)
+
+    conversation.refresh_from_db()
+    assert conversation.learner_facts == ["The learner has a dog named Bello."]
+    assert conversation.scene_notes == [
+        "They talked about the weekend.",
+        "The partner asked about the film.",
+    ]
+    assert saved(conversation) == [(1, "habe gegangen", "bin gegangen", 1)]
 
 
 @pytest.mark.django_db
@@ -284,6 +326,8 @@ def test_llm_error_marks_failure_and_retry_succeeds(
     assert conversation.analysis_started_at is None
     assert conversation.analyzed_at is None
     assert saved(conversation) == []
+    assert conversation.learner_facts == []
+    assert conversation.scene_notes == []
 
     later = NOON + timedelta(seconds=10)
     fake_llm.outcomes.append(make_result(found(1, "habe gegangen", "bin gegangen")))
@@ -344,7 +388,13 @@ def test_save_error_after_model_call_marks_failure(
     anna: User, fake_llm: FakeAnalyzeMistakes, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     conversation = make_conversation(anna)
-    fake_llm.outcomes.append(make_result(found(1, "habe gegangen", "bin gegangen")))
+    fake_llm.outcomes.append(
+        make_result(
+            found(1, "habe gegangen", "bin gegangen"),
+            learner_facts=("The learner has a dog named Bello.",),
+            scene_notes=("They talked about the weekend.",),
+        )
+    )
 
     def broken_save(*args: Any) -> None:
         raise DatabaseError("disk full")
@@ -360,6 +410,8 @@ def test_save_error_after_model_call_marks_failure(
     assert conversation.analyzed_at is None
     assert conversation.analysis_cost_usd == 0
     assert saved(conversation) == []
+    assert conversation.learner_facts == []
+    assert conversation.scene_notes == []
 
 
 @pytest.mark.django_db

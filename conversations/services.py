@@ -7,12 +7,20 @@ parallel retry is refused instead of paying for a second call. The agent's reply
 saved in a short transaction that first re-checks, under the lock, that the
 conversation still waits for it (the user may have ended it meanwhile).
 
+Memory from earlier conversations is a snapshot from the start: `start_conversation`
+selects and formats it once into `memory_prompt`, and every turn (also "Try again")
+sends that same text. It is never recomputed, not even when the analysis of another
+conversation finishes meanwhile, so the cached prompt prefix stays the same.
+
 The post-conversation analysis (`analyze_conversation`) follows the same pattern
 with its own marker (`analysis_started_at`): a locked check, the model call
 (`analyze_mistakes`) outside any transaction, then a locked save only if the
 conversation is still not analysed. It runs once per ended conversation, whatever
 ended it and whatever is left of the budget. The model's raw list is turned into
 list positions here: chronological order, identical pairs merged into one item.
+The same analysis returns notes for later conversations (`learner_facts`,
+`scene_notes`); they are saved together with the list, in the same locked block, so
+a late result drops them too.
 """
 
 from collections.abc import Sequence
@@ -25,7 +33,14 @@ from django.db import IntegrityError, transaction
 from accounts.models import User
 
 from .budget import is_exhausted, is_final_turn, turn_cost
-from .llm import FoundMistake, TurnResult, analyze_mistakes, generate_turn
+from .llm import (
+    FoundMistake,
+    TurnResult,
+    analyze_mistakes,
+    format_memory,
+    generate_turn,
+)
+from .memory import select_memory
 from .models import Conversation, Message, Mistake
 from .topics import Topic, get_topic
 
@@ -88,6 +103,9 @@ def start_conversation(user: User, topic_key: str, now: datetime) -> Conversatio
         raise ConversationError("Unknown topic. Please choose one from the list.")
     if is_exhausted(user, now):
         raise ConversationError("You have used today's conversation limit.")
+    memory_prompt = format_memory(
+        select_memory(user, topic.key, user.practice_language)
+    )
     try:
         # Without its own atomic block, the caught IntegrityError would break the
         # surrounding transaction (TransactionManagementError on the next query).
@@ -97,6 +115,7 @@ def start_conversation(user: User, topic_key: str, now: datetime) -> Conversatio
                 topic=topic.key,
                 topic_title=topic.title,
                 topic_scenario=topic.scenario,
+                memory_prompt=memory_prompt,
                 language=user.practice_language,
                 agent_turn_started_at=now,
             )
@@ -170,6 +189,7 @@ def _generate_and_save(conversation: Conversation, now: datetime) -> None:
             language=conversation.language,
             history=history,
             final_turn=final,
+            memory=conversation.memory_prompt,
         )
     except Exception:
         # Free the conversation at once, so "Try again" works right away.
@@ -292,6 +312,8 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
                 _save_mistakes(
                     locked, _merge_mistakes(result.mistakes, learner_messages)
                 )
+                locked.learner_facts = _clean_notes(result.learner_facts)
+                locked.scene_notes = _clean_notes(result.scene_notes)
                 locked.analyzed_at = now
                 locked.analysis_cost_usd = turn_cost(
                     result.model,
@@ -305,6 +327,8 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
                         "analyzed_at",
                         "analysis_cost_usd",
                         "analysis_failed_at",
+                        "learner_facts",
+                        "scene_notes",
                     ]
                 )
             _clear_analysis_marker(locked, now)
@@ -323,6 +347,11 @@ def _mark_analysis_failed(conversation: Conversation, started_at: datetime) -> N
         pk=conversation.pk, analyzed_at__isnull=True, analysis_started_at__isnull=True
     ).update(analysis_failed_at=started_at)
     conversation.refresh_from_db()
+
+
+def _clean_notes(notes: Sequence[str]) -> list[str]:
+    """Trimmed notes in the model's order, without empty ones."""
+    return [note.strip() for note in notes if note.strip()]
 
 
 @dataclass
