@@ -398,23 +398,23 @@ Migracja `0003` dodaje tylko pola nullable / z wartością domyślną i nową ta
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą: `uv run pytest`
-- [x] 2.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy przechodzą: `uv run pytest` — a01675b
+- [x] 2.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .` — a01675b
 
 #### Manual
 
-- [x] 2.3 Jednorazowe wywołanie `analyze_mistakes` z prawdziwym kluczem (`uv run --env-file .env python manage.py shell`) na krótkim transkrypcie z 2 znanymi błędami zwraca oba błędy z poprawną kategorią, a `gpt-5.4` przyjmuje effort `high` (brak błędu 400).
+- [x] 2.3 Jednorazowe wywołanie `analyze_mistakes` z prawdziwym kluczem (`uv run --env-file .env python manage.py shell`) na krótkim transkrypcie z 2 znanymi błędami zwraca oba błędy z poprawną kategorią, a `gpt-5.4` przyjmuje effort `high` (brak błędu 400). — a01675b
 
 ### Phase 3: Serwis analizy
 
 #### Automated
 
-- [ ] 3.1 Testy przechodzą: `uv run pytest`
-- [ ] 3.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Testy przechodzą: `uv run pytest`
+- [x] 3.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 3.3 Przegląd testów scalania i kolejności w `tests/test_analysis.py` potwierdza, że opisują regułę zgodną z decyzjami (chronologicznie, identyczne pary z „×N”).
+- [x] 3.3 Przegląd testów scalania i kolejności w `tests/test_analysis.py` potwierdza, że opisują regułę zgodną z decyzjami (chronologicznie, identyczne pary z „×N”).
 
 ### Phase 4: Widok i ekran listy
 
