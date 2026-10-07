@@ -52,13 +52,13 @@ Realizuje FR-008 i część „po zakończeniu użytkownik widzi listę błędó
 
 Analiza to osobny krok, nie część zakończenia. `end_conversation` zostaje szybkie i niezmienione; strona zakończonej rozmowy sama inicjuje POST `conversation_analyze`. Serwis `analyze_conversation` powtarza wzorzec tur z S-01: pod blokadą sprawdza, że rozmowa jest zakończona, nieprzeanalizowana i nieanalizowana właśnie teraz, ustawia znacznik; poza transakcją woła `llm.analyze_mistakes`; pod blokadą zapisuje `Mistake` (po scaleniu i posortowaniu w kodzie), koszt i `analyzed_at`. Porażka ustawia `analysis_failed_at`, co wyłącza auto-wysyłkę (inaczej strona ponawiałaby płatne wywołanie w pętli) i pokazuje „Try again”.
 
-Model zwraca dla każdego błędu numer wiadomości ucznia, więc kolejność chronologiczną i scalanie „×N” wylicza deterministycznie kod, a nie model. Analiza używa tego samego `LLM_MODEL` z osobnym reasoning effort (domyślnie `high`) i osobnym, krótkim limitem czasu (świadomy wybór UX, nie wymóg serwera — patrz „Timing & lifecycle”).
+Model zwraca dla każdego błędu numer wiadomości ucznia, więc kolejność chronologiczną i scalanie „×N” wylicza deterministycznie kod, a nie model. Analiza używa tego samego `LLM_MODEL` z osobnym reasoning effort (domyślnie `medium`) i osobnym limitem czasu (świadomy wybór UX, nie wymóg serwera — patrz „Timing & lifecycle”).
 
 ## Critical Implementation Details
 
 **State sequencing** — szablon zakończonej rozmowy rozstrzyga stany w tej kolejności: przeanalizowana (lista) → analiza w toku (spinner + odświeżanie) → nieudana (błąd + „Try again”) → nierozpoczęta (auto-wysyłka). „W toku” musi być przed „nieudana”, bo „Try again” po porażce znowu ustawia znacznik; auto-wysyłka nigdy nie może się pojawić przy ustawionym `analysis_failed_at`.
 
-**Timing & lifecycle** — znacznik analizy wygasa po `LLM_ANALYSIS_TIMEOUT_SECONDS × (LLM_ANALYSIS_MAX_RETRIES + 1) + 30` s (jak `_agent_turn_timeout`). 90 s przy 0 ponowień to świadomy wybór UX (krótkie czekanie, tania porażka naprawiana przez „Try again”), a nie limit serwera: przy `--threads 4` gunicorn działa jako gthread i `--timeout 120` nie ogranicza pojedynczego żądania; realnym sufitem jest proxy Railway — 5 min bez przesyłu danych (`context/foundation/infrastructure.md:72`). Wynik, który przyszedł, gdy rozmowa jest już przeanalizowana (równoległe żądanie po wygaśnięciu znacznika), jest odrzucany i niezliczany — tak jak spóźniona tura w S-01.
+**Timing & lifecycle** — znacznik analizy wygasa po `LLM_ANALYSIS_TIMEOUT_SECONDS × (LLM_ANALYSIS_MAX_RETRIES + 1) + 30` s (jak `_agent_turn_timeout`). 150 s przy 0 ponowień (ok. 3× zmierzonego czasu analizy 20 tur z effort `medium`) to świadomy wybór UX (czekanie z zapasem, a porażkę naprawia „Try again”), a nie limit serwera: przy `--threads 4` gunicorn działa jako gthread i `--timeout 120` nie ogranicza pojedynczego żądania; realnym sufitem jest proxy Railway — 5 min bez przesyłu danych (`context/foundation/infrastructure.md:72`). Wynik, który przyszedł, gdy rozmowa jest już przeanalizowana (równoległe żądanie po wygaśnięciu znacznika), jest odrzucany i niezliczany — tak jak spóźniona tura w S-01.
 
 ## Phase 1: Model danych i budżet
 
@@ -137,8 +137,8 @@ Nowa funkcja `llm.analyze_mistakes` ze strukturalną odpowiedzią, osobnym promp
 **Intent**: Osobne ustawienia dla analizy, bo potrzebuje więcej „myślenia” i więcej czasu niż tura rozmowy, ale użytkownik nie powinien czekać dłużej niż ok. 1,5 min.
 
 **Contract**:
-- `LLM_ANALYSIS_REASONING_EFFORT = os.environ.get("LLM_ANALYSIS_REASONING_EFFORT", "high")` (wzorzec jak `LLM_REASONING_EFFORT`, komentarz: trafność listy jest kryterium sukcesu PRD).
-- `LLM_ANALYSIS_TIMEOUT_SECONDS = 90`, `LLM_ANALYSIS_MAX_RETRIES = 0` (komentarz: świadomy wybór UX — krótkie czekanie i tania porażka, którą naprawia „Try again”; to nie limit serwera — gunicorn gthread nie ucina długich żądań, sufitem jest 5 min bez danych na proxy Railway).
+- `LLM_ANALYSIS_REASONING_EFFORT = os.environ.get("LLM_ANALYSIS_REASONING_EFFORT", "medium")` (wzorzec jak `LLM_REASONING_EFFORT`, komentarz: trafność listy jest kryterium sukcesu PRD; zmierzone na 20 turach: `high` był 3× wolniejszy i droższy i wpisywał literówki na listę).
+- `LLM_ANALYSIS_TIMEOUT_SECONDS = 150`, `LLM_ANALYSIS_MAX_RETRIES = 0` (komentarz: świadomy wybór UX — ok. 3× zmierzonego czasu, potem porażka, którą naprawia „Try again”; to nie limit serwera — gunicorn gthread nie ucina długich żądań, sufitem jest 5 min bez danych na proxy Railway).
 
 #### 2. `analyze_mistakes`
 
@@ -158,7 +158,7 @@ Nowa funkcja `llm.analyze_mistakes` ze strukturalną odpowiedzią, osobnym promp
 
 **File**: `CLAUDE.md` (sekcja „TalkAItive — project notes”, poza blokiem `10x-cli`)
 
-**Intent**: Dopisać opcjonalne `LLM_ANALYSIS_REASONING_EFFORT` (domyślnie `high`) do listy opcjonalnych zmiennych obok `LLM_MODEL`.
+**Intent**: Dopisać opcjonalne `LLM_ANALYSIS_REASONING_EFFORT` (domyślnie `medium`) do listy opcjonalnych zmiennych obok `LLM_MODEL`.
 
 **Contract**: jedna fraza w istniejącym punkcie o opcjonalnych env vars.
 
@@ -219,7 +219,7 @@ Nowa funkcja `llm.analyze_mistakes` ze strukturalną odpowiedzią, osobnym promp
 **Intent**: Deterministycznie zamienić surową listę modelu na pozycje listy: chronologicznie, identyczne pary scalone.
 
 **Contract**:
-- Normalizacja do porównań: `strip()` i zwinięcie białych znaków; wielkość liter ma znaczenie.
+- Normalizacja do porównań i zapisu: `wrong` i `correct` po `strip()` i zwinięciu białych znaków, `sentence` i `explanation` po `strip()`; wielkość liter ma znaczenie.
 - Odrzucamy wpisy z pustym `wrong` lub `correct` albo z `wrong == correct` po normalizacji.
 - Sortowanie stabilne po `message_number`; numery spoza `1..N` trafiają na koniec (w kolejności modelu).
 - Identyczna para (`wrong`, `correct`) po normalizacji → jedna pozycja w miejscu pierwszego wystąpienia, z jej `category`, `sentence`, `explanation` i `occurrences` = liczba wystąpień.
@@ -329,7 +329,7 @@ Adres `conversations/<pk>/analysis/`, stany zakończonej rozmowy w szablonie, au
 - Lokalnie z prawdziwym kluczem (`uv run --env-file .env python manage.py runserver`): rozmowa (`de`) z celowymi błędami z każdej kategorii, zakończona „End” → spinner, potem lista chronologiczna pod transkryptem; błędy i kategorie są trafne (kryterium sukcesu PRD).
 - Ten sam błąd powtórzony dwa razy pokazuje się raz z „×2”; literówka nie pojawia się na liście.
 - Rozmowa zakończona pożegnaniem agenta i rozmowa zakończona dziennym limitem (np. tymczasowo niski `DAILY_BUDGET_USD` w `.env`) też dostają listę.
-- Czas analizy ok. 20-turowej rozmowy z effort `high` mieści się wyraźnie poniżej 90 s; wynik zapisany w Progress.
+- Czas analizy ok. 20-turowej rozmowy z effort `medium` mieści się wyraźnie poniżej 150 s; wynik zapisany w `change.md`.
 - Odświeżenie strony w trakcie analizy nie uruchamia drugiego wywołania (w `manage.py shell`: jeden zestaw `Mistake`, jeden koszt).
 - Z wyłączonym JS przycisk „Show my mistakes” działa.
 - Strona na szerokości telefonu jest czytelna (lista bez poziomego przewijania).
@@ -361,7 +361,7 @@ Adres `conversations/<pk>/analysis/`, stany zakończonej rozmowy w szablonie, au
 
 ## Performance Considerations
 
-Jedno wywołanie na rozmowę; transkrypt ok. 20 tur to kilka tysięcy tokenów wejścia, więc koszt analizy to głównie tokeny rozumowania przy effort `high` (szacunkowo kilka centów). Żądanie analizy zajmuje jeden wątek gunicorna na czas wywołania (do 90 s); przy 2 workerach × 4 wątkach i 2 użytkownikach to wystarczy.
+Jedno wywołanie na rozmowę; transkrypt ok. 20 tur to kilka tysięcy tokenów wejścia, więc koszt analizy to głównie tokeny rozumowania przy effort `medium` (zmierzone: ok. $0,07–0,08 za 20 tur). Żądanie analizy zajmuje jeden wątek gunicorna na czas wywołania (do 150 s); przy 2 workerach × 4 wątkach i 2 użytkownikach to wystarczy.
 
 ## Migration Notes
 
@@ -429,7 +429,7 @@ Migracja `0003` dodaje tylko pola nullable / z wartością domyślną i nową ta
 - [x] 4.4 Lokalnie z prawdziwym kluczem (`uv run --env-file .env python manage.py runserver`): rozmowa (`de`) z celowymi błędami z każdej kategorii, zakończona „End” → spinner, potem lista chronologiczna pod transkryptem; błędy i kategorie są trafne (kryterium sukcesu PRD). — dfe3e7d
 - [x] 4.5 Ten sam błąd powtórzony dwa razy pokazuje się raz z „×2”; literówka nie pojawia się na liście. — dfe3e7d
 - [x] 4.6 Rozmowa zakończona pożegnaniem agenta i rozmowa zakończona dziennym limitem (np. tymczasowo niski `DAILY_BUDGET_USD` w `.env`) też dostają listę. — dfe3e7d
-- [x] 4.7 Czas analizy ok. 20-turowej rozmowy z effort `high` mieści się wyraźnie poniżej 90 s; wynik zapisany w Progress. — dfe3e7d
+- [x] 4.7 Czas analizy ok. 20-turowej rozmowy z effort `medium` mieści się wyraźnie poniżej 150 s; wynik zapisany w `change.md`. — dfe3e7d
 - [x] 4.8 Odświeżenie strony w trakcie analizy nie uruchamia drugiego wywołania (w `manage.py shell`: jeden zestaw `Mistake`, jeden koszt). — dfe3e7d
 - [x] 4.9 Z wyłączonym JS przycisk „Show my mistakes” działa. — dfe3e7d
 - [x] 4.10 Strona na szerokości telefonu jest czytelna (lista bez poziomego przewijania). — dfe3e7d
