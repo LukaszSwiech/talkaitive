@@ -23,6 +23,11 @@ class Conversation(UserOwned):
     # topic is changed or removed in code.
     topic_title = models.TextField()
     topic_scenario = models.TextField()
+    # Memory block for the prompt, computed once at the start from the user's past
+    # conversations and never recomputed, so the cached prompt prefix stays the same
+    # for every turn. Empty for conversations from before this field and for a user
+    # without memory.
+    memory_prompt = models.TextField(blank=True)
     # Copied from the user at the start.
     language = models.CharField(max_length=2, choices=PracticeLanguage)
     status = models.CharField(max_length=10, choices=Status, default=Status.ACTIVE)

@@ -14,8 +14,10 @@ from conversations.llm import (
     MistakeReport,
     TurnResult,
     analyze_mistakes,
+    format_memory,
     generate_turn,
 )
+from conversations.memory import Memory, PastMistake
 from conversations.topics import get_topic
 
 TOPIC = get_topic("bakery")
@@ -69,6 +71,7 @@ def call(**overrides: Any) -> TurnResult:
         "language": "de",
         "history": [("assistant", "Guten Tag!"), ("user", "Ich möchte Brötchen.")],
         "final_turn": False,
+        "memory": "",
     }
     kwargs.update(overrides)
     return generate_turn(**kwargs)
@@ -133,6 +136,102 @@ def test_instructions_start_with_the_same_stable_prefix(
     assert english.split(marker)[0] == german.split(marker)[0]
     assert "B1-B2" in english
     assert "at most the 1-2 most important" in english.replace("\\\n", "")
+
+
+FULL_MEMORY = Memory(
+    learner_facts=["The learner has a dog called Bello.", "The learner is a nurse."],
+    scene_notes=[
+        ["They talked about rye bread.", "The baker asked about the weekend."],
+        ["The baker said she bakes at 4 a.m."],
+    ],
+    mistakes=[
+        PastMistake("habe gegangen", "bin gegangen", "Gehen takes sein.", 3),
+        PastMistake("der Brot", "das Brot", "Brot is neuter.", 1),
+    ],
+)
+
+
+def test_memory_block_comes_after_the_scene(fake_openai: SimpleNamespace) -> None:
+    memory = format_memory(FULL_MEMORY)
+
+    call(memory=memory)
+
+    (kwargs,) = fake_openai.responses.calls
+    instructions = kwargs["instructions"]
+    assert instructions.endswith(f"Scene: {TOPIC.scenario}\n\n{memory}")
+    assert instructions.index("Practice language:") < instructions.index("Scene:")
+
+
+def test_empty_memory_leaves_instructions_unchanged(
+    fake_openai: SimpleNamespace,
+) -> None:
+    call(memory="")
+    call(memory=format_memory(Memory()))
+
+    without, with_empty = (c["instructions"] for c in fake_openai.responses.calls)
+    assert without == with_empty
+    assert without.endswith(f"Scene: {TOPIC.scenario}")
+
+
+def test_memory_keeps_the_stable_instructions_prefix(
+    fake_openai: SimpleNamespace,
+) -> None:
+    call(memory="")
+    call(memory=format_memory(FULL_MEMORY))
+
+    without, with_memory = (c["instructions"] for c in fake_openai.responses.calls)
+    assert without.startswith(llm._INSTRUCTIONS)
+    assert with_memory.startswith(without)
+
+
+def test_format_memory_of_empty_memory_is_empty() -> None:
+    assert format_memory(Memory()) == ""
+
+
+def test_format_memory_lists_every_section_in_order() -> None:
+    text = format_memory(FULL_MEMORY)
+
+    assert text.index("Bello") < text.index("nurse")
+    assert text.index("nurse") < text.index("rye bread")
+    assert text.index("rye bread") < text.index("4 a.m.")
+    assert text.index("4 a.m.") < text.index("habe gegangen")
+    assert "- habe gegangen → bin gegangen: Gehen takes sein." in text
+    assert text.index("habe gegangen") < text.index("der Brot")
+    assert "trust the newer one" in text
+    assert "do not ask again questions that were already asked" in text
+    assert "at most one" in text
+    assert "Never say that this is an exercise" in text
+
+
+@pytest.mark.parametrize(
+    ("memory", "present", "absent"),
+    [
+        (
+            Memory(learner_facts=["The learner has a dog."]),
+            "about the learner",
+            ["this same scene", "got wrong before"],
+        ),
+        (
+            Memory(scene_notes=[["They talked about bread."]]),
+            "this same scene",
+            ["about the learner", "got wrong before"],
+        ),
+        (
+            Memory(mistakes=[PastMistake("a", "b", "Why.", 1)]),
+            "got wrong before",
+            ["about the learner", "this same scene"],
+        ),
+    ],
+    ids=["facts-only", "scene-only", "mistakes-only"],
+)
+def test_format_memory_skips_empty_sections(
+    memory: Memory, present: str, absent: list[str]
+) -> None:
+    text = format_memory(memory)
+
+    assert present in text
+    for heading in absent:
+        assert heading not in text
 
 
 def test_history_is_passed_in_order_as_input_messages(

@@ -827,3 +827,143 @@ def test_full_flow_from_end_to_the_list_of_mistakes(
     assert auto_submit_form(conversation) not in page
     [call] = fake_analysis.calls
     assert ("user", "Ich habe gegangen.") in call["history"]
+
+
+# --- memory from earlier conversations ----------------------------------------
+
+
+def past_conversation(
+    user: User,
+    language: str = PracticeLanguage.GERMAN,
+    analyzed: bool = True,
+    facts: tuple[str, ...] = (),
+    notes: tuple[str, ...] = (),
+) -> Conversation:
+    """An ended bakery conversation with one learner message."""
+    now = timezone.now() - timedelta(days=1)
+    conversation = Conversation.objects.create(
+        user=user,
+        topic="bakery",
+        topic_title="Bakery",
+        topic_scenario="Scene.",
+        language=language,
+        status=Conversation.Status.ENDED,
+        ended_at=now,
+        analyzed_at=now if analyzed else None,
+        learner_facts=list(facts),
+        scene_notes=list(notes),
+    )
+    Message.objects.create(
+        conversation=conversation, role=Message.Role.USER, text="Ich habe gegangen."
+    )
+    return conversation
+
+
+@pytest.mark.django_db
+def test_start_saves_the_users_memory_and_sends_it_to_the_opening_turn(
+    anna_client: Client, anna: User, fake_llm: FakeGenerateTurn
+) -> None:
+    past = past_conversation(
+        anna,
+        facts=("The learner has a dog called Bello.",),
+        notes=("The baker asked about rye bread.",),
+    )
+    add_mistake(past, 1, wrong="habe gegangen", correct="bin gegangen")
+
+    conversation = start(anna_client)
+
+    assert "Bello" in conversation.memory_prompt
+    assert "rye bread" in conversation.memory_prompt
+    assert "habe gegangen → bin gegangen" in conversation.memory_prompt
+    [call] = fake_llm.calls
+    assert call["memory"] == conversation.memory_prompt
+
+
+@pytest.mark.django_db
+def test_start_without_past_conversations_has_no_memory(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+
+    assert conversation.memory_prompt == ""
+    [call] = fake_llm.calls
+    assert call["memory"] == ""
+
+
+@pytest.mark.django_db
+def test_every_turn_and_retry_get_the_memory_from_the_start(
+    anna_client: Client,
+    anna: User,
+    fake_llm: FakeGenerateTurn,
+    fake_analysis: FakeAnalyzeMistakes,
+) -> None:
+    past_conversation(anna, facts=("The learner has a dog called Bello.",))
+    not_analysed = past_conversation(anna, analyzed=False)
+    conversation = start(anna_client)
+    snapshot = conversation.memory_prompt
+    assert "Bello" in snapshot
+
+    # Another conversation's analysis finishes after the start, with a new fact.
+    fake_analysis.outcomes.append(
+        AnalysisResult(
+            mistakes=[],
+            learner_facts=["The learner works as a nurse."],
+            scene_notes=["They talked about cakes."],
+            model="test-model",
+            input_tokens=1000,
+            cached_input_tokens=400,
+            output_tokens=200,
+        )
+    )
+    anna_client.post(analysis_url(not_analysed))
+    not_analysed.refresh_from_db()
+    assert not_analysed.learner_facts == ["The learner works as a nurse."]
+
+    send(anna_client, conversation, "Hallo")
+    fake_llm.outcomes.append(LLMError("down"))
+    send(anna_client, conversation, "Zwei Brötchen, bitte.")
+    anna_client.post(f"/conversations/{conversation.pk}/retry/")
+
+    assert len(fake_llm.calls) == 4
+    assert [call["memory"] for call in fake_llm.calls] == [snapshot] * 4
+    conversation.refresh_from_db()
+    assert conversation.memory_prompt == snapshot
+    assert "nurse" not in snapshot
+
+
+@pytest.mark.django_db
+def test_memory_never_contains_another_users_data(
+    anna_client: Client, lukasz: User, fake_llm: FakeGenerateTurn
+) -> None:
+    past = past_conversation(
+        lukasz,
+        facts=("The learner is called Lukasz.",),
+        notes=("Lukasz ordered a cake.",),
+    )
+    add_mistake(past, 1, wrong="lukasz wrong", correct="lukasz correct")
+
+    conversation = start(anna_client)
+
+    assert conversation.memory_prompt == ""
+    assert "Lukasz" not in fake_llm.calls[0]["memory"]
+
+
+@pytest.mark.django_db
+def test_memory_from_another_language_is_not_used(
+    anna_client: Client, anna: User, fake_llm: FakeGenerateTurn
+) -> None:
+    past = past_conversation(
+        anna,
+        language=PracticeLanguage.GERMAN,
+        facts=("The learner has a dog called Bello.",),
+        notes=("The baker asked about rye bread.",),
+    )
+    add_mistake(past, 1, wrong="habe gegangen", correct="bin gegangen")
+    anna.practice_language = PracticeLanguage.ENGLISH
+    anna.save()
+
+    conversation = start(anna_client)
+
+    assert conversation.language == "en"
+    assert conversation.memory_prompt == ""
+    assert fake_llm.calls[0]["memory"] == ""

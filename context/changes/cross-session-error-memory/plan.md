@@ -315,25 +315,25 @@ Wybrana pamięć staje się stałym blokiem promptu: liczona i zapisywana przy s
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą: `uv run pytest`
-- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy przechodzą: `uv run pytest` — 334f8df
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 334f8df
 
 #### Manual
 
-- [x] 2.3 `select_memory` wywołane w `uv run python manage.py shell` na lokalnych danych z fazy 1 zwraca oczekiwane fakty, notatki i błędy
+- [x] 2.3 `select_memory` wywołane w `uv run python manage.py shell` na lokalnych danych z fazy 1 zwraca oczekiwane fakty, notatki i błędy — 334f8df
 
 ### Phase 3: Pamięć w rozmowie
 
 #### Automated
 
-- [ ] 3.1 Migracje są kompletne: `uv run python manage.py makemigrations --check --dry-run`
-- [ ] 3.2 Migracje przechodzą: `uv run python manage.py migrate`
-- [ ] 3.3 Testy przechodzą: `uv run pytest`
-- [ ] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Migracje są kompletne: `uv run python manage.py makemigrations --check --dry-run`
+- [x] 3.2 Migracje przechodzą: `uv run python manage.py migrate`
+- [x] 3.3 Testy przechodzą: `uv run pytest`
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 3.5 Kolejna rozmowa w tej samej scenie nawiązuje do poprzedniej i nie powtarza wcześniejszych pytań
-- [ ] 3.6 Rozmowa w innej scenie korzysta z faktu o uczniu, gdy pasuje (np. sąsiad zna imię psa podane w parku), i nie wciąga wątków z innej sceny
-- [ ] 3.7 Agent stwarza okazję do najwyżej jednej dawnej konstrukcji, naturalnie i bez mówienia, że to poprawka
+- [x] 3.5 Kolejna rozmowa w tej samej scenie nawiązuje do poprzedniej i nie powtarza wcześniejszych pytań
+- [x] 3.6 Rozmowa w innej scenie korzysta z faktu o uczniu, gdy pasuje (np. sąsiad zna imię psa podane w parku), i nie wciąga wątków z innej sceny
+- [x] 3.7 Agent stwarza okazję do najwyżej jednej dawnej konstrukcji, naturalnie i bez mówienia, że to poprawka
 - [ ] 3.8 Od drugiej tury `cached_input_tokens` w `Message` jest większe od zera (cache działa z blokiem pamięci)
