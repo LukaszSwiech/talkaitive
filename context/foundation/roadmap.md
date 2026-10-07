@@ -44,7 +44,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | done |
-| S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
+| S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | in-progress |
 | S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
 
 ## Streams
@@ -121,7 +121,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** to jest dokładnie ta różnica, którą Wizja w PRD nazywa wprost jako przewagę nad zwykłym czatem („nie pamięta, co już było omawiane”) — mocniej testuje główną hipotezę produktu niż sam S-01, ale wymaga najpierw danych z S-01 i S-02, więc nie może być wcześniej; mimo to nie powinno być odkładane bez powodu, bo to druga po S-01 najważniejsza rzecz do zweryfikowania.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-04: Usunięcie konta wraz z danymi
 
@@ -175,6 +175,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Inne języki niż niemiecki** — Why parked: PRD Non-Goals.
 - **Ćwiczenia i testy (fiszki, quizy)** — Why parked: PRD Non-Goals — jedyną formą ćwiczenia jest rozmowa.
 - **Statystyki postępu (wykresy, panel)** — Why parked: PRD Non-Goals.
+- **Profil ucznia w stylu Observational Memory** — Why parked: S-03 bierze fakty o uczniu z 10 ostatnich rozmów jako rozwiązanie tymczasowe; profil scalany przez osobne wywołanie LLM („Reflector”) wymaga nowej tabeli, kosztu w budżecie i obsługi błędów, więc jest po MVP (decyzja w `/10x-plan` S-03, 2026-10-07). GitHub [#16](https://github.com/LukaszSwiech/talkaitive/issues/16), Linear [LUK-28](https://linear.app/lukaszswiech/issue/LUK-28/profil-ucznia-w-stylu-observational-memory-po-mvp).
 
 ## Milestone History
 
