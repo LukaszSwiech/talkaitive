@@ -283,8 +283,9 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
     except Exception:
         # Free the conversation at once, so "Try again" works right away.
         _clear_analysis_marker(locked, now)
+        # A newer request that took over the expired marker decides the state.
         Conversation.objects.for_user(locked.user).filter(
-            pk=locked.pk, analyzed_at__isnull=True
+            pk=locked.pk, analyzed_at__isnull=True, analysis_started_at__isnull=True
         ).update(analysis_failed_at=now)
         conversation.refresh_from_db()
         raise

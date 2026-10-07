@@ -295,6 +295,50 @@ def test_llm_error_marks_failure_and_retry_succeeds(
 
 
 @pytest.mark.django_db
+def test_failure_does_not_mark_a_conversation_a_newer_request_is_analysing(
+    anna: User, fake_llm: FakeAnalyzeMistakes
+) -> None:
+    conversation = make_conversation(anna)
+    newer = NOON + ANALYSIS_TIMEOUT
+
+    def newer_request_takes_over(**kwargs: Any) -> AnalysisResult:
+        Conversation.objects.filter(pk=conversation.pk).update(
+            analysis_started_at=newer
+        )
+        raise LLMError("down")
+
+    fake_llm.outcomes.append(newer_request_takes_over)
+
+    with pytest.raises(LLMError):
+        services.analyze_conversation(conversation, NOON)
+
+    conversation.refresh_from_db()
+    assert conversation.analysis_failed_at is None
+    assert conversation.analysis_started_at == newer
+
+
+@pytest.mark.django_db
+def test_failure_does_not_mark_a_conversation_a_parallel_request_analysed(
+    anna: User, fake_llm: FakeAnalyzeMistakes
+) -> None:
+    conversation = make_conversation(anna)
+    earlier = NOON - timedelta(seconds=5)
+
+    def parallel_request_finishes_first(**kwargs: Any) -> AnalysisResult:
+        Conversation.objects.filter(pk=conversation.pk).update(analyzed_at=earlier)
+        raise LLMError("down")
+
+    fake_llm.outcomes.append(parallel_request_finishes_first)
+
+    with pytest.raises(LLMError):
+        services.analyze_conversation(conversation, NOON)
+
+    conversation.refresh_from_db()
+    assert conversation.analysis_failed_at is None
+    assert conversation.analyzed_at == earlier
+
+
+@pytest.mark.django_db
 def test_identical_pairs_merge_at_the_first_occurrence(
     anna: User, fake_llm: FakeAnalyzeMistakes
 ) -> None:
