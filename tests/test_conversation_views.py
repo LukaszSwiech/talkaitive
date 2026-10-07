@@ -80,6 +80,8 @@ class FakeAnalyzeMistakes:
 def make_analysis(*mistakes: FoundMistake) -> AnalysisResult:
     return AnalysisResult(
         mistakes=list(mistakes),
+        learner_facts=[],
+        scene_notes=[],
         model="test-model",
         input_tokens=1000,
         cached_input_tokens=400,

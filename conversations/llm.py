@@ -5,7 +5,8 @@ Two calls to the Responses API, both with structured output:
 - `generate_turn` builds the prompt from the topic, the language and the history and
   returns a plain `TurnResult`.
 - `analyze_mistakes` sends the whole transcript after the conversation and returns
-  an `AnalysisResult` with the learner's mistakes.
+  an `AnalysisResult` with the learner's mistakes and, from the same call, short
+  notes for later conversations (facts about the learner, notes about the scene).
 
 Both raise one error type (`LLMError`) that views know how to show, and never log
 conversation text.
@@ -84,6 +85,17 @@ unchanged.
 - Report every occurrence separately with its own message number, even when the \
 same mistake repeats.
 - If the learner made no mistakes, return an empty list.
+
+Notes for later conversations:
+- learner_facts: at most 5 lasting facts the learner said about themselves, e.g. \
+their dog's name and breed, their job, their family, where they live. Only what \
+the learner actually said; never guess.
+- scene_notes: at most 8 notes about this conversation: what was talked about, \
+what questions the partner asked, and what the partner said about their own \
+character, e.g. how the hairdresser cut the learner's hair.
+- Write each note as one short sentence in English.
+- Notes never describe mistakes or the learner's language level.
+- Empty lists are fine when there is nothing worth noting.
 """
 
 
@@ -113,11 +125,15 @@ class FoundMistake(BaseModel):
 
 class MistakeReport(BaseModel):
     mistakes: list[FoundMistake]
+    learner_facts: list[str]
+    scene_notes: list[str]
 
 
 @dataclass(frozen=True)
 class AnalysisResult:
     mistakes: list[FoundMistake]
+    learner_facts: list[str]
+    scene_notes: list[str]
     model: str
     input_tokens: int
     cached_input_tokens: int
@@ -285,6 +301,8 @@ def analyze_mistakes(
     usage = response.usage
     return AnalysisResult(
         mistakes=list(parsed.mistakes),
+        learner_facts=list(parsed.learner_facts),
+        scene_notes=list(parsed.scene_notes),
         model=settings.LLM_MODEL,
         input_tokens=usage.input_tokens,
         cached_input_tokens=usage.input_tokens_details.cached_tokens,

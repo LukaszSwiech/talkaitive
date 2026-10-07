@@ -41,6 +41,14 @@ class Conversation(UserOwned):
     analyzed_at = models.DateTimeField(null=True, blank=True)
     # Cost of the analysis; counted in the daily budget on the `analyzed_at` day.
     analysis_cost_usd = models.DecimalField(max_digits=10, decimal_places=6, default=0)
+    # Notes from the same analysis, for the user's next conversations: short
+    # English sentences. `learner_facts` are lasting facts the learner said about
+    # themselves (a dog's name, a job); `scene_notes` are about this scene (what was
+    # talked about, what the partner asked or said about their own character).
+    # Neither ever describes mistakes. Empty for conversations from before these
+    # notes, without learner messages, or not analysed yet.
+    learner_facts = models.JSONField(default=list, blank=True)
+    scene_notes = models.JSONField(default=list, blank=True)
 
     class Meta:
         constraints = [

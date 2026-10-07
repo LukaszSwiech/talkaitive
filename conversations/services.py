@@ -13,6 +13,9 @@ with its own marker (`analysis_started_at`): a locked check, the model call
 conversation is still not analysed. It runs once per ended conversation, whatever
 ended it and whatever is left of the budget. The model's raw list is turned into
 list positions here: chronological order, identical pairs merged into one item.
+The same analysis returns notes for later conversations (`learner_facts`,
+`scene_notes`); they are saved together with the list, in the same locked block, so
+a late result drops them too.
 """
 
 from collections.abc import Sequence
@@ -292,6 +295,8 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
                 _save_mistakes(
                     locked, _merge_mistakes(result.mistakes, learner_messages)
                 )
+                locked.learner_facts = _clean_notes(result.learner_facts)
+                locked.scene_notes = _clean_notes(result.scene_notes)
                 locked.analyzed_at = now
                 locked.analysis_cost_usd = turn_cost(
                     result.model,
@@ -305,6 +310,8 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
                         "analyzed_at",
                         "analysis_cost_usd",
                         "analysis_failed_at",
+                        "learner_facts",
+                        "scene_notes",
                     ]
                 )
             _clear_analysis_marker(locked, now)
@@ -323,6 +330,11 @@ def _mark_analysis_failed(conversation: Conversation, started_at: datetime) -> N
         pk=conversation.pk, analyzed_at__isnull=True, analysis_started_at__isnull=True
     ).update(analysis_failed_at=started_at)
     conversation.refresh_from_db()
+
+
+def _clean_notes(notes: Sequence[str]) -> list[str]:
+    """Trimmed notes in the model's order, without empty ones."""
+    return [note.strip() for note in notes if note.strip()]
 
 
 @dataclass

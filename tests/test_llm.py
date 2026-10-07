@@ -293,6 +293,9 @@ MISTAKE = FoundMistake(
     explanation="Verbs of motion form the perfect with 'sein'.",
 )
 
+FACTS = ["The learner likes films about dogs."]
+NOTES = ["They talked about the weekend.", "The partner asked which film it was."]
+
 
 def analyze(**overrides: Any) -> AnalysisResult:
     kwargs: dict[str, Any] = {"language": "de", "history": ANALYSIS_HISTORY}
@@ -302,7 +305,9 @@ def analyze(**overrides: Any) -> AnalysisResult:
 
 @pytest.fixture
 def fake_analysis(fake_openai: SimpleNamespace) -> SimpleNamespace:
-    fake_openai.responses.outcome = make_response(MistakeReport(mistakes=[MISTAKE]))
+    fake_openai.responses.outcome = make_response(
+        MistakeReport(mistakes=[MISTAKE], learner_facts=FACTS, scene_notes=NOTES)
+    )
     return fake_openai
 
 
@@ -375,6 +380,10 @@ def test_analysis_instructions_share_a_stable_prefix_across_languages(
     assert "Practice language: English" in english
     assert "Practice language: German" in german
     assert "word_order" in english
+    assert "learner_facts" in english
+    assert "scene_notes" in english
+    # The notes section is fixed text, before the language.
+    assert english.index("scene_notes") < english.index(marker)
 
 
 def test_analysis_maps_mistakes_and_usage_to_result(
@@ -386,6 +395,8 @@ def test_analysis_maps_mistakes_and_usage_to_result(
 
     assert result == AnalysisResult(
         mistakes=[MISTAKE],
+        learner_facts=FACTS,
+        scene_notes=NOTES,
         model="gpt-5.4",
         input_tokens=1200,
         cached_input_tokens=1000,
@@ -396,9 +407,15 @@ def test_analysis_maps_mistakes_and_usage_to_result(
 def test_analysis_with_no_mistakes_returns_an_empty_list(
     fake_openai: SimpleNamespace,
 ) -> None:
-    fake_openai.responses.outcome = make_response(MistakeReport(mistakes=[]))
+    fake_openai.responses.outcome = make_response(
+        MistakeReport(mistakes=[], learner_facts=[], scene_notes=[])
+    )
 
-    assert analyze().mistakes == []
+    result = analyze()
+
+    assert result.mistakes == []
+    assert result.learner_facts == []
+    assert result.scene_notes == []
 
 
 @pytest.mark.parametrize(
@@ -452,7 +469,8 @@ def test_analysis_empty_parsed_output_raises_llm_error(
 
 def test_analysis_missing_usage_raises_llm_error(fake_openai: SimpleNamespace) -> None:
     fake_openai.responses.outcome = make_response(
-        MistakeReport(mistakes=[MISTAKE]), usage=None
+        MistakeReport(mistakes=[MISTAKE], learner_facts=FACTS, scene_notes=NOTES),
+        usage=None,
     )
 
     with pytest.raises(LLMError):
