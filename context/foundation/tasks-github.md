@@ -31,7 +31,7 @@ W przeciwieństwie do Linear, GitHub **zachowuje prefiksy** `type:`/`status:`/`s
 
 GitHub Issues (utworzone przez `gh issue create`) **nie mają** tu ustawionych natywnych relacji „blocked by” (w przeciwieństwie do Linear, gdzie są to prawdziwe relacje — patrz `tasks-linear.md`). Zależność jest wyrażona wyłącznie tekstowo: w polu `## Prerequisites` treści issue oraz przez odwołania do numerów innych issues (np. „F-01 (#1)”).
 
-## Aktualne mapowanie (stan na 2026-10-06)
+## Aktualne mapowanie (stan na 2026-10-07)
 
 | Roadmap ID | Change ID | GitHub Issue | Etykiety | Stan |
 | --- | --- | --- | --- | --- |
@@ -46,6 +46,7 @@ GitHub Issues (utworzone przez `gh issue create`) **nie mają** tu ustawionych n
 | Q-04 | — | [#9](https://github.com/LukaszSwiech/talkaitive/issues/9) | `roadmap-question` | open |
 | Q-05 | — | [#10](https://github.com/LukaszSwiech/talkaitive/issues/10) | `roadmap-question` | open |
 | Q-06 | — | [#11](https://github.com/LukaszSwiech/talkaitive/issues/11) | `roadmap-question` | open |
+| Q-07 | — | [#14](https://github.com/LukaszSwiech/talkaitive/issues/14) | `roadmap-question` | open |
 
 Ta sama kolumna „GitHub Issue” jest też utrzymywana w `context/foundation/roadmap.md`, w tabelach `## Backlog Handoff` i `## Open Roadmap Questions` — link nawigacyjny w drugą stronę.
 

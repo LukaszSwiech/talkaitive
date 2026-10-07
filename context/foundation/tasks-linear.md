@@ -41,7 +41,7 @@ Pole `Prerequisites:` z roadmapy jest odwzorowane jako natywna relacja Linear `b
 
 Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest informacyjne, nie blokujące).
 
-## Aktualne mapowanie (stan na 2026-10-06)
+## Aktualne mapowanie (stan na 2026-10-07)
 
 | Roadmap ID | Change ID | Linear Issue | Etykiety | Status |
 | --- | --- | --- | --- | --- |
@@ -56,6 +56,7 @@ Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest inform
 | Q-04 | — | [LUK-24](https://linear.app/lukaszswiech/issue/LUK-24/q-04-jak-ma-wygladac-zakladanie-kont-po-mvp) | `roadmap-question` | Backlog |
 | Q-05 | — | [LUK-25](https://linear.app/lukaszswiech/issue/LUK-25/q-05-jakie-sa-niefunkcjonalne-non-goals-mvp) | `roadmap-question` | Backlog |
 | Q-06 | — | [LUK-26](https://linear.app/lukaszswiech/issue/LUK-26/q-06-jaki-jest-ballpark-target-scaleqps-i-target-scaledata-volume) | `roadmap-question` | Backlog |
+| Q-07 | — | [LUK-27](https://linear.app/lukaszswiech/issue/LUK-27/q-07-jak-przygotowywac-liste-bledow-poza-zadaniem-http-z-ograniczonymi) | `roadmap-question` | Backlog |
 
 Ta sama kolumna „Linear Issue” jest też utrzymywana w `context/foundation/roadmap.md`, w tabelach `## Backlog Handoff` i `## Open Roadmap Questions` — to jest link nawigacyjny w drugą stronę, żeby nie trzeba było otwierać obu plików naraz.
 
