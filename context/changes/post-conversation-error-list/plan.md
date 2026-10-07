@@ -385,25 +385,25 @@ Migracja `0003` dodaje tylko pola nullable / z wartością domyślną i nową ta
 
 #### Automated
 
-- [x] 1.1 Migracja jest kompletna: `uv run python manage.py makemigrations --check --dry-run`
-- [x] 1.2 Migracja się aplikuje: `uv run python manage.py migrate`
-- [x] 1.3 Testy przechodzą: `uv run pytest`
-- [x] 1.4 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
+- [x] 1.1 Migracja jest kompletna: `uv run python manage.py makemigrations --check --dry-run` — c0d93c8
+- [x] 1.2 Migracja się aplikuje: `uv run python manage.py migrate` — c0d93c8
+- [x] 1.3 Testy przechodzą: `uv run pytest` — c0d93c8
+- [x] 1.4 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .` — c0d93c8
 
 #### Manual
 
-- [x] 1.5 `/admin/` nie pokazuje `Mistake` ani pól analizy jako nowego modelu (strona admina bez nowych pozycji).
+- [x] 1.5 `/admin/` nie pokazuje `Mistake` ani pól analizy jako nowego modelu (strona admina bez nowych pozycji). — c0d93c8
 
 ### Phase 2: Wywołanie modelu do analizy
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą: `uv run pytest`
-- [ ] 2.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy przechodzą: `uv run pytest`
+- [x] 2.2 Lint i format bez zmian: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 2.3 Jednorazowe wywołanie `analyze_mistakes` z prawdziwym kluczem (`uv run --env-file .env python manage.py shell`) na krótkim transkrypcie z 2 znanymi błędami zwraca oba błędy z poprawną kategorią, a `gpt-5.4` przyjmuje effort `high` (brak błędu 400).
+- [x] 2.3 Jednorazowe wywołanie `analyze_mistakes` z prawdziwym kluczem (`uv run --env-file .env python manage.py shell`) na krótkim transkrypcie z 2 znanymi błędami zwraca oba błędy z poprawną kategorią, a `gpt-5.4` przyjmuje effort `high` (brak błędu 400).
 
 ### Phase 3: Serwis analizy
 
