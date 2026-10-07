@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -61,6 +61,12 @@ def add_message(
     # created_at is auto_now_add, so it can only be moved with an update.
     Message.objects.filter(pk=message.pk).update(created_at=at)
     return message
+
+
+def add_analysis(conversation: Conversation, cost: str, at: datetime) -> None:
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analyzed_at=at, analysis_cost_usd=Decimal(cost)
+    )
 
 
 def end_by_daily_limit(conversation: Conversation, at: datetime) -> None:
@@ -155,6 +161,47 @@ def test_spent_today_ignores_other_users(anna: User, lukasz: User) -> None:
     add_message(make_conversation(lukasz), "0.900000", NOON)
 
     assert spent_today(anna, NOON) == Decimal("0.1")
+
+
+def test_spent_today_adds_todays_analyses_to_turns(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.100000", NOON)
+    add_analysis(conversation, "0.050000", NOON)
+
+    assert spent_today(anna, NOON) == Decimal("0.15")
+
+
+def test_spent_today_ignores_analysis_from_before_midnight(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.100000", NOON)
+    add_analysis(conversation, "0.400000", MIDNIGHT - timedelta(seconds=1))
+
+    assert spent_today(anna, NOON) == Decimal("0.1")
+
+
+def test_spent_today_counts_analysis_at_midnight(anna: User) -> None:
+    add_analysis(make_conversation(anna), "0.200000", MIDNIGHT)
+
+    assert spent_today(anna, NOON) == Decimal("0.2")
+
+
+def test_spent_today_ignores_other_users_analyses(anna: User, lukasz: User) -> None:
+    add_analysis(make_conversation(lukasz), "0.900000", NOON)
+
+    assert spent_today(anna, NOON) == Decimal(0)
+
+
+def test_is_exhausted_true_when_only_the_analysis_crosses_the_threshold(
+    anna: User,
+) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.900000", NOON)
+    assert not is_exhausted(anna, NOON)
+
+    add_analysis(conversation, "0.070000", NOON)
+
+    # 0.90 + 0.07 + 0.03 estimate reaches the 1.00 budget.
+    assert is_exhausted(anna, NOON)
 
 
 def test_spent_today_is_zero_without_messages(anna: User) -> None:
