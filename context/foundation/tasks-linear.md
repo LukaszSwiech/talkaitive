@@ -47,7 +47,7 @@ Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest inform
 | --- | --- | --- | --- | --- |
 | F-01 | auth-and-access-scaffold | [LUK-16](https://linear.app/lukaszswiech/issue/LUK-16/f-01-auth-i-izolacja-danych-miedzy-uzytkownikami) | `foundation`, `stream:conversation-loop` | Done |
 | S-01 | first-corrected-conversation | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `slice`, `north-star`, `stream:conversation-loop` | Done |
-| S-02 | post-conversation-error-list | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `slice`, `stream:conversation-loop` | In Progress |
+| S-02 | post-conversation-error-list | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `slice`, `stream:conversation-loop` | Done |
 | S-03 | cross-session-error-memory | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | `slice`, `stream:conversation-loop` | Backlog |
 | S-04 | account-and-data-deletion | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | `slice`, `stream:account` | Backlog |
 | Q-01 | — | [LUK-21](https://linear.app/lukaszswiech/issue/LUK-21/q-01-jak-praktika-rozwiazuje-pamiec-miedzy-sesjami-kontrole-poziomu) | `roadmap-question` | Backlog |
