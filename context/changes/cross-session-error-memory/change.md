@@ -1,7 +1,7 @@
 ---
 change_id: cross-session-error-memory
 title: Cross session error memory
-status: implementing
+status: implemented
 created: 2026-10-07
 updated: 2026-10-07
 archived_at: null

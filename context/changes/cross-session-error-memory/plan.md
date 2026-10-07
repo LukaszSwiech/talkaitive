@@ -326,14 +326,14 @@ Wybrana pamięć staje się stałym blokiem promptu: liczona i zapisywana przy s
 
 #### Automated
 
-- [x] 3.1 Migracje są kompletne: `uv run python manage.py makemigrations --check --dry-run`
-- [x] 3.2 Migracje przechodzą: `uv run python manage.py migrate`
-- [x] 3.3 Testy przechodzą: `uv run pytest`
-- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Migracje są kompletne: `uv run python manage.py makemigrations --check --dry-run` — 34437b6
+- [x] 3.2 Migracje przechodzą: `uv run python manage.py migrate` — 34437b6
+- [x] 3.3 Testy przechodzą: `uv run pytest` — 34437b6
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 34437b6
 
 #### Manual
 
-- [x] 3.5 Kolejna rozmowa w tej samej scenie nawiązuje do poprzedniej i nie powtarza wcześniejszych pytań
-- [x] 3.6 Rozmowa w innej scenie korzysta z faktu o uczniu, gdy pasuje (np. sąsiad zna imię psa podane w parku), i nie wciąga wątków z innej sceny
-- [x] 3.7 Agent stwarza okazję do najwyżej jednej dawnej konstrukcji, naturalnie i bez mówienia, że to poprawka
+- [x] 3.5 Kolejna rozmowa w tej samej scenie nawiązuje do poprzedniej i nie powtarza wcześniejszych pytań — 34437b6
+- [x] 3.6 Rozmowa w innej scenie korzysta z faktu o uczniu, gdy pasuje (np. sąsiad zna imię psa podane w parku), i nie wciąga wątków z innej sceny — 34437b6
+- [x] 3.7 Agent stwarza okazję do najwyżej jednej dawnej konstrukcji, naturalnie i bez mówienia, że to poprawka — 34437b6
 - [ ] 3.8 Od drugiej tury `cached_input_tokens` w `Message` jest większe od zera (cache działa z blokiem pamięci)
