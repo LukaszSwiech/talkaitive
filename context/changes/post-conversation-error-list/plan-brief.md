@@ -25,7 +25,7 @@ Pod transkryptem zakończonej rozmowy pojawia się spinner, strona sama uruchami
 | Kolejność | Chronologicznie, kategoria jako etykieta | Łatwo powiązać błąd z momentem rozmowy. | Plan |
 | Powtórzenia | Identyczna para scalana przez kod w jedną pozycję z „×N” w miejscu pierwszego wystąpienia | Krótsza lista, przewidywalna i testowalna reguła. | Plan |
 | Wyjaśnienie | Jedno zdanie po angielsku (język UI) | Lista uczy, a nie tylko wylicza. | Plan |
-| Model | Ten sam `gpt-5.4`, reasoning effort `high` (env `LLM_ANALYSIS_REASONING_EFFORT`) | Modelom trudno o dokładne podsumowanie, a trafność listy to kryterium sukcesu PRD. | Plan |
+| Model | Ten sam `gpt-5.4`, reasoning effort `medium` (env `LLM_ANALYSIS_REASONING_EFFORT`) | Modelom trudno o dokładne podsumowanie, a trafność listy to kryterium sukcesu PRD; `high` zmierzony na 20 turach był 3× wolniejszy i droższy i wpisywał literówki. | Plan |
 | Zakres błędów | Bez literówek, wielkości liter i interpunkcji (chyba że zmieniają sens) | Spójne z korektą na żywo. | Plan |
 | Miejsce na stronie | Pod transkryptem | Najmniejsza zmiana szablonu. | Plan |
 | Kolejność i scalanie liczy kod | Model zwraca numer wiadomości ucznia | Deterministyczne sortowanie zamiast ufania kolejności modelu. | Plan |
@@ -39,14 +39,14 @@ Pod transkryptem zakończonej rozmowy pojawia się spinner, strona sama uruchami
 
 ## Architecture / Approach
 
-End / pożegnanie / limit → `end_conversation` (bez zmian) → strona rozmowy w stanie „nierozpoczęta” → auto-POST `conversation_analyze` → `services.analyze_conversation`: pod blokadą ustawia znacznik → poza transakcją `llm.analyze_mistakes` (Responses API, `MistakeReport`, effort `high`, timeout 90 s, 0 ponowień) → pod blokadą scalanie i sortowanie w kodzie, zapis `Mistake`, kosztu i `analyzed_at` → redirect → strona z listą. Wzorce znacznika, blokady i obsługi błędów są skopiowane z tur S-01.
+End / pożegnanie / limit → `end_conversation` (bez zmian) → strona rozmowy w stanie „nierozpoczęta” → auto-POST `conversation_analyze` → `services.analyze_conversation`: pod blokadą ustawia znacznik → poza transakcją `llm.analyze_mistakes` (Responses API, `MistakeReport`, effort `medium`, timeout 150 s, 0 ponowień) → pod blokadą scalanie i sortowanie w kodzie, zapis `Mistake`, kosztu i `analyzed_at` → redirect → strona z listą. Wzorce znacznika, blokady i obsługi błędów są skopiowane z tur S-01.
 
 ## Phases at a Glance
 
 | Phase | What it delivers | Key risk |
 | --- | --- | --- |
 | 1. Model danych i budżet | `Mistake`, pola analizy, migracja, `spent_today` z analizami | Pominięcie izolacji per użytkownik (pilnują testy) |
-| 2. Wywołanie modelu | `analyze_mistakes`, prompt, ustawienia effort/timeout | `gpt-5.4` z effort `high` za wolny lub odrzuca ustawienie |
+| 2. Wywołanie modelu | `analyze_mistakes`, prompt, ustawienia effort/timeout | `gpt-5.4` z effort `high` za wolny (sprawdziło się: 165 s) — stąd `medium` i limit 150 s |
 | 3. Serwis analizy | Jednorazowa analiza, scalanie „×N”, kolejność, koszt, porażka | Wyścig równoległych żądań (dwa płatne wywołania) |
 | 4. Widok i ekran | `/analysis/`, 4 stany strony, auto-wysyłka, test na żywo | Pętla auto-wysyłki po porażce; trafność listy |
 
@@ -55,8 +55,8 @@ End / pożegnanie / limit → `end_conversation` (bez zmian) → strona rozmowy 
 
 ## Open Risks & Assumptions
 
-- Zakładamy, że `gpt-5.4` przyjmuje reasoning effort `high` i że analiza ~20 tur mieści się wyraźnie w 90 s; sprawdzane ręcznie w fazach 2 i 4. Jeśli nie, effort zmienia się zmienną `LLM_ANALYSIS_REASONING_EFFORT` bez zmiany kodu.
-- Dzień może przekroczyć $1 o koszt jednej analizy (szacunkowo kilka centów) — świadomie zaakceptowane.
+- `gpt-5.4` przyjmuje reasoning effort `high` (sprawdzone w fazie 2), ale analiza ~20 tur trwała z nim 165 s, więc domyślny jest `medium` (52–80 s) z limitem 150 s (faza 4, pomiar w `change.md`). Effort zmienia się zmienną `LLM_ANALYSIS_REASONING_EFFORT` bez zmiany kodu.
+- Dzień może przekroczyć $1 o koszt jednej analizy (zmierzone: ok. $0,07–0,08 za 20 tur) — świadomie zaakceptowane.
 - Trafność listy (kryterium sukcesu PRD) oceniamy tylko ręcznie na kilku rozmowach; brak automatycznej ewaluacji.
 - Rozmowy zakończone przed wdrożeniem dostaną listę dopiero po otwarciu ich strony.
 
