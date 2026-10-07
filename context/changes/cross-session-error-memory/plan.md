@@ -336,4 +336,4 @@ Wybrana pamięć staje się stałym blokiem promptu: liczona i zapisywana przy s
 - [x] 3.5 Kolejna rozmowa w tej samej scenie nawiązuje do poprzedniej i nie powtarza wcześniejszych pytań — 34437b6
 - [x] 3.6 Rozmowa w innej scenie korzysta z faktu o uczniu, gdy pasuje (np. sąsiad zna imię psa podane w parku), i nie wciąga wątków z innej sceny — 34437b6
 - [x] 3.7 Agent stwarza okazję do najwyżej jednej dawnej konstrukcji, naturalnie i bez mówienia, że to poprawka — 34437b6
-- [ ] 3.8 Od drugiej tury `cached_input_tokens` w `Message` jest większe od zera (cache działa z blokiem pamięci)
+- [x] 3.8 Od drugiej tury `cached_input_tokens` w `Message` jest większe od zera (cache działa z blokiem pamięci) — potwierdzone w impl-review symulacją 32 tur z `generate_turn` (2026-10-07): prefiks z pamięcią stabilny (trafienia 1792→3840 tokenów), ale pierwsze trafienie dopiero w turze 6 i jedno pudło w turze 11 — cache OpenAI jest best-effort, więc „od drugiej tury” jest zbyt ostre
