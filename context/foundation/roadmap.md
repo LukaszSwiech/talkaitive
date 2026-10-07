@@ -43,7 +43,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------- | -------- |
 | F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
-| S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | in-progress |
+| S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | done |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
 | S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
 
@@ -109,7 +109,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** zależy od istnienia danych z realnej rozmowy (S-01), dlatego jest zaraz po niej — dzięki temu logika wykrywania błędów użytej w korekcie na żywo (S-01) i w liście końcowej nie jest budowana dwa razy od zera.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-03: Pamięć między rozmowami i domykanie pętli błędów
 
@@ -141,7 +141,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | ---------- | ----------------------------- | ---------------------------------------------------------------- | ---------------------- | ------------- | ------------- | ------------------------------------------ |
 | F-01       | auth-and-access-scaffold      | Auth i izolacja danych między użytkownikami                     | yes                    | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | [LUK-16](https://linear.app/lukaszswiech/issue/LUK-16/f-01-auth-i-izolacja-danych-miedzy-uzytkownikami) | Fundament pod wszystkie zadania poniżej |
 | S-01       | first-corrected-conversation  | Pierwsza rozmowa po niemiecku z korektą na bieżąco (gwiazda przewodnia) | yes                    | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `done` (2026-10-06), zarchiwizowane: `context/archive/2026-10-05-first-corrected-conversation/`. |
-| S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | yes                    | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `in-progress` (2026-10-07), plan: `context/changes/post-conversation-error-list/plan.md` |
+| S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | yes                    | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `done` (2026-10-07), zarchiwizowane: `context/archive/2026-10-06-post-conversation-error-list/`. |
 | S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | no                     | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | Czeka na S-01, S-02                      |
 | S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | no                     | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | Czeka na F-01; może ruszyć równolegle z S-01 |
 
@@ -184,3 +184,4 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 
 - **F-01: (foundation) zaproszony użytkownik może zalogować się e-mailem i hasłem; każda strona poza logowaniem przekierowuje do logowania; każde zapytanie o rozmowy/błędy/pamięć jest ograniczone do zalogowanego użytkownika.** — Archived 2026-10-03 → `context/archive/2026-10-01-auth-and-access-scaffold/`. Lesson: —.
 - **S-01: zalogowany użytkownik może wybrać jeden z 20 tematów, prowadzić tekstową rozmowę po niemiecku, otrzymywać korektę błędnych wypowiedzi wplecioną w odpowiedź agenta (recast) bez przerywania rozmowy, i zakończyć rozmowę przyciskiem „Zakończ” albo przez agenta (pożegnanie / wyczerpany dzienny limit, z komunikatem o limicie).** — Archived 2026-10-06 → `context/archive/2026-10-05-first-corrected-conversation/`. Lesson: —.
+- **S-02: użytkownik może po zakończeniu rozmowy zobaczyć uporządkowaną listę błędów z tej rozmowy: kategoria (gramatyka / słownictwo / szyk zdania), wersja błędna → poprawna.** — Archived 2026-10-07 → `context/archive/2026-10-06-post-conversation-error-list/`. Lesson: —.
