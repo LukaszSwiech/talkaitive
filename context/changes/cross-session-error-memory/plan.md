@@ -301,26 +301,26 @@ Wybrana pamięć staje się stałym blokiem promptu: liczona i zapisywana przy s
 
 #### Automated
 
-- [x] 1.1 Migracje są kompletne: `uv run python manage.py makemigrations --check --dry-run`
-- [x] 1.2 Migracje przechodzą: `uv run python manage.py migrate`
-- [x] 1.3 Testy przechodzą: `uv run pytest`
-- [x] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 1.1 Migracje są kompletne: `uv run python manage.py makemigrations --check --dry-run` — c149bc8
+- [x] 1.2 Migracje przechodzą: `uv run python manage.py migrate` — c149bc8
+- [x] 1.3 Testy przechodzą: `uv run pytest` — c149bc8
+- [x] 1.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — c149bc8
 
 #### Manual
 
-- [x] 1.5 Prawdziwa rozmowa (lokalnie, `uv run --env-file .env python manage.py runserver`), zakończona, z otwartą listą błędów: lista błędów wygląda jak przed zmianą, a w `uv run python manage.py shell` rozmowa ma sensowne `learner_facts` i `scene_notes` bez opisów błędów
-- [x] 1.6 Czas przygotowania listy błędów nie rośnie zauważalnie (punkt odniesienia z S-02: ok. 52 s dla 20 tur)
+- [x] 1.5 Prawdziwa rozmowa (lokalnie, `uv run --env-file .env python manage.py runserver`), zakończona, z otwartą listą błędów: lista błędów wygląda jak przed zmianą, a w `uv run python manage.py shell` rozmowa ma sensowne `learner_facts` i `scene_notes` bez opisów błędów — c149bc8
+- [x] 1.6 Czas przygotowania listy błędów nie rośnie zauważalnie (punkt odniesienia z S-02: ok. 52 s dla 20 tur) — c149bc8
 
 ### Phase 2: Wybór pamięci
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą: `uv run pytest`
-- [ ] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy przechodzą: `uv run pytest`
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 2.3 `select_memory` wywołane w `uv run python manage.py shell` na lokalnych danych z fazy 1 zwraca oczekiwane fakty, notatki i błędy
+- [x] 2.3 `select_memory` wywołane w `uv run python manage.py shell` na lokalnych danych z fazy 1 zwraca oczekiwane fakty, notatki i błędy
 
 ### Phase 3: Pamięć w rozmowie
 
