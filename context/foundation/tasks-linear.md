@@ -41,13 +41,13 @@ Pole `Prerequisites:` z roadmapy jest odwzorowane jako natywna relacja Linear `b
 
 Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest informacyjne, nie blokujące).
 
-## Aktualne mapowanie (stan na 2026-10-06)
+## Aktualne mapowanie (stan na 2026-10-07)
 
 | Roadmap ID | Change ID | Linear Issue | Etykiety | Status |
 | --- | --- | --- | --- | --- |
 | F-01 | auth-and-access-scaffold | [LUK-16](https://linear.app/lukaszswiech/issue/LUK-16/f-01-auth-i-izolacja-danych-miedzy-uzytkownikami) | `foundation`, `stream:conversation-loop` | Done |
 | S-01 | first-corrected-conversation | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `slice`, `north-star`, `stream:conversation-loop` | Done |
-| S-02 | post-conversation-error-list | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `slice`, `stream:conversation-loop` | Backlog |
+| S-02 | post-conversation-error-list | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `slice`, `stream:conversation-loop` | In Progress |
 | S-03 | cross-session-error-memory | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | `slice`, `stream:conversation-loop` | Backlog |
 | S-04 | account-and-data-deletion | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | `slice`, `stream:account` | Backlog |
 | Q-01 | — | [LUK-21](https://linear.app/lukaszswiech/issue/LUK-21/q-01-jak-praktika-rozwiazuje-pamiec-miedzy-sesjami-kontrole-poziomu) | `roadmap-question` | Backlog |
@@ -56,6 +56,7 @@ Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest inform
 | Q-04 | — | [LUK-24](https://linear.app/lukaszswiech/issue/LUK-24/q-04-jak-ma-wygladac-zakladanie-kont-po-mvp) | `roadmap-question` | Backlog |
 | Q-05 | — | [LUK-25](https://linear.app/lukaszswiech/issue/LUK-25/q-05-jakie-sa-niefunkcjonalne-non-goals-mvp) | `roadmap-question` | Backlog |
 | Q-06 | — | [LUK-26](https://linear.app/lukaszswiech/issue/LUK-26/q-06-jaki-jest-ballpark-target-scaleqps-i-target-scaledata-volume) | `roadmap-question` | Backlog |
+| Q-07 | — | [LUK-27](https://linear.app/lukaszswiech/issue/LUK-27/q-07-jak-przygotowywac-liste-bledow-poza-zadaniem-http-z-ograniczonymi) | `roadmap-question` | Backlog |
 
 Ta sama kolumna „Linear Issue” jest też utrzymywana w `context/foundation/roadmap.md`, w tabelach `## Backlog Handoff` i `## Open Roadmap Questions` — to jest link nawigacyjny w drugą stronę, żeby nie trzeba było otwierać obu plików naraz.
 

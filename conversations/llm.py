@@ -1,17 +1,25 @@
 """The only module that imports `openai`.
 
-Builds the prompt from the topic, the language and the history, calls the Responses
-API with structured output and returns a plain `TurnResult` or raises one error type
-(`LLMError`) that views know how to show.
+Two calls to the Responses API, both with structured output:
+
+- `generate_turn` builds the prompt from the topic, the language and the history and
+  returns a plain `TurnResult`.
+- `analyze_mistakes` sends the whole transcript after the conversation and returns
+  an `AnalysisResult` with the learner's mistakes.
+
+Both raise one error type (`LLMError`) that views know how to show, and never log
+conversation text.
 
 Prompt caching: the instructions are fixed text first, then the language and the
 scenario; the variable "final turn" instruction is a separate message at the very end
-of `input`, so it does not break the cached prefix.
+of `input`, so it does not break the cached prefix. The analysis instructions are
+fixed text first, then only the language.
 """
 
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from django.conf import settings
 from openai import APIError, OpenAI
@@ -54,6 +62,31 @@ _FINAL_TURN_MESSAGE = (
 )
 
 
+_ANALYSIS_INSTRUCTIONS = """\
+You review a finished conversation between a language learner and a conversation \
+partner. Find the learner's mistakes so the learner can study them.
+
+What to analyse:
+- Analyse only the learner's messages, marked "[n] Learner:". The partner's \
+messages are context only; never report anything from them.
+- Report only mistakes in these categories: grammar, vocabulary, word_order.
+- Ignore typos, capitalisation and punctuation unless they change the meaning.
+
+How to report each mistake:
+- message_number: the number n of the learner message that contains it.
+- category: grammar, vocabulary or word_order.
+- wrong: the shortest fragment of the learner's text that shows the mistake, \
+e.g. "habe ... gegangen".
+- correct: the corrected version of that same fragment, e.g. "bin ... gegangen".
+- sentence: the learner's whole original sentence that contains the mistake, \
+unchanged.
+- explanation: one short sentence in English.
+- Report every occurrence separately with its own message number, even when the \
+same mistake repeats.
+- If the learner made no mistakes, return an empty list.
+"""
+
+
 class AgentTurn(BaseModel):
     reply: str
     end_conversation: bool
@@ -69,18 +102,40 @@ class TurnResult:
     output_tokens: int
 
 
+class FoundMistake(BaseModel):
+    message_number: int
+    category: Literal["grammar", "vocabulary", "word_order"]
+    wrong: str
+    correct: str
+    sentence: str
+    explanation: str
+
+
+class MistakeReport(BaseModel):
+    mistakes: list[FoundMistake]
+
+
+@dataclass(frozen=True)
+class AnalysisResult:
+    mistakes: list[FoundMistake]
+    model: str
+    input_tokens: int
+    cached_input_tokens: int
+    output_tokens: int
+
+
 class LLMError(Exception):
     """Any failure of the model call that the user can only retry later."""
 
 
-def _get_client() -> OpenAI:
+def _get_client(*, timeout: float, max_retries: int) -> OpenAI:
     if not settings.OPENAI_API_KEY:
         raise LLMError("OPENAI_API_KEY is not configured.")
     return OpenAI(
         api_key=settings.OPENAI_API_KEY,
         base_url=settings.OPENAI_BASE_URL,
-        timeout=settings.LLM_TIMEOUT_SECONDS,
-        max_retries=settings.LLM_MAX_RETRIES,
+        timeout=timeout,
+        max_retries=max_retries,
     )
 
 
@@ -121,7 +176,10 @@ def generate_turn(
     final_turn: bool,
 ) -> TurnResult:
     """One agent turn. `history` is a list of `(role, text)`, oldest first."""
-    client = _get_client()
+    client = _get_client(
+        timeout=settings.LLM_TIMEOUT_SECONDS,
+        max_retries=settings.LLM_MAX_RETRIES,
+    )
     try:
         response = client.responses.parse(
             model=settings.LLM_MODEL,
@@ -159,6 +217,74 @@ def generate_turn(
     return TurnResult(
         reply=parsed.reply,
         end_conversation=parsed.end_conversation,
+        model=settings.LLM_MODEL,
+        input_tokens=usage.input_tokens,
+        cached_input_tokens=usage.input_tokens_details.cached_tokens,
+        output_tokens=usage.output_tokens,
+    )
+
+
+def _build_analysis_instructions(language: str) -> str:
+    return f"{_ANALYSIS_INSTRUCTIONS}\nPractice language: {_language_name(language)}"
+
+
+def _build_transcript(history: Sequence[tuple[str, str]]) -> str:
+    """One text: learner messages numbered from 1, partner messages unnumbered."""
+    lines: list[str] = []
+    learner_number = 0
+    for role, text in history:
+        if role == "assistant":
+            lines.append(f"Partner: {text}")
+        else:
+            learner_number += 1
+            lines.append(f"[{learner_number}] Learner: {text}")
+    return "\n\n".join(lines)
+
+
+def analyze_mistakes(
+    *, language: str, history: Sequence[tuple[str, str]]
+) -> AnalysisResult:
+    """The learner's mistakes in a finished conversation. `history` is oldest first.
+
+    `message_number` in each mistake counts only the learner's messages, from 1.
+    """
+    client = _get_client(
+        timeout=settings.LLM_ANALYSIS_TIMEOUT_SECONDS,
+        max_retries=settings.LLM_ANALYSIS_MAX_RETRIES,
+    )
+    try:
+        response = client.responses.parse(
+            model=settings.LLM_MODEL,
+            instructions=_build_analysis_instructions(language),
+            input=_build_transcript(history),
+            text_format=MistakeReport,
+            reasoning={"effort": settings.LLM_ANALYSIS_REASONING_EFFORT},
+            store=False,
+        )
+    except APIError as exc:
+        # Log the error type and status only, never the conversation text.
+        logger.error(
+            "LLM analysis call failed: %s (status %s)",
+            type(exc).__name__,
+            getattr(exc, "status_code", None),
+        )
+        raise LLMError("The model call failed.") from exc
+    except ValidationError:
+        # The error text quotes the model's output, so log only that it happened.
+        logger.error("LLM output does not match the MistakeReport schema.")
+        raise LLMError("The model returned no usable answer.") from None
+
+    parsed = response.output_parsed
+    if parsed is None:
+        logger.error("LLM analysis returned no parsed output (refusal or empty).")
+        raise LLMError("The model returned no usable answer.")
+    if response.usage is None:
+        logger.error("LLM analysis response has no usage; it cannot be priced.")
+        raise LLMError("The model response has no token usage.")
+
+    usage = response.usage
+    return AnalysisResult(
+        mistakes=list(parsed.mistakes),
         model=settings.LLM_MODEL,
         input_tokens=usage.input_tokens,
         cached_input_tokens=usage.input_tokens_details.cached_tokens,

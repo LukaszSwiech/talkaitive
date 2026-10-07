@@ -6,7 +6,16 @@ import pydantic
 import pytest
 
 from conversations import llm
-from conversations.llm import AgentTurn, LLMError, TurnResult, generate_turn
+from conversations.llm import (
+    AgentTurn,
+    AnalysisResult,
+    FoundMistake,
+    LLMError,
+    MistakeReport,
+    TurnResult,
+    analyze_mistakes,
+    generate_turn,
+)
 from conversations.topics import get_topic
 
 TOPIC = get_topic("bakery")
@@ -26,7 +35,7 @@ class FakeResponses:
 
 
 def make_response(
-    parsed: AgentTurn | None = None,
+    parsed: pydantic.BaseModel | None = None,
     usage: object | None = "default",
 ) -> SimpleNamespace:
     if parsed is None:
@@ -264,3 +273,187 @@ def test_malformed_structured_output_becomes_llm_error(
 
     assert "AgentTurn" in caplog.text
     assert "Brötchen" not in caplog.text
+
+
+# --- analyze_mistakes ---------------------------------------------------------
+
+ANALYSIS_HISTORY = [
+    ("assistant", "Was hast du am Wochenende gemacht?"),
+    ("user", "Ich habe ins Kino gegangen."),
+    ("assistant", "Ach, du bist ins Kino gegangen! Welcher Film?"),
+    ("user", "Ein Film über Hunde, er war sehr lustig."),
+]
+
+MISTAKE = FoundMistake(
+    message_number=1,
+    category="grammar",
+    wrong="habe ... gegangen",
+    correct="bin ... gegangen",
+    sentence="Ich habe ins Kino gegangen.",
+    explanation="Verbs of motion form the perfect with 'sein'.",
+)
+
+
+def analyze(**overrides: Any) -> AnalysisResult:
+    kwargs: dict[str, Any] = {"language": "de", "history": ANALYSIS_HISTORY}
+    kwargs.update(overrides)
+    return analyze_mistakes(**kwargs)
+
+
+@pytest.fixture
+def fake_analysis(fake_openai: SimpleNamespace) -> SimpleNamespace:
+    fake_openai.responses.outcome = make_response(MistakeReport(mistakes=[MISTAKE]))
+    return fake_openai
+
+
+def test_analysis_client_uses_analysis_timeout_and_retries(
+    fake_analysis: SimpleNamespace, settings
+) -> None:
+    settings.OPENAI_API_KEY = "sk-test"
+    settings.OPENAI_BASE_URL = "https://eu.example.test/v1"
+    settings.LLM_TIMEOUT_SECONDS = 12
+    settings.LLM_MAX_RETRIES = 3
+    settings.LLM_ANALYSIS_TIMEOUT_SECONDS = 90
+    settings.LLM_ANALYSIS_MAX_RETRIES = 0
+
+    analyze()
+
+    assert fake_analysis.client_kwargs == {
+        "api_key": "sk-test",
+        "base_url": "https://eu.example.test/v1",
+        "timeout": 90,
+        "max_retries": 0,
+    }
+
+
+def test_analysis_call_passes_model_effort_store_and_text_format(
+    fake_analysis: SimpleNamespace, settings
+) -> None:
+    settings.LLM_MODEL = "gpt-5.4"
+    settings.LLM_REASONING_EFFORT = "none"
+    settings.LLM_ANALYSIS_REASONING_EFFORT = "high"
+
+    analyze()
+
+    (kwargs,) = fake_analysis.responses.calls
+    assert kwargs["model"] == "gpt-5.4"
+    assert kwargs["reasoning"] == {"effort": "high"}
+    assert kwargs["store"] is False
+    assert kwargs["text_format"] is MistakeReport
+
+
+def test_transcript_numbers_only_learner_messages(
+    fake_analysis: SimpleNamespace,
+) -> None:
+    analyze()
+
+    (kwargs,) = fake_analysis.responses.calls
+    transcript = kwargs["input"]
+    assert isinstance(transcript, str)
+    assert "[1] Learner: Ich habe ins Kino gegangen." in transcript
+    assert "[2] Learner: Ein Film über Hunde, er war sehr lustig." in transcript
+    assert "[3]" not in transcript
+    assert "Partner: Was hast du am Wochenende gemacht?" in transcript
+    assert "Partner: Ach, du bist ins Kino gegangen! Welcher Film?" in transcript
+    # Partner messages carry no number.
+    assert "] Partner:" not in transcript
+    # Order is kept.
+    assert transcript.index("Wochenende") < transcript.index("[1] Learner")
+    assert transcript.index("[1] Learner") < transcript.index("Welcher Film")
+    assert transcript.index("Welcher Film") < transcript.index("[2] Learner")
+
+
+def test_analysis_instructions_share_a_stable_prefix_across_languages(
+    fake_analysis: SimpleNamespace,
+) -> None:
+    analyze(language="en")
+    analyze(language="de")
+
+    english, german = (c["instructions"] for c in fake_analysis.responses.calls)
+    marker = "Practice language:"
+    assert english.split(marker)[0] == german.split(marker)[0]
+    assert "Practice language: English" in english
+    assert "Practice language: German" in german
+    assert "word_order" in english
+
+
+def test_analysis_maps_mistakes_and_usage_to_result(
+    fake_analysis: SimpleNamespace, settings
+) -> None:
+    settings.LLM_MODEL = "gpt-5.4"
+
+    result = analyze()
+
+    assert result == AnalysisResult(
+        mistakes=[MISTAKE],
+        model="gpt-5.4",
+        input_tokens=1200,
+        cached_input_tokens=1000,
+        output_tokens=40,
+    )
+
+
+def test_analysis_with_no_mistakes_returns_an_empty_list(
+    fake_openai: SimpleNamespace,
+) -> None:
+    fake_openai.responses.outcome = make_response(MistakeReport(mistakes=[]))
+
+    assert analyze().mistakes == []
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        openai.APITimeoutError(request=SimpleNamespace()),
+        openai.APIConnectionError(request=SimpleNamespace()),
+        _status_error(openai.RateLimitError, 429),
+        _status_error(openai.InternalServerError, 500),
+    ],
+    ids=["timeout", "connection", "rate-limit", "status"],
+)
+def test_analysis_sdk_errors_become_llm_error(
+    fake_openai: SimpleNamespace,
+    error: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    fake_openai.responses.outcome = error
+
+    with pytest.raises(LLMError), caplog.at_level("ERROR", logger="conversations.llm"):
+        analyze()
+
+    assert type(error).__name__ in caplog.text
+    assert "Kino" not in caplog.text
+
+
+def test_analysis_malformed_output_becomes_llm_error(
+    fake_openai: SimpleNamespace, caplog: pytest.LogCaptureFixture
+) -> None:
+    with pytest.raises(pydantic.ValidationError) as truncated:
+        MistakeReport.model_validate_json(
+            '{"mistakes": [{"sentence": "Ich habe ins Kino'
+        )
+    fake_openai.responses.outcome = truncated.value
+
+    with pytest.raises(LLMError), caplog.at_level("ERROR", logger="conversations.llm"):
+        analyze()
+
+    assert "MistakeReport" in caplog.text
+    assert "Kino" not in caplog.text
+
+
+def test_analysis_empty_parsed_output_raises_llm_error(
+    fake_openai: SimpleNamespace,
+) -> None:
+    fake_openai.responses.outcome = SimpleNamespace(output_parsed=None, usage=None)
+
+    with pytest.raises(LLMError):
+        analyze()
+
+
+def test_analysis_missing_usage_raises_llm_error(fake_openai: SimpleNamespace) -> None:
+    fake_openai.responses.outcome = make_response(
+        MistakeReport(mistakes=[MISTAKE]), usage=None
+    )
+
+    with pytest.raises(LLMError):
+        analyze()

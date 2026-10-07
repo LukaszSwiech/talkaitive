@@ -32,6 +32,15 @@ class Conversation(UserOwned):
     # Set while the model generates the agent's turn, so a refresh shows "Agent is
     # typing" and a parallel retry is refused. It expires on its own (see services).
     agent_turn_started_at = models.DateTimeField(null=True, blank=True)
+    # Post-conversation mistake analysis. Set while the analysis runs, so a refresh
+    # shows the spinner and a parallel start is refused.
+    analysis_started_at = models.DateTimeField(null=True, blank=True)
+    # The last failed analysis; the page offers "Try again".
+    analysis_failed_at = models.DateTimeField(null=True, blank=True)
+    # The analysis finished (also with zero mistakes); it never runs again.
+    analyzed_at = models.DateTimeField(null=True, blank=True)
+    # Cost of the analysis; counted in the daily budget on the `analyzed_at` day.
+    analysis_cost_usd = models.DecimalField(max_digits=10, decimal_places=6, default=0)
 
     class Meta:
         constraints = [
@@ -77,3 +86,36 @@ class Message(models.Model):
 
     def __str__(self) -> str:
         return f"{self.role}: {self.text[:40]}"
+
+
+class Mistake(UserOwned):
+    """One mistake found in a conversation by the post-conversation analysis.
+
+    `user` is always the conversation's user (set by the service).
+    """
+
+    class Category(models.TextChoices):
+        GRAMMAR = "grammar", "Grammar"
+        VOCABULARY = "vocabulary", "Vocabulary"
+        WORD_ORDER = "word_order", "Word order"
+
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="mistakes"
+    )
+    # Place on the list, starting at 1.
+    position = models.PositiveIntegerField()
+    category = models.CharField(max_length=20, choices=Category)
+    wrong = models.TextField()
+    correct = models.TextField()
+    # The user's sentence the mistake comes from.
+    sentence = models.TextField()
+    explanation = models.TextField()
+    # How many times the same mistake appeared in the conversation.
+    occurrences = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["position", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.category}: {self.wrong} -> {self.correct}"

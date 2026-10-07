@@ -1,8 +1,9 @@
 """Daily LLM budget rules.
 
-One place for everything about the per-user daily limit: the cost of a turn, what
-was spent today, whether the budget is exhausted, whether the next turn must be the
-last one and when talking is allowed again. Functions take `now` as a parameter so
+One place for everything about the per-user daily limit: the cost of a turn (also
+used for the cost of a post-conversation analysis), what was spent today (agent
+turns plus analyses), whether the budget is exhausted, whether the next turn must
+be the last one and when talking is allowed again. Functions take `now` as a parameter so
 tests can use fixed dates (including daylight-saving changes).
 """
 
@@ -24,7 +25,10 @@ _TOKENS_PER_PRICE_UNIT = Decimal(1_000_000)
 def turn_cost(
     model: str, input_tokens: int, cached_input_tokens: int, output_tokens: int
 ) -> Decimal:
-    """Cost in USD of one agent turn; `input_tokens` includes the cached ones."""
+    """Cost in USD of one LLM call (an agent turn or a mistake analysis).
+
+    `input_tokens` includes the cached ones.
+    """
     try:
         prices = settings.LLM_PRICES_USD_PER_MTOK[model]
     except KeyError:
@@ -56,11 +60,18 @@ def next_reset(now: datetime) -> datetime:
 
 
 def spent_today(user: User, now: datetime) -> Decimal:
-    total = Message.objects.filter(
+    """Agent turns plus mistake analyses since the last midnight."""
+    start = day_start(now)
+    turns = Message.objects.filter(
         conversation__in=Conversation.objects.for_user(user),
-        created_at__gte=day_start(now),
+        created_at__gte=start,
     ).aggregate(total=Sum("cost_usd"))["total"]
-    return total or Decimal(0)
+    analyses = (
+        Conversation.objects.for_user(user)
+        .filter(analyzed_at__gte=start)
+        .aggregate(total=Sum("analysis_cost_usd"))["total"]
+    )
+    return (turns or Decimal(0)) + (analyses or Decimal(0))
 
 
 def is_exhausted(user: User, now: datetime) -> bool:

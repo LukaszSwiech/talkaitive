@@ -3,7 +3,7 @@ project: "TalkAItive"
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-06
+updated: 2026-10-07
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -43,7 +43,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------- | -------- |
 | F-01 | auth-and-access-scaffold      | (foundation) zaproszony użytkownik loguje się e-mailem i hasłem; każda strona poza logowaniem wymaga logowania; dane każdego użytkownika są odizolowane | —              | FR-001, NFR Prywatność, Access Control  | done |
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
-| S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | proposed |
+| S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | in-progress |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | proposed |
 | S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
 
@@ -109,7 +109,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** zależy od istnienia danych z realnej rozmowy (S-01), dlatego jest zaraz po niej — dzięki temu logika wykrywania błędów użytej w korekcie na żywo (S-01) i w liście końcowej nie jest budowana dwa razy od zera.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-03: Pamięć między rozmowami i domykanie pętli błędów
 
@@ -141,7 +141,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | ---------- | ----------------------------- | ---------------------------------------------------------------- | ---------------------- | ------------- | ------------- | ------------------------------------------ |
 | F-01       | auth-and-access-scaffold      | Auth i izolacja danych między użytkownikami                     | yes                    | [#1](https://github.com/LukaszSwiech/talkaitive/issues/1) | [LUK-16](https://linear.app/lukaszswiech/issue/LUK-16/f-01-auth-i-izolacja-danych-miedzy-uzytkownikami) | Fundament pod wszystkie zadania poniżej |
 | S-01       | first-corrected-conversation  | Pierwsza rozmowa po niemiecku z korektą na bieżąco (gwiazda przewodnia) | yes                    | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `done` (2026-10-06), zarchiwizowane: `context/archive/2026-10-05-first-corrected-conversation/`. |
-| S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | no                     | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | Czeka na S-01                            |
+| S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | yes                    | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `in-progress` (2026-10-07), plan: `context/changes/post-conversation-error-list/plan.md` |
 | S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | no                     | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | Czeka na S-01, S-02                      |
 | S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | no                     | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | Czeka na F-01; może ruszyć równolegle z S-01 |
 
@@ -159,6 +159,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | Q-04 | Jak ma wyglądać zakładanie kont po MVP? | user | — (dotyczy kolejnego milestone'a; F-01 w pełni pokrywa zakres MVP) | [#9](https://github.com/LukaszSwiech/talkaitive/issues/9) | [LUK-24](https://linear.app/lukaszswiech/issue/LUK-24/q-04-jak-ma-wygladac-zakladanie-kont-po-mvp) |
 | Q-05 | Jakie są niefunkcjonalne non-goals MVP? | user | no | [#10](https://github.com/LukaszSwiech/talkaitive/issues/10) | [LUK-25](https://linear.app/lukaszswiech/issue/LUK-25/q-05-jakie-sa-niefunkcjonalne-non-goals-mvp) |
 | Q-06 | Jaki jest ballpark `target_scale.qps` i `target_scale.data_volume`? | user | no | [#11](https://github.com/LukaszSwiech/talkaitive/issues/11) | [LUK-26](https://linear.app/lukaszswiech/issue/LUK-26/q-06-jaki-jest-ballpark-target-scaleqps-i-target-scaledata-volume) |
+| Q-07 | Jak przygotowywać listę błędów (i inne długie wywołania modelu) poza żądaniem HTTP, tak żeby nieudane, płatne próby były ograniczone i widoczne w dziennym budżecie? Ryzyko zaakceptowane w MVP (2026-10-07): w S-02 próba ucięta timeoutem zapisuje koszt 0, a „Try again” nie ma limitu prób. Kierunek do głębszej analizy: osobna strona analizy + zlecenie w bazie wykonywane np. przez cron na Railway, albo lepszy sposób pracy z modelem (background mode / webhook w Responses API, `max_output_tokens`). Szczegóły w issue. | user | — (zaakceptowane ryzyko w MVP; dotyczy funkcji po MVP) | [#14](https://github.com/LukaszSwiech/talkaitive/issues/14) | [LUK-27](https://linear.app/lukaszswiech/issue/LUK-27/q-07-jak-przygotowywac-liste-bledow-poza-zadaniem-http-z-ograniczonymi) |
 
 **Synchronizacja statusów (bez integracji, wykonywana przez agenta, GitHub i Linear niezależnie od siebie):** tak jak w `Backlog Handoff` — gdy pytanie zostaje rozstrzygnięte, agent w tej samej turze i bez osobnej prośby zamyka odpowiedni GitHub Issue (`gh issue close`), osobno przestawia Linear issue na `Done` (`mcp__linear__save_issue`, pole `state`), usuwa lub oznacza jako rozwiązany odpowiedni wiersz w tej tabeli i poprawia tabele mapowania w `tasks-github.md` i `tasks-linear.md`. Pełna mechanika: `context/foundation/tasks-github.md`, `context/foundation/tasks-linear.md`.
 

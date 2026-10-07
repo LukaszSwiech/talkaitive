@@ -2,12 +2,13 @@ import importlib
 
 import pytest
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError, transaction
 
 import talkaitive.settings
 from accounts.models import PracticeLanguage, User
-from conversations.models import Conversation, Message
+from conversations.models import Conversation, Message, Mistake
 from conversations.topics import TOPICS, get_topic
 
 
@@ -84,6 +85,59 @@ def test_deleting_user_deletes_their_conversations_and_messages(
 
     assert list(Conversation.objects.all()) == [lukasz_conversation]
     assert Message.objects.count() == 1
+
+
+def make_mistake(conversation: Conversation, position: int = 1) -> Mistake:
+    return Mistake.objects.create(
+        user=conversation.user,
+        conversation=conversation,
+        position=position,
+        category=Mistake.Category.GRAMMAR,
+        wrong="Ich habe gegangen",
+        correct="Ich bin gegangen",
+        sentence="Gestern ich habe gegangen nach Hause.",
+        explanation="Gehen bildet das Perfekt mit sein.",
+    )
+
+
+@pytest.mark.django_db
+def test_deleting_user_deletes_their_mistakes(anna: User, lukasz: User) -> None:
+    make_mistake(make_conversation(anna))
+    lukasz_mistake = make_mistake(make_conversation(lukasz))
+
+    anna.delete()
+
+    assert list(Mistake.objects.all()) == [lukasz_mistake]
+
+
+@pytest.mark.django_db
+def test_deleting_conversation_deletes_its_mistakes(anna: User) -> None:
+    ended = make_conversation(anna, status=Conversation.Status.ENDED)
+    make_mistake(ended)
+    kept = make_mistake(make_conversation(anna))
+
+    ended.delete()
+
+    assert list(Mistake.objects.all()) == [kept]
+
+
+@pytest.mark.django_db
+def test_mistakes_for_user_hides_other_users_mistakes(anna: User, lukasz: User) -> None:
+    anna_mistake = make_mistake(make_conversation(anna))
+
+    assert list(Mistake.objects.for_user(anna)) == [anna_mistake]
+    assert not Mistake.objects.for_user(lukasz).exists()
+    assert not Mistake.objects.for_user(AnonymousUser()).exists()
+
+
+@pytest.mark.django_db
+def test_mistakes_are_ordered_by_position(anna: User) -> None:
+    conversation = make_conversation(anna)
+    second = make_mistake(conversation, position=2)
+    first = make_mistake(conversation, position=1)
+
+    assert list(conversation.mistakes.all()) == [first, second]
+    assert first.occurrences == 1
 
 
 @pytest.mark.django_db
