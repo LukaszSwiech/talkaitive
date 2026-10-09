@@ -3,7 +3,7 @@ project: "TalkAItive"
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-07
+updated: 2026-10-09
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -45,7 +45,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | done |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | done |
-| S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, NFR Usuwanie danych             | proposed |
+| S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, FR-002, NFR Usuwanie danych     | in-progress |
 
 ## Streams
 
@@ -125,15 +125,15 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 
 ### S-04: Usunięcie konta wraz z danymi
 
-- **Outcome:** użytkownik może usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć), z trwałym usunięciem w ciągu 24 godzin.
+- **Outcome:** użytkownik może usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć), z trwałym usunięciem w ciągu 24 godzin. Użytkownik może też się wylogować.
 - **Change ID:** account-and-data-deletion
-- **PRD refs:** FR-013, NFR Usuwanie danych
+- **PRD refs:** FR-013, FR-002, NFR Usuwanie danych
 - **Prerequisites:** F-01
 - **Parallel with:** S-01, S-02, S-03
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** utrzymane niezależnie od zadań rozmowy/pamięci, żeby dało się je zbudować równolegle zaraz po F-01; warto wracać do niego przy każdym nowym modelu danych (S-02, S-03), żeby usuwanie konta dalej obejmowało wszystko.
-- **Status:** proposed
+- **Status:** in-progress
 
 ## Backlog Handoff
 
@@ -143,7 +143,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 | S-01       | first-corrected-conversation  | Pierwsza rozmowa po niemiecku z korektą na bieżąco (gwiazda przewodnia) | yes                    | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `done` (2026-10-06), zarchiwizowane: `context/archive/2026-10-05-first-corrected-conversation/`. |
 | S-02       | post-conversation-error-list  | Lista błędów po zakończonej rozmowie                             | yes                    | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `done` (2026-10-07), zarchiwizowane: `context/archive/2026-10-06-post-conversation-error-list/`. |
 | S-03       | cross-session-error-memory    | Pamięć między rozmowami i domykanie pętli błędów                | yes                    | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | `done` (2026-10-07), zarchiwizowane: `context/archive/2026-10-07-cross-session-error-memory/`. |
-| S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | no                     | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | Czeka na F-01; może ruszyć równolegle z S-01 |
+| S-04       | account-and-data-deletion     | Usunięcie konta wraz z danymi                                   | yes                    | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | `planning` (2026-10-09), plan: `context/changes/account-and-data-deletion/plan.md`. |
 
 **Dozwolone wartości `Status:`:** `proposed`, `ready`, `planning`, `in-progress`, `blocked`, `done`. (`planning` = jest `plan.md` z `/10x-plan`, implementacja jeszcze nie ruszyła.)
 
@@ -165,7 +165,6 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 
 ## Parked
 
-- **Wylogowanie (FR-002)** — Why parked: zdegradowane z must-have do nice-to-have w rundzie sokratejskiej; PRD Non-Goals: poza zakresem wiążącym MVP.
 - **Oznaczanie zagadnienia jako opanowanego po N poprawnych użyciach (FR-011)** — Why parked: nice-to-have, jawnie „po MVP” zarówno w rundzie sokratejskiej, jak i w Non-Goals (statystyki postępu).
 - **Rozmowa głosowa (naciśnij i mów, odpowiedź głosem)** — Why parked: PRD Non-Goals — scope-down z fazy 3; głos dopiero po MVP.
 - **Historia rozmów i edycja błędów/pamięci** — Why parked: PRD Non-Goals — celem MVP jest rozmawianie, nie analiza.
@@ -176,6 +175,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Ćwiczenia i testy (fiszki, quizy)** — Why parked: PRD Non-Goals — jedyną formą ćwiczenia jest rozmowa.
 - **Statystyki postępu (wykresy, panel)** — Why parked: PRD Non-Goals.
 - **Profil ucznia w stylu Observational Memory** — Why parked: S-03 bierze fakty o uczniu z 10 ostatnich rozmów jako rozwiązanie tymczasowe; profil scalany przez osobne wywołanie LLM („Reflector”) wymaga nowej tabeli, kosztu w budżecie i obsługi błędów, więc jest po MVP (decyzja w `/10x-plan` S-03, 2026-10-07). GitHub [#16](https://github.com/LukaszSwiech/talkaitive/issues/16), Linear [LUK-28](https://linear.app/lukaszswiech/issue/LUK-28/profil-ucznia-w-stylu-observational-memory-po-mvp).
+- **Wspólny pasek nawigacji na każdej stronie („Log out”, „Delete account”)** — Why parked: S-04 świadomie dało te akcje tylko na stronie głównej (najmniejsza zmiana spełniająca FR-002); pasek w `base.html` dla wszystkich zalogowanych stron wymaga najpierw researchu UI. Przy okazji przeniesie CSS `.topbar` z `home.html` do `base.html` (F2 z impl-review S-04). Decyzja użytkownika 2026-10-09: po MVP.
 
 ## Milestone History
 

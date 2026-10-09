@@ -6,12 +6,12 @@ a 404. POST views always redirect (POST -> redirect -> GET).
 
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
-from accounts.models import User
+from accounts.http import AuthenticatedHttpRequest
 
 from . import services
 from .budget import is_exhausted, next_reset
@@ -19,12 +19,6 @@ from .llm import LLMError
 from .models import Conversation, Mistake
 from .services import AnalysisNotNeeded, ConversationError
 from .topics import TOPICS
-
-
-class AuthenticatedHttpRequest(HttpRequest):
-    """A request behind LoginRequiredMiddleware: `user` is always a signed-in `User`."""
-
-    user: User
 
 
 def _get_conversation(request: AuthenticatedHttpRequest, pk: int) -> Conversation:

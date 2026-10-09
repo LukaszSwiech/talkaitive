@@ -1,8 +1,27 @@
 {% extends "base.html" %}
 
+{% block head %}
+  <style>
+    .topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; margin-bottom: 1rem; }
+    .topbar h1 { margin: 0; }
+    .topbar .account { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+    .topbar .account p { margin: 0; }
+    .topbar .account button { margin-top: 0; }
+  </style>
+{% endblock %}
+
 {% block content %}
-  <h1>TalkAItive</h1>
-  <p>Signed in as {{ user.email }}</p>
+  <header class="topbar">
+    <h1>TalkAItive</h1>
+    <div class="account">
+      <p>Signed in as {{ user.email }}</p>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Log out</button>
+      </form>
+      <a href="{% url 'account_delete' %}">Delete account</a>
+    </div>
+  </header>
 
   {% if active_conversation %}
     <p>You have a conversation in progress: <strong>{{ active_conversation.topic_title }}</strong></p>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Delete account - TalkAItive{% endblock %}
+
+{% block content %}
+  <h1>Delete account</h1>
+  <p>
+    Your account and all your conversations, mistake lists and memory will be
+    deleted immediately. This cannot be undone.
+  </p>
+  <p>
+    The model provider (OpenAI) may keep copies of your conversation text for up
+    to 30 days for abuse monitoring. TalkAItive cannot delete them.
+  </p>
+  {% if can_delete %}
+    <form method="post">
+      {% csrf_token %}
+      <label for="id_password">Enter your password to confirm</label>
+      <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+      <button type="submit">Delete my account permanently</button>
+      <a href="{% url 'home' %}">Cancel</a>
+    </form>
+  {% else %}
+    <p class="notice">
+      This is the owner account, so it cannot be deleted here. Delete it through
+      /admin/ or manage.py.
+    </p>
+    <p><a href="{% url 'home' %}">Back to the home page</a></p>
+  {% endif %}
+{% endblock %}

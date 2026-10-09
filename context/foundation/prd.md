@@ -92,7 +92,7 @@ Osoba przygotowująca się do części ustnej egzaminu Goethe-Institut. Poza zak
 ## Non-Functional Requirements
 
 - **Prywatność:** rozmowy, błędy i pamięć jednej osoby nigdy nie są widoczne dla innej osoby — w tym dla właściciela w produkcie.
-- **Usuwanie danych:** po usunięciu konta wszystkie dane użytkownika (rozmowy, błędy, pamięć) są trwale usunięte w ciągu 24 godzin.
+- **Usuwanie danych:** po usunięciu konta wszystkie dane użytkownika (rozmowy, błędy, pamięć) są trwale usunięte w ciągu 24 godzin. Termin dotyczy danych w bazie aplikacji (usuwane natychmiast po potwierdzeniu). Poza kontrolą produktu pozostają: kopie rozmów u dostawcy modelu (OpenAI może je trzymać do 30 dni w logach monitoringu nadużyć; brak zero data retention) oraz kopie zapasowe bazy (do 7 dni, gdy powstaną — reguła w `context/deployment/deploy-plan.md`).
 - **Informacja zwrotna podczas czekania:** użytkownik przez cały czas oczekiwania na odpowiedź agenta widzi, że odpowiedź jest przygotowywana.
 - **Czas odpowiedzi agenta:** świadomie bez progu liczbowego — zależy od dostawcy modelu i jest poza kontrolą produktu.
 
@@ -127,7 +127,6 @@ Aplikacja ocenia poprawność każdego zdania użytkownika, a do kolejnych rozm�
 - **Tylko niemiecki** — brak innych języków do nauki.
 - **Brak ćwiczeń i testów** — brak osobnych ćwiczeń gramatycznych, fiszek, quizów; jedyną formą ćwiczenia jest rozmowa.
 - **Brak statystyk postępu** — brak wykresów, podsumowań i panelu postępu; oznaczanie zagadnień jako opanowanych (FR-011) jest nice-to-have po MVP.
-- **Wylogowanie poza zakresem wiążącym MVP** — FR-002 zdegradowany do nice-to-have w rundzie sokratejskiej.
 
 ### Niefunkcjonalne
 

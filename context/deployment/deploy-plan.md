@@ -198,6 +198,7 @@ Change `auth-and-access-scaffold` (F-01) replaced the default `auth.User` with a
 - [x] Upgrade to Hobby (done 2026-09-28).
 - [x] Check Railway backups on Hobby (2026-09-28): not available, Pro only (see Verification).
 - [ ] **Daily off-platform `pg_dump`**, plus one test restore. Hobby has no Railway backups, so the database has no backup at all. Do this before the app holds real data; on 2026-09-28 it holds only the admin account. This follows the 2026-09-27 user decision: skip `pg_dump` only if Hobby had backups.
+  - Retention: delete dumps older than 7 days. Data of deleted accounts may survive in dumps for up to 7 days (exception recorded in the PRD, NFR "Usuwanie danych").
   - Not via GitHub Actions for now (user decision 2026-09-28): the mechanism is chosen in the later CI/CD stage.
   - Postgres has no public TCP proxy (checked 2026-09-28). A runner outside Railway needs one enabled first, or the dump must run inside Railway.
   - **Needs:** the mechanism decision from the CI/CD stage, and a place to run the dump (a TCP proxy on Postgres for an outside runner, or a job inside Railway).
