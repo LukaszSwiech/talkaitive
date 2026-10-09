@@ -98,7 +98,24 @@ def test_logout_rejects_get(client: Client, anna: User) -> None:
 
 
 @pytest.mark.django_db
+def test_logout_when_already_signed_out_goes_to_login(client: Client) -> None:
+    response = client.post("/logout/")
+    assert response.status_code == 302
+    assert response["Location"] == "/login/"
+
+
+@pytest.mark.django_db
 def test_home_has_logout_form(client: Client, anna: User) -> None:
     assert client.login(username="anna@example.de", password=PASSWORD)
     home = client.get("/")
     assert 'action="/logout/"' in home.content.decode()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("url", ["/", "/account/delete/"])
+def test_signed_in_pages_are_not_cached(client: Client, anna: User, url: str) -> None:
+    assert client.login(username="anna@example.de", password=PASSWORD)
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "no-store" in response["Cache-Control"]
+    assert "private" in response["Cache-Control"]

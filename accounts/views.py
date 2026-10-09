@@ -8,13 +8,14 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
-from conversations.views import AuthenticatedHttpRequest
-
+from .http import AuthenticatedHttpRequest
 from .services import AccountDeletionError, delete_account
 
 
+@sensitive_post_parameters("password")
 @require_http_methods(["GET", "POST"])
 def account_delete(request: AuthenticatedHttpRequest) -> HttpResponse:
     if request.method == "GET":
@@ -28,9 +29,10 @@ def account_delete(request: AuthenticatedHttpRequest) -> HttpResponse:
     except AccountDeletionError as exc:
         messages.error(request, str(exc))
         return redirect("account_delete")
-    # The service deleted the session row too, but logout() still has to run: its
-    # flush() replaces the session key in the browser's cookie. The message goes
-    # after it, so it lands in the cookie and survives the redirect.
+    # The service already deleted the session row, but logout() still has to run:
+    # it makes request.user anonymous for the rest of this request and empties the
+    # session, so the stale session cookie is deleted and a later write would start
+    # a new session instead of failing on the deleted row (SessionInterrupted).
     logout(request)
     messages.success(request, "Your account has been deleted.")
     return redirect("login")

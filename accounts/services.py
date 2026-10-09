@@ -16,6 +16,7 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.models import Session
 from django.db import transaction
+from django.views.decorators.debug import sensitive_variables
 
 from .models import User
 
@@ -24,6 +25,7 @@ class AccountDeletionError(Exception):
     """A refused deletion; the message is shown to the user as it is."""
 
 
+@sensitive_variables("password")
 def delete_account(user: User, password: str) -> None:
     """Delete `user` with all their data, after checking the password.
 

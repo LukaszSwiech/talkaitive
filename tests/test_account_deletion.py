@@ -107,13 +107,36 @@ def test_deleting_account_removes_all_data_of_that_user_only(
     assert User.objects.filter(pk=lukasz.pk).exists()
 
 
-def test_every_relation_to_user_is_known_and_cascades() -> None:
+def user_data_models() -> set[type[models.Model]]:
+    """`User` and every model whose rows deleting a user removes by CASCADE."""
+    reached: set[type[models.Model]] = {User}
+    grew = True
+    while grew:
+        grew = False
+        for model in apps.get_models():
+            if model in reached:
+                continue
+            for field in model._meta.get_fields():
+                if (
+                    field.concrete
+                    and field.is_relation
+                    and field.related_model in reached
+                    and field.remote_field.on_delete is models.CASCADE
+                ):
+                    reached.add(model)
+                    grew = True
+                    break
+    return reached
+
+
+def test_every_relation_to_user_data_is_known_and_cascades() -> None:
+    user_data = user_data_models()
     found: dict[tuple[type[models.Model], str], models.Field] = {}
     for model in apps.get_models():
         for field in model._meta.get_fields():
             if field.auto_created or not field.is_relation:
                 continue
-            if field.related_model is User and (
+            if field.related_model in user_data and (
                 field.many_to_one or field.one_to_one or field.many_to_many
             ):
                 found[(model, field.name)] = field
@@ -121,17 +144,22 @@ def test_every_relation_to_user_is_known_and_cascades() -> None:
     expected = {
         (Conversation, "user"),
         (Mistake, "user"),
+        (Mistake, "conversation"),
+        (Message, "conversation"),
         (LogEntry, "user"),
         (OwnedNote, "user"),
     }
     assert set(found) == expected, (
-        "A model has a relation to User that deleting an account does not know "
-        "about. Check that its rows disappear with the account (ON DELETE CASCADE, "
-        "or removal in accounts/services.py), cover it in "
-        "tests/test_account_deletion.py, then add it to the list above: "
-        f"{set(found) ^ expected}"
+        "A model has a relation to user data (User or a model deleted with it) "
+        "that deleting an account does not know about. Check that its rows "
+        "disappear with the account (ON DELETE CASCADE, or removal in "
+        "accounts/services.py), cover it in tests/test_account_deletion.py, then "
+        f"add it to the list above: {set(found) ^ expected}"
     )
     for (model, name), field in found.items():
+        if field.many_to_many:
+            # No on_delete: deleting either side removes only the link rows.
+            continue
         assert field.remote_field.on_delete is models.CASCADE, (
             f"{model.__name__}.{name} must use on_delete=CASCADE so that deleting "
             "an account removes these rows."
@@ -177,6 +205,8 @@ def test_successful_deletion_logs_out_and_shows_message(anna: User) -> None:
     assert response.status_code == 302
     assert response["Location"] == "/login/"
     assert "_auth_user_id" not in client.session
+    # Only logout() deletes the session cookie; the service alone leaves it behind.
+    assert response.cookies["sessionid"].value == ""
     page = client.get("/login/")
     assert "Your account has been deleted." in page.content.decode()
 
@@ -228,7 +258,8 @@ def test_superuser_cannot_delete_account_even_with_correct_password(
     assert response.status_code == 302
     assert response["Location"] == DELETE_URL
     assert User.objects.filter(pk=owner.pk).exists()
-    assert "cannot be deleted here" in client.get(DELETE_URL).content.decode()
+    page = client.get(DELETE_URL)
+    assert "The owner account cannot be deleted here." in page.content.decode()
 
 
 @pytest.mark.django_db
