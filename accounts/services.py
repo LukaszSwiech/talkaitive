@@ -1,0 +1,52 @@
+"""Account deletion: the one place with the rules (FR-013).
+
+`delete_account` removes the user and everything the application keeps about them:
+the ORM cascade from `User` takes the conversations, messages, mistakes and memory
+fields (they live on the conversation) and the admin log entries the user wrote.
+Two things are not reached by the cascade and are removed here by hand: the user's
+sessions (the session table stores the id inside an encoded blob, not as a foreign
+key) and the admin log entries ABOUT the user (`LogEntry.object_id` is text, not a
+foreign key). Everything runs in one transaction through the ORM, never raw SQL.
+
+Not covered, because it is outside the application: copies held by OpenAI (up to 30
+days for abuse monitoring) and database backups. See the PRD, NFR "Usuwanie danych".
+"""
+
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sessions.models import Session
+from django.db import transaction
+
+from .models import User
+
+
+class AccountDeletionError(Exception):
+    """A refused deletion; the message is shown to the user as it is."""
+
+
+def delete_account(user: User, password: str) -> None:
+    """Delete `user` with all their data, after checking the password.
+
+    Raises `AccountDeletionError` for a superuser or a wrong password; nothing is
+    deleted then.
+    """
+    if user.is_superuser:
+        raise AccountDeletionError(
+            "The owner account cannot be deleted here. "
+            "Delete it through /admin/ or manage.py."
+        )
+    if not user.check_password(password):
+        raise AccountDeletionError("Incorrect password.")
+
+    # `user.delete()` sets `user.pk` to None, so remember it first.
+    user_id = str(user.pk)
+    with transaction.atomic():
+        # Expired sessions are included: they still hold the user id.
+        for session in Session.objects.iterator():
+            if session.get_decoded().get("_auth_user_id") == user_id:
+                session.delete()
+        LogEntry.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=user_id,
+        ).delete()
+        user.delete()

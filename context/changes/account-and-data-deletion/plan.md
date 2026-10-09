@@ -296,26 +296,26 @@ Brak zmian schematu i migracji. Wdrożenie przez auto-deploy z `main`. Na produk
 
 #### Automated
 
-- [x] 1.1 Testy przechodzą: `uv run pytest`
-- [x] 1.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 1.1 Testy przechodzą: `uv run pytest` — 9d90a73
+- [x] 1.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 9d90a73
 
 #### Manual
 
-- [x] 1.3 Lokalnie (`uv run python manage.py runserver`): po kliknięciu „Log out” na stronie głównej ląduję na `/login/`, a wejście na `/` przekierowuje z powrotem do logowania
+- [x] 1.3 Lokalnie (`uv run python manage.py runserver`): po kliknięciu „Log out” na stronie głównej ląduję na `/login/`, a wejście na `/` przekierowuje z powrotem do logowania — 9d90a73
 
 ### Phase 2: Usuwanie konta (FR-013)
 
 #### Automated
 
-- [ ] 2.1 Migracje są kompletne (brak nowych): `uv run python manage.py makemigrations --check --dry-run`
-- [ ] 2.2 Testy przechodzą: `uv run pytest`
-- [ ] 2.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Migracje są kompletne (brak nowych): `uv run python manage.py makemigrations --check --dry-run`
+- [x] 2.2 Testy przechodzą: `uv run pytest`
+- [x] 2.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 2.4 Lokalnie: konto testowe założone w `uv run python manage.py shell` (`User.objects.create_user`) z jedną zakończoną rozmową; strona `/account/delete/` czytelnie mówi, co zniknie, i zawiera zdanie o OpenAI
-- [ ] 2.5 Lokalnie: złe hasło pokazuje błąd i nic nie usuwa; poprawne hasło kończy się na `/login/` z komunikatem „Your account has been deleted.”, a w `shell` brak użytkownika, jego rozmów, wiadomości i błędów
-- [ ] 2.6 Lokalnie: zalogowany superuser widzi na `/account/delete/` informację bez formularza
+- [x] 2.4 Lokalnie: konto testowe założone w `uv run python manage.py shell` (`User.objects.create_user`) z jedną zakończoną rozmową; strona `/account/delete/` czytelnie mówi, co zniknie, i zawiera zdanie o OpenAI
+- [x] 2.5 Lokalnie: złe hasło pokazuje błąd i nic nie usuwa; poprawne hasło kończy się na `/login/` z komunikatem „Your account has been deleted.”, a w `shell` brak użytkownika, jego rozmów, wiadomości i błędów
+- [x] 2.6 Lokalnie: zalogowany superuser widzi na `/account/delete/` informację bez formularza
 
 ### Phase 3: Dokumenty — wyjątki od 24 h i FR-002
 

@@ -19,6 +19,7 @@
         {% csrf_token %}
         <button type="submit">Log out</button>
       </form>
+      <a href="{% url 'account_delete' %}">Delete account</a>
     </div>
   </header>
 
