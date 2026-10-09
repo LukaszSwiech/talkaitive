@@ -307,24 +307,24 @@ Brak zmian schematu i migracji. Wdrożenie przez auto-deploy z `main`. Na produk
 
 #### Automated
 
-- [x] 2.1 Migracje są kompletne (brak nowych): `uv run python manage.py makemigrations --check --dry-run`
-- [x] 2.2 Testy przechodzą: `uv run pytest`
-- [x] 2.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Migracje są kompletne (brak nowych): `uv run python manage.py makemigrations --check --dry-run` — a58a433
+- [x] 2.2 Testy przechodzą: `uv run pytest` — a58a433
+- [x] 2.3 Lint i format: `uv run ruff check . && uv run ruff format --check .` — a58a433
 
 #### Manual
 
-- [x] 2.4 Lokalnie: konto testowe założone w `uv run python manage.py shell` (`User.objects.create_user`) z jedną zakończoną rozmową; strona `/account/delete/` czytelnie mówi, co zniknie, i zawiera zdanie o OpenAI
-- [x] 2.5 Lokalnie: złe hasło pokazuje błąd i nic nie usuwa; poprawne hasło kończy się na `/login/` z komunikatem „Your account has been deleted.”, a w `shell` brak użytkownika, jego rozmów, wiadomości i błędów
-- [x] 2.6 Lokalnie: zalogowany superuser widzi na `/account/delete/` informację bez formularza
+- [x] 2.4 Lokalnie: konto testowe założone w `uv run python manage.py shell` (`User.objects.create_user`) z jedną zakończoną rozmową; strona `/account/delete/` czytelnie mówi, co zniknie, i zawiera zdanie o OpenAI — a58a433
+- [x] 2.5 Lokalnie: złe hasło pokazuje błąd i nic nie usuwa; poprawne hasło kończy się na `/login/` z komunikatem „Your account has been deleted.”, a w `shell` brak użytkownika, jego rozmów, wiadomości i błędów — a58a433
+- [x] 2.6 Lokalnie: zalogowany superuser widzi na `/account/delete/` informację bez formularza — a58a433
 
 ### Phase 3: Dokumenty — wyjątki od 24 h i FR-002
 
 #### Automated
 
-- [ ] 3.1 PRD nie zawiera już non-goal o wylogowaniu: `! grep -n "Wylogowanie poza zakresem" context/foundation/prd.md`
-- [ ] 3.2 Roadmapa nie ma FR-002 w Parked: `! grep -n "Wylogowanie (FR-002)" context/foundation/roadmap.md`
-- [ ] 3.3 `deploy-plan.md` zawiera regułę 7 dni: `grep -n "7 dni\|7 days" context/deployment/deploy-plan.md`
+- [x] 3.1 PRD nie zawiera już non-goal o wylogowaniu: `! grep -n "Wylogowanie poza zakresem" context/foundation/prd.md`
+- [x] 3.2 Roadmapa nie ma FR-002 w Parked: `! grep -n "Wylogowanie (FR-002)" context/foundation/roadmap.md`
+- [x] 3.3 `deploy-plan.md` zawiera regułę 7 dni: `grep -n "7 dni\|7 days" context/deployment/deploy-plan.md`
 
 #### Manual
 
-- [ ] 3.4 Treść wyjątku w PRD jest zgodna ze zdaniem na stronie `/account/delete/` (OpenAI, 30 dni) i z regułą w `deploy-plan.md` (7 dni)
+- [x] 3.4 Treść wyjątku w PRD jest zgodna ze zdaniem na stronie `/account/delete/` (OpenAI, 30 dni) i z regułą w `deploy-plan.md` (7 dni)
