@@ -39,7 +39,7 @@ GitHub Issues (utworzone przez `gh issue create`) **nie mają** tu ustawionych n
 | S-01 | first-corrected-conversation | [#2](https://github.com/LukaszSwiech/talkaitive/issues/2) | `type:slice`, `north-star`, `stream:conversation-loop` | closed |
 | S-02 | post-conversation-error-list | [#3](https://github.com/LukaszSwiech/talkaitive/issues/3) | `type:slice`, `stream:conversation-loop` | closed |
 | S-03 | cross-session-error-memory | [#4](https://github.com/LukaszSwiech/talkaitive/issues/4) | `type:slice`, `stream:conversation-loop` | closed |
-| S-04 | account-and-data-deletion | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | `type:slice`, `status:in-progress`, `stream:account` | open |
+| S-04 | account-and-data-deletion | [#5](https://github.com/LukaszSwiech/talkaitive/issues/5) | `type:slice`, `stream:account` | closed |
 | Q-01 | — | [#6](https://github.com/LukaszSwiech/talkaitive/issues/6) | `roadmap-question` | open |
 | Q-02 | — | [#7](https://github.com/LukaszSwiech/talkaitive/issues/7) | `roadmap-question` | open |
 | Q-03 | — | [#8](https://github.com/LukaszSwiech/talkaitive/issues/8) | `roadmap-question` | open |
