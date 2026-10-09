@@ -1,10 +1,10 @@
 ---
 change_id: account-and-data-deletion
 title: Account and data deletion
-status: impl_reviewed
+status: archived
 created: 2026-10-07
 updated: 2026-10-09
-archived_at: null
+archived_at: 2026-10-09T19:19:40Z
 ---
 
 ## Notes

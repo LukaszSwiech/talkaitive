@@ -45,7 +45,7 @@ Obcokrajowcy mieszkający w Niemczech na poziomie B1–B2 nie mają z kim ćwicz
 | S-01 | first-corrected-conversation  | wybrać temat, prowadzić rozmowę po niemiecku z korektą wplecioną na bieżąco i zakończyć ją (przyciskiem albo przez agenta) | F-01           | FR-003, FR-004, FR-005, FR-006, FR-007, FR-012, US-01 | done |
 | S-02 | post-conversation-error-list  | zobaczyć po zakończeniu rozmowy uporządkowaną listę błędów (kategoria, wersja błędna → poprawna)                | S-01           | FR-008                                  | done |
 | S-03 | cross-session-error-memory    | zacząć kolejną rozmowę, w której agent nawiązuje do wcześniejszych wątków i błędów pasujących do tematu, bez powtarzania pytań | S-01, S-02     | FR-009, FR-010, US-01                   | done |
-| S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, FR-002, NFR Usuwanie danych     | in-progress |
+| S-04 | account-and-data-deletion     | usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć)                                            | F-01           | FR-013, FR-002, NFR Usuwanie danych     | done |
 
 ## Streams
 
@@ -133,7 +133,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** utrzymane niezależnie od zadań rozmowy/pamięci, żeby dało się je zbudować równolegle zaraz po F-01; warto wracać do niego przy każdym nowym modelu danych (S-02, S-03), żeby usuwanie konta dalej obejmowało wszystko.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -187,3 +187,4 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **S-01: zalogowany użytkownik może wybrać jeden z 20 tematów, prowadzić tekstową rozmowę po niemiecku, otrzymywać korektę błędnych wypowiedzi wplecioną w odpowiedź agenta (recast) bez przerywania rozmowy, i zakończyć rozmowę przyciskiem „Zakończ” albo przez agenta (pożegnanie / wyczerpany dzienny limit, z komunikatem o limicie).** — Archived 2026-10-06 → `context/archive/2026-10-05-first-corrected-conversation/`. Lesson: —.
 - **S-02: użytkownik może po zakończeniu rozmowy zobaczyć uporządkowaną listę błędów z tej rozmowy: kategoria (gramatyka / słownictwo / szyk zdania), wersja błędna → poprawna.** — Archived 2026-10-07 → `context/archive/2026-10-06-post-conversation-error-list/`. Lesson: —.
 - **S-03: użytkownik może rozpocząć kolejną rozmowę, w której agent uwzględnia wcześniej omawiane wątki pasujące do wybranego tematu, nie powtarza wcześniej zadanych pytań i naturalnie stwarza okazje do użycia konstrukcji, w których użytkownik wcześniej się mylił — bez informowania wprost, że to poprawka.** — Archived 2026-10-07 → `context/archive/2026-10-07-cross-session-error-memory/`. Lesson: —.
+- **S-04: użytkownik może usunąć swoje konto wraz ze wszystkimi danymi (rozmowy, błędy, pamięć), z trwałym usunięciem w ciągu 24 godzin. Użytkownik może też się wylogować.** — Archived 2026-10-09 → `context/archive/2026-10-07-account-and-data-deletion/`. Lesson: —.
