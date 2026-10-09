@@ -175,6 +175,7 @@ Foundations poniżej zakładają ten stan i NIE odtwarzają go od nowa.
 - **Ćwiczenia i testy (fiszki, quizy)** — Why parked: PRD Non-Goals — jedyną formą ćwiczenia jest rozmowa.
 - **Statystyki postępu (wykresy, panel)** — Why parked: PRD Non-Goals.
 - **Profil ucznia w stylu Observational Memory** — Why parked: S-03 bierze fakty o uczniu z 10 ostatnich rozmów jako rozwiązanie tymczasowe; profil scalany przez osobne wywołanie LLM („Reflector”) wymaga nowej tabeli, kosztu w budżecie i obsługi błędów, więc jest po MVP (decyzja w `/10x-plan` S-03, 2026-10-07). GitHub [#16](https://github.com/LukaszSwiech/talkaitive/issues/16), Linear [LUK-28](https://linear.app/lukaszswiech/issue/LUK-28/profil-ucznia-w-stylu-observational-memory-po-mvp).
+- **Wspólny pasek nawigacji na każdej stronie („Log out”, „Delete account”)** — Why parked: S-04 świadomie dało te akcje tylko na stronie głównej (najmniejsza zmiana spełniająca FR-002); pasek w `base.html` dla wszystkich zalogowanych stron wymaga najpierw researchu UI. Przy okazji przeniesie CSS `.topbar` z `home.html` do `base.html` (F2 z impl-review S-04). Decyzja użytkownika 2026-10-09: po MVP.
 
 ## Milestone History
 
