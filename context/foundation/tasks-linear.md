@@ -41,7 +41,7 @@ Pole `Prerequisites:` z roadmapy jest odwzorowane jako natywna relacja Linear `b
 
 Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest informacyjne, nie blokujące).
 
-## Aktualne mapowanie (stan na 2026-10-07)
+## Aktualne mapowanie (stan na 2026-10-09)
 
 | Roadmap ID | Change ID | Linear Issue | Etykiety | Status |
 | --- | --- | --- | --- | --- |
@@ -49,7 +49,7 @@ Pytania Q-01..Q-06 nie mają zależności (pole `Blocks` w roadmapie jest inform
 | S-01 | first-corrected-conversation | [LUK-17](https://linear.app/lukaszswiech/issue/LUK-17/s-01-pierwsza-rozmowa-po-niemiecku-z-korekta-na-biezaco-gwiazda) | `slice`, `north-star`, `stream:conversation-loop` | Done |
 | S-02 | post-conversation-error-list | [LUK-18](https://linear.app/lukaszswiech/issue/LUK-18/s-02-lista-bledow-po-zakonczonej-rozmowie) | `slice`, `stream:conversation-loop` | Done |
 | S-03 | cross-session-error-memory | [LUK-19](https://linear.app/lukaszswiech/issue/LUK-19/s-03-pamiec-miedzy-rozmowami-i-domykanie-petli-bledow) | `slice`, `stream:conversation-loop` | Done |
-| S-04 | account-and-data-deletion | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | `slice`, `stream:account` | Backlog |
+| S-04 | account-and-data-deletion | [LUK-20](https://linear.app/lukaszswiech/issue/LUK-20/s-04-usuniecie-konta-wraz-z-danymi) | `slice`, `stream:account` | In Progress |
 | Q-01 | — | [LUK-21](https://linear.app/lukaszswiech/issue/LUK-21/q-01-jak-praktika-rozwiazuje-pamiec-miedzy-sesjami-kontrole-poziomu) | `roadmap-question` | Backlog |
 | Q-02 | — | [LUK-22](https://linear.app/lukaszswiech/issue/LUK-22/q-02-czy-mvp-zdazy-przed-terminem-miekkim-2026-11-04) | `roadmap-question` | Backlog |
 | Q-03 | — | [LUK-23](https://linear.app/lukaszswiech/issue/LUK-23/q-03-ile-razy-w-tygodniu-oznacza-regularne-uzywanie-w-primary-success) | `roadmap-question` | Backlog |
