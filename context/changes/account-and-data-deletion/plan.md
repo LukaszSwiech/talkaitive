@@ -321,10 +321,10 @@ Brak zmian schematu i migracji. Wdrożenie przez auto-deploy z `main`. Na produk
 
 #### Automated
 
-- [x] 3.1 PRD nie zawiera już non-goal o wylogowaniu: `! grep -n "Wylogowanie poza zakresem" context/foundation/prd.md`
-- [x] 3.2 Roadmapa nie ma FR-002 w Parked: `! grep -n "Wylogowanie (FR-002)" context/foundation/roadmap.md`
-- [x] 3.3 `deploy-plan.md` zawiera regułę 7 dni: `grep -n "7 dni\|7 days" context/deployment/deploy-plan.md`
+- [x] 3.1 PRD nie zawiera już non-goal o wylogowaniu: `! grep -n "Wylogowanie poza zakresem" context/foundation/prd.md` — 807a050
+- [x] 3.2 Roadmapa nie ma FR-002 w Parked: `! grep -n "Wylogowanie (FR-002)" context/foundation/roadmap.md` — 807a050
+- [x] 3.3 `deploy-plan.md` zawiera regułę 7 dni: `grep -n "7 dni\|7 days" context/deployment/deploy-plan.md` — 807a050
 
 #### Manual
 
-- [x] 3.4 Treść wyjątku w PRD jest zgodna ze zdaniem na stronie `/account/delete/` (OpenAI, 30 dni) i z regułą w `deploy-plan.md` (7 dni)
+- [x] 3.4 Treść wyjątku w PRD jest zgodna ze zdaniem na stronie `/account/delete/` (OpenAI, 30 dni) i z regułą w `deploy-plan.md` (7 dni) — 807a050
