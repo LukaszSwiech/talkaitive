@@ -75,3 +75,30 @@ def test_logged_in_login_page_redirects_home(client: Client, anna: User) -> None
     response = client.get("/login/")
     assert response.status_code == 302
     assert response["Location"] == "/"
+
+
+@pytest.mark.django_db
+def test_logout_ends_session_and_redirects_to_login(client: Client, anna: User) -> None:
+    assert client.login(username="anna@example.de", password=PASSWORD)
+    response = client.post("/logout/")
+    assert response.status_code == 302
+    assert response["Location"] == "/login/"
+    assert "_auth_user_id" not in client.session
+
+    home = client.get("/")
+    assert home.status_code == 302
+    assert home["Location"] == "/login/?next=/"
+
+
+@pytest.mark.django_db
+def test_logout_rejects_get(client: Client, anna: User) -> None:
+    assert client.login(username="anna@example.de", password=PASSWORD)
+    assert client.get("/logout/").status_code == 405
+    assert "_auth_user_id" in client.session
+
+
+@pytest.mark.django_db
+def test_home_has_logout_form(client: Client, anna: User) -> None:
+    assert client.login(username="anna@example.de", password=PASSWORD)
+    home = client.get("/")
+    assert 'action="/logout/"' in home.content.decode()
