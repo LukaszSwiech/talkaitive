@@ -1,7 +1,7 @@
 ---
 change_id: testing-suite-trust-and-ci
 title: Suite trust and CI floor — mutation-proven tests and a CI gate before main
-status: planned
+status: implementing
 created: 2026-10-14
 updated: 2026-10-14
 archived_at: null

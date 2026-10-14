@@ -484,14 +484,14 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [ ] 1.1 `uv run mutmut run` kończy się bez błędu konfiguracji, a `uv run mutmut results` pokazuje mutanty z 4 modułów
-- [ ] 1.2 Mutant `>=` → `>` w `is_exhausted` jest w wynikach mutmut zabity (kontrola sensu)
-- [ ] 1.3 `uv run pytest` dalej 198 passed
-- [ ] 1.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą mimo istniejącego katalogu `mutants/`
+- [x] 1.1 `uv run mutmut run` kończy się bez błędu konfiguracji, a `uv run mutmut results` pokazuje mutanty z 4 modułów
+- [x] 1.2 Mutant `>=` → `>` w `is_exhausted` jest w wynikach mutmut zabity (kontrola sensu)
+- [x] 1.3 `uv run pytest` dalej 198 passed
+- [x] 1.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą mimo istniejącego katalogu `mutants/`
 
 #### Manual
 
-- [ ] 1.5 `mutmut-baseline.md` zawiera czas przebiegu, liczby i listę przeżywających mutantów, a użytkownik akceptuje decyzję go/no-go dla mutmut
+- [x] 1.5 `mutmut-baseline.md` zawiera czas przebiegu, liczby i listę przeżywających mutantów, a użytkownik akceptuje decyzję go/no-go dla mutmut
 
 ### Phase 2: Próg CI i bramka Railway
 
