@@ -372,24 +372,24 @@ Brak migracji bazy: nowe ustawienie jest stałą, a stan „analiza nieudana” 
 
 #### Automated
 
-- [x] 3.1 Najpierw czerwone: test granicy 209 s / 210 s i test strony przy ok. 200 s padają na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py`
-- [x] 3.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
-- [x] 3.3 mutmut bez niewyjaśnionych przeżyć w `_agent_turn_timeout`, `_analysis_timeout`, `_clear_turn_marker`: `uv run mutmut run` + `uv run mutmut results`
-- [x] 3.4 Ręczne mutanty zgodne z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0)
-- [x] 3.5 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Najpierw czerwone: test granicy 209 s / 210 s i test strony przy ok. 200 s padają na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py` — f128a4b
+- [x] 3.2 Po zmianie wszystkie testy przechodzą: `uv run pytest` — f128a4b
+- [x] 3.3 mutmut bez niewyjaśnionych przeżyć w `_agent_turn_timeout`, `_analysis_timeout`, `_clear_turn_marker`: `uv run mutmut run` + `uv run mutmut results` — f128a4b
+- [x] 3.4 Ręczne mutanty zgodne z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0) — f128a4b
+- [x] 3.5 Lint i format: `uv run ruff check . && uv run ruff format --check .` — f128a4b
 
 ### Phase 4: Wygasły znacznik analizy = porażka
 
 #### Automated
 
-- [ ] 4.1 Najpierw czerwone: test strony z wygasłym znacznikiem pada na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py`
-- [ ] 4.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
-- [ ] 4.3 mutmut bez niewyjaśnionych przeżyć w `analysis_failed`: `uv run mutmut run` + `uv run mutmut results`
-- [ ] 4.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 4.1 Najpierw czerwone: test strony z wygasłym znacznikiem pada na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py`
+- [x] 4.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
+- [x] 4.3 mutmut bez niewyjaśnionych przeżyć w `analysis_failed`: `uv run mutmut run` + `uv run mutmut results`
+- [x] 4.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 4.5 Lokalnie (`uv run python manage.py runserver`): zakończona rozmowa z ręcznie ustawionym w shellu Django znacznikiem analizy sprzed 4 min pokazuje komunikat i „Try again”, strona sama się nie wysyła i nie odświeża
+- [x] 4.5 Lokalnie (`uv run python manage.py runserver`): zakończona rozmowa z ręcznie ustawionym w shellu Django znacznikiem analizy sprzed 4 min pokazuje komunikat i „Try again”, strona sama się nie wysyła i nie odświeża
 
 ### Phase 5: Cookbook i domknięcie fazy w test-plan
 

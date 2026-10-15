@@ -255,6 +255,21 @@ def analysis_in_progress(conversation: Conversation, now: datetime) -> bool:
     return started is not None and now - started < _analysis_timeout()
 
 
+def analysis_failed(conversation: Conversation, now: datetime) -> bool:
+    """True when the last analysis attempt ended without a list of mistakes.
+
+    Either the failure was recorded, or the marker expired without a result (the
+    worker died meanwhile). The page then offers "Try again" instead of starting a
+    new paid analysis by itself.
+    """
+    if conversation.analyzed_at is not None or analysis_in_progress(conversation, now):
+        return False
+    return (
+        conversation.analysis_failed_at is not None
+        or conversation.analysis_started_at is not None
+    )
+
+
 def _clear_analysis_marker(conversation: Conversation, started_at: datetime) -> None:
     # Only our own marker: once it has expired, another request may have set a new one.
     Conversation.objects.for_user(conversation.user).filter(

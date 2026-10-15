@@ -11,9 +11,11 @@ from decimal import Decimal
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from accounts.models import User
 from conversations import services
+from conversations.llm import FoundMistake
 from conversations.models import Conversation, Message
 from tests.fake_provider import FakeProvider
 
@@ -236,6 +238,65 @@ def test_analysis_marker_lives_as_long_as_the_sdk_can_wait_plus_a_margin(
     assert services.analysis_in_progress(conversation, started + age) is in_progress
 
 
+ANALYSIS_START = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    ("fields", "age", "failed"),
+    [
+        ({}, timedelta(0), False),
+        ({"analysis_failed_at": ANALYSIS_START}, timedelta(0), True),
+        ({"analysis_started_at": ANALYSIS_START}, ANALYSIS_MARKER_LIFETIME, True),
+        (
+            {"analysis_started_at": ANALYSIS_START},
+            ANALYSIS_MARKER_LIFETIME - timedelta(microseconds=1),
+            False,
+        ),
+        (
+            {
+                "analysis_started_at": ANALYSIS_START,
+                "analysis_failed_at": ANALYSIS_START - timedelta(minutes=5),
+            },
+            timedelta(seconds=10),
+            False,
+        ),
+        (
+            {"analysis_started_at": ANALYSIS_START, "analyzed_at": ANALYSIS_START},
+            ANALYSIS_MARKER_LIFETIME,
+            False,
+        ),
+        (
+            {"analysis_failed_at": ANALYSIS_START, "analyzed_at": ANALYSIS_START},
+            timedelta(0),
+            False,
+        ),
+    ],
+    ids=[
+        "never-started",
+        "failure-recorded",
+        "marker-expired-without-result",
+        "marker-still-valid",
+        "retry-in-progress-after-a-failure",
+        "analysed-with-a-leftover-marker",
+        "analysed-after-a-failure",
+    ],
+)
+def test_analysis_failed_when_a_failure_was_recorded_or_the_marker_expired(
+    fields: dict[str, datetime], age: timedelta, failed: bool
+) -> None:
+    """The analysis failed: no result, no live marker, and an attempt was made.
+
+    An expired marker without a result means the worker died during the analysis;
+    the page must then offer "Try again" instead of starting a new paid call by
+    itself. A never-started analysis is not a failure: it still starts on its own.
+    Source: decision P6 (plan testing-waiting-path-recovery, 2026-10-15); test-plan
+    §2 risk #1; the 180 s lifetime: see `ANALYSIS_MARKER_LIFETIME`.
+    """
+    conversation = Conversation(**fields)
+
+    assert services.analysis_failed(conversation, ANALYSIS_START + age) is failed
+
+
 @pytest.mark.parametrize(
     ("timeout_setting", "retries_setting"),
     [
@@ -299,3 +360,124 @@ def test_turn_after_a_503_with_retry_after_saves_and_shows_the_reply(
     assert "Gerne, drei Brezeln." in page
     assert "Try again" not in page
     assert "The agent could not reply" not in page
+
+
+# --- the analysis after the conversation ----------------------------------------
+#
+# Oracle: decision P6 (plan, 2026-10-15) and test-plan §2 risk #1: a failed or
+# abandoned analysis ends with a message and "Try again", and the click really
+# starts one new analysis whose list then appears on the page.
+
+ANALYSIS_FAILED = "We could not prepare your list of mistakes. Please try again."
+
+PERFEKT_MISTAKE = FoundMistake(
+    message_number=1,
+    category="grammar",
+    wrong="habe gegangen",
+    correct="bin gegangen",
+    sentence="Ich habe gegangen.",
+    explanation="Gehen takes sein in the Perfekt.",
+)
+
+
+def analysis_url(conversation: Conversation) -> str:
+    return f"/conversations/{conversation.pk}/analysis/"
+
+
+def auto_submit_form(conversation: Conversation) -> str:
+    # The form itself: base.html's script also mentions `data-auto-submit`.
+    return f'action="{analysis_url(conversation)}" data-auto-submit'
+
+
+def ended_conversation(client: Client, fake_provider: FakeProvider) -> Conversation:
+    """An ended conversation with one learner message, not analysed yet."""
+    fake_provider.reply("Guten Tag! Was haben Sie gestern gemacht?")
+    client.post(START_URL, {"topic": "bakery"})
+    conversation = Conversation.objects.get(status=Conversation.Status.ACTIVE)
+    fake_provider.reply("Ah, schön. Und dann?")
+    client.post(
+        f"/conversations/{conversation.pk}/messages/", {"text": "Ich habe gegangen."}
+    )
+    client.post(f"/conversations/{conversation.pk}/end/")
+    conversation.refresh_from_db()
+    assert conversation.status == Conversation.Status.ENDED
+    return conversation
+
+
+def assert_shows_the_list(page: str) -> None:
+    assert "Your mistakes" in page
+    assert "bin gegangen" in page
+    assert "Gehen takes sein in the Perfekt." in page
+    assert "Try again" not in page
+    assert ANALYSIS_FAILED not in page
+
+
+@pytest.mark.django_db
+def test_expired_analysis_marker_shows_try_again_and_the_retry_brings_the_list(
+    anna_client: Client, fake_provider: FakeProvider
+) -> None:
+    """The worker died during the analysis: the marker is 190 s old, no result.
+
+    The page offers "Try again" (it does not start a paid call by itself); one
+    click makes exactly one new request and shows the list.
+    """
+    conversation = ended_conversation(anna_client, fake_provider)
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analysis_started_at=timezone.now() - timedelta(seconds=190)
+    )
+    before_retry = len(fake_provider.requests)
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert ANALYSIS_FAILED in page
+    assert auto_submit_form(conversation) not in page
+
+    fake_provider.analysis(mistakes=[PERFEKT_MISTAKE])
+    retried = anna_client.post(analysis_url(conversation), follow=True)
+
+    conversation.refresh_from_db()
+    assert len(fake_provider.requests) - before_retry == 1
+    assert conversation.analyzed_at is not None
+    assert conversation.analysis_failed_at is None
+    assert conversation.analysis_started_at is None
+    assert list(conversation.mistakes.values_list("wrong", "correct")) == [
+        ("habe gegangen", "bin gegangen")
+    ]
+    assert retried.redirect_chain[-1][0] == detail_url(conversation)
+    assert_shows_the_list(retried.content.decode())
+
+
+@pytest.mark.django_db
+def test_hung_analysis_shows_try_again_and_the_retry_brings_the_list(
+    anna_client: Client, fake_provider: FakeProvider
+) -> None:
+    """The provider hangs during the analysis (one attempt, no SDK retry).
+
+    The page shows the message and "Try again"; the click with a working provider
+    shows the list. Two analysis requests in total.
+    """
+    conversation = ended_conversation(anna_client, fake_provider)
+    before_analysis = len(fake_provider.requests)
+
+    fake_provider.hang()
+    failed = anna_client.post(analysis_url(conversation), follow=True)
+
+    conversation.refresh_from_db()
+    assert len(fake_provider.requests) - before_analysis == 1
+    assert conversation.analyzed_at is None
+    assert conversation.analysis_failed_at is not None
+    assert conversation.analysis_started_at is None
+    page = failed.content.decode()
+    assert ANALYSIS_FAILED in page
+    assert f'action="{analysis_url(conversation)}"' in page
+    assert auto_submit_form(conversation) not in page
+    assert 'http-equiv="refresh"' not in page
+
+    fake_provider.analysis(mistakes=[PERFEKT_MISTAKE])
+    retried = anna_client.post(analysis_url(conversation), follow=True)
+
+    conversation.refresh_from_db()
+    assert len(fake_provider.requests) - before_analysis == 2
+    assert conversation.analyzed_at is not None
+    assert conversation.analysis_failed_at is None
+    assert_shows_the_list(retried.content.decode())

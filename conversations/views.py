@@ -96,6 +96,7 @@ def conversation_detail(request: AuthenticatedHttpRequest, pk: int) -> HttpRespo
                 conversation=conversation
             ),
             "analysis_in_progress": services.analysis_in_progress(conversation, now),
+            "analysis_failed": services.analysis_failed(conversation, now),
             "reset_at": reset_at,
             "budget_time_zone": settings.BUDGET_TIME_ZONE,
             "max_message_length": services.MAX_MESSAGE_LENGTH,

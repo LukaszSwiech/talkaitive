@@ -999,6 +999,53 @@ def test_failed_analysis_page_offers_try_again_without_auto_submit(
 
 
 @pytest.mark.django_db
+def test_expired_analysis_marker_offers_try_again_without_auto_submit(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """About 190 s after the start, past the 180 s marker, with no result and no
+    recorded failure: the worker died during the analysis.
+
+    The page treats it as a failure, so a new paid analysis starts only on a click.
+    Source: decision P6 (plan testing-waiting-path-recovery, 2026-10-15); test-plan
+    §2 risk #1 (the marker expires, then "Try again"); the 180 s lifetime is
+    `ANALYSIS_MARKER_LIFETIME` in tests/test_waiting_path.py.
+    """
+    conversation = ended(anna_client)
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analysis_started_at=timezone.now() - timedelta(seconds=190)
+    )
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert "We could not prepare your list of mistakes. Please try again." in page
+    assert f'action="{analysis_url(conversation)}"' in page
+    assert "Try again" in page
+    assert auto_submit_form(conversation) not in page
+    assert 'http-equiv="refresh"' not in page
+
+
+@pytest.mark.django_db
+def test_analysis_marker_of_170_s_still_shows_the_spinner(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """Before the 180 s marker expires, the analysis may still be running.
+
+    Source: see `ANALYSIS_MARKER_LIFETIME` in tests/test_waiting_path.py.
+    """
+    conversation = ended(anna_client)
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analysis_started_at=timezone.now() - timedelta(seconds=170)
+    )
+
+    page = anna_client.get(detail_url(conversation)).content.decode()
+
+    assert 'http-equiv="refresh"' in page
+    assert '<span role="status">Preparing your list of mistakes…</span>' in page
+    assert "Try again" not in page
+    assert auto_submit_form(conversation) not in page
+
+
+@pytest.mark.django_db
 def test_analysed_page_lists_mistakes_in_order(
     anna_client: Client, fake_llm: FakeGenerateTurn
 ) -> None:
