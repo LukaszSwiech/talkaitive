@@ -67,10 +67,14 @@ def _lock(conversation: Conversation) -> Conversation:
 
 
 def _agent_turn_timeout() -> timedelta:
-    # Longer than the SDK can wait (timeout x attempts): a live call is never taken
-    # for a dead one, and a marker left by a killed worker still expires.
+    # Longer than the SDK can wait: every attempt up to its timeout, the longest
+    # Retry-After before each retry, plus 30 s. A live call is never taken for a
+    # dead one, and a marker left by a killed worker still expires.
+    # Assumes a non-streaming call: httpx applies the timeout per phase and per
+    # read, so only a body that arrives at once makes it the length of an attempt.
     attempts = settings.LLM_MAX_RETRIES + 1
-    return timedelta(seconds=settings.LLM_TIMEOUT_SECONDS * attempts + 30)
+    waits = settings.LLM_MAX_RETRIES * settings.LLM_MAX_RETRY_AFTER_SECONDS
+    return timedelta(seconds=waits + settings.LLM_TIMEOUT_SECONDS * attempts + 30)
 
 
 def agent_turn_in_progress(conversation: Conversation, now: datetime) -> bool:
@@ -241,13 +245,31 @@ def end_conversation(
 def _analysis_timeout() -> timedelta:
     # Like `_agent_turn_timeout`: longer than the SDK can wait for the analysis.
     attempts = settings.LLM_ANALYSIS_MAX_RETRIES + 1
-    return timedelta(seconds=settings.LLM_ANALYSIS_TIMEOUT_SECONDS * attempts + 30)
+    waits = settings.LLM_ANALYSIS_MAX_RETRIES * settings.LLM_MAX_RETRY_AFTER_SECONDS
+    return timedelta(
+        seconds=waits + settings.LLM_ANALYSIS_TIMEOUT_SECONDS * attempts + 30
+    )
 
 
 def analysis_in_progress(conversation: Conversation, now: datetime) -> bool:
     """True while the model is (or may still be) analysing the conversation."""
     started = conversation.analysis_started_at
     return started is not None and now - started < _analysis_timeout()
+
+
+def analysis_failed(conversation: Conversation, now: datetime) -> bool:
+    """True when the last analysis attempt ended without a list of mistakes.
+
+    Either the failure was recorded, or the marker expired without a result (the
+    worker died meanwhile). The page then offers "Try again" instead of starting a
+    new paid analysis by itself.
+    """
+    if conversation.analyzed_at is not None or analysis_in_progress(conversation, now):
+        return False
+    return (
+        conversation.analysis_failed_at is not None
+        or conversation.analysis_started_at is not None
+    )
 
 
 def _clear_analysis_marker(conversation: Conversation, started_at: datetime) -> None:

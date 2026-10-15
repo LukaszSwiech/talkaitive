@@ -69,8 +69,8 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|------------|-----------------|---------------|------------|--------|---------------|
-| 1 | Suite trust and CI floor | Udowodnić, że zepsucie krytycznej logiki wywraca testy, i że testy uruchamiają się same przed wdrożeniem z `main` | #2 (cross-cutting) | mutation testing + CI gate (pytest, ruff) | researched | testing-suite-trust-and-ci |
-| 2 | Waiting-path recovery | Udowodnić, że zawieszenie lub błąd dostawcy kończy się komunikatem i działającym „Try again”, nie wiecznym spinnerem | #1 | integration | not started | — |
+| 1 | Suite trust and CI floor | Udowodnić, że zepsucie krytycznej logiki wywraca testy, i że testy uruchamiają się same przed wdrożeniem z `main` | #2 (cross-cutting) | mutation testing + CI gate (pytest, ruff) | complete | testing-suite-trust-and-ci |
+| 2 | Waiting-path recovery | Udowodnić, że zawieszenie lub błąd dostawcy kończy się komunikatem i działającym „Try again”, nie wiecznym spinnerem | #1 | integration | complete | testing-waiting-path-recovery |
 | 3 | Privacy and deletion boundaries | Udowodnić, że żaden widok ani blok pamięci nie ujawnia cudzych danych, a usunięcie konta usuwa wszystko | #3, #6 | integration | not started | — |
 | 4 | Budget ceiling | Udowodnić, że limit $1/dzień trzyma się także przy błędach, ponowieniach i drogich wywołaniach | #4 | unit + integration | not started | — |
 | 5 | AI eval layer | Dać mierzalny wynik jakości korekty i listy błędów przy każdej zmianie promptu lub modelu | #5 | AI-native eval (real model, golden dataset) | not started | — |
@@ -150,7 +150,26 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.3 Adding a test for provider failure or hang (granica LLM)
 
-- TBD — see §3 Phase 2 for the slow / failing / empty provider response and recovery pattern.
+- **Location**: atrapa dostawcy `tests/fake_provider.py` (`FakeProvider`), fixture `fake_provider` w `tests/conftest.py`; testy całej ścieżki czekania (widok → serwis → `llm` → strona) w `tests/test_waiting_path.py`; zachowanie samego SDK w `tests/test_llm.py`.
+- **Run locally**: `uv run pytest` (bez klucza i bez sieci; CI uruchamia to samo).
+- **Którą atrapę wybrać**:
+  - **`fake_provider` (atrapa transportu)** — gdy test dotyczy zachowania SDK (ponowienia, `Retry-After`, timeout żądania) albo całej ścieżki aż do strony. Prawdziwy klient `openai.OpenAI` działa jak na produkcji; fixture podmienia tylko `conversations.llm.OpenAI` na klienta z `httpx2.MockTransport` (ustawienia nadal idą z Django settings) i nagrywa `time.sleep` zamiast spać.
+    - Scenariusz układasz po kolei, jedno wywołanie na żądanie: `hang(times=…)`, `fail(status, retry_after=…)`, `reply(text, end_conversation=…)`, `analysis(mistakes, …)`.
+    - Sprawdzasz: `requests` (ile żądań poszło), `read_timeouts` (limit odczytu każdego żądania), `sleeps` (ile SDK chciało czekać).
+    - Żądanie bez zaplanowanego kroku wywraca test — liczba żądań jest częścią scenariusza.
+    - `hang` rzuca `ReadTimeout` od razu. Dlatego sprawdzaj też `read_timeouts`: dopiero on dowodzi, że prawdziwe zawieszenie zostałoby ucięte.
+  - **`FakeGenerateTurn` / `FakeAnalyzeMistakes`** (`tests/test_conversation_views.py`, fixture `fake_llm` i `fake_analysis`) — gdy liczy się kolejność zdarzeń dwóch żądań (wyścig znaczników). Wynik w kolejce może być funkcją: zmienia znacznik w bazie w połowie wywołania (np. „B przejmuje turę”), potem zwraca wynik albo rzuca `LLMError`.
+- **Jak symulować czas**: nigdy przez czekanie. Albo przesuń znacznik w bazie (`agent_turn_started_at` / `analysis_started_at` = `timezone.now() - timedelta(seconds=N)`) i otwórz stronę, albo podaj `now` wprost do `services.agent_turn_in_progress`, `services.analysis_in_progress`, `services.analysis_failed`. Oczekiwane czasy (np. 210 s znacznika tury, 180 s analizy, 300 s proxy Railway) wpisuj ręcznie jako stałe w teście, z komentarzem o źródle (decyzja, dokumentacja SDK, PRD) — nigdy nie licz ich funkcjami z `services.py`.
+- **Brzeg znacznika „w toku”**: testuj `N − 1 µs` (w toku) i, gdzie to możliwe, dokładnie `N` (wygasł). Wyjątek: znacznik tury (`tests/test_conversation_views.py::test_turn_marker_lives_as_long_as_the_sdk_can_wait_plus_a_margin`) sprawdza `210 s + 1 µs`, bo dokładne 210 s zabiłoby zaakceptowany mutant równoważny M8 (`<` → `<=`, `scripts/mutation/accepted_survivors.md`) i wywróciło `manual_mutants.py`. Znacznik analizy nie ma takiego mutanta, więc jego test sprawdza dokładnie 180 s. Leży w `tests/test_waiting_path.py`, nie w `tests/test_analysis.py`, bo tamten moduł nadpisuje timeout analizy dla wszystkich swoich testów.
+- **Sukces = stan bazy + liczba żądań + treść strony, nigdy sam kod HTTP.** Sprawdź zapisane wiadomości i znaczniki (`agent_turn_started_at`, `analysis_failed_at`, `awaiting_agent_reply`), przyrost `len(fake_provider.requests)` (np. „Try again” = dokładnie jedno nowe żądanie) i tekst strony („Try again”, komunikat błędu, brak `http-equiv="refresh"`, gdy strona nie może utknąć w „Agent is typing”).
+- **Reference tests**:
+  - `tests/test_waiting_path.py::test_hung_provider_shows_try_again_and_the_retry_brings_the_reply` — zawieszenie obu prób tury, komunikat, „Try again”, jedno nowe żądanie i odpowiedź na stronie.
+  - `tests/test_waiting_path.py::test_turn_after_a_503_with_retry_after_saves_and_shows_the_reply` — `fail(503, retry_after=56)`, potem odpowiedź; `sleeps == [56]`.
+  - `tests/test_waiting_path.py::test_hung_analysis_shows_try_again_and_the_retry_brings_the_list` — to samo dla analizy po rozmowie.
+  - `tests/test_waiting_path.py::test_longest_model_wait_fits_in_the_platforms_request_limit` — niezmiennik ustawień: najdłuższe czekanie SDK < limit proxy Railway.
+  - `tests/test_llm.py::test_turn_retries_after_503_with_retry_after_and_returns_the_reply` i `::test_turn_does_not_retry_when_retry_after_exceeds_120_s` — przypięte zachowanie SDK, na którym opierają się czasy znaczników.
+  - `tests/test_conversation_views.py::test_turn_marker_lives_as_long_as_the_sdk_can_wait_plus_a_margin` — granica znacznika z parametrem `now`; `::test_expired_turn_marker_offers_try_again_and_the_retry_calls_the_model` — znacznik przesunięty w bazie; `::test_failed_late_request_leaves_the_newer_requests_marker_alone` — wyścig dwóch żądań przez `FakeGenerateTurn`.
+- **Potwierdzenie mutacją**: jak w §6.1. `conversations/llm.py` nie jest w `[tool.mutmut]`, więc nowe zachowanie w nim potwierdzasz ręcznym mutantem w `scripts/mutation/manual_mutants.py` (§6.1 krok 4; przykład: M14, M15 dla pustej odpowiedzi).
 
 ### 6.4 Adding a test for budget accounting (także nieudane i ponawiane wywołania)
 
@@ -166,6 +185,10 @@ the relevant rollout phase ships; before that, the sub-section reads
 here capturing anything surprising the rollout phase taught.)
 
 - **Phase 1 — Suite trust and CI floor (2026-10-15):** przy zielonych 198 testach przeżywało 12 z 13 celowanych ręcznych mutantów, w tym M1–M4 (usunięte filtry danych w widokach i w budżecie) — zielone testy nie świadczyły o izolacji. mutmut na 4 modułach: 667 mutantów, ok. 24 s lokalnie, przeżycia 65 → 51, każde z wierszem w rejestrze; mutmut kończy się kodem 0 mimo przeżyć, więc sam nie jest bramką. Bramkę CI udowodnił kanarek: `8ac139b` → deploy `SKIPPED`, revert `3d97f46` → `SUCCESS`.
+- **Phase 2 — Waiting-path recovery (2026-10-15):** atrapa na transporcie SDK pokazała to, czego atrapy nad SDK nie widziały: `Retry-After` od OpenAI (do 120 s) wydłużał czekanie SDK poza ważność znacznika tury (90 s → teraz 210 s = 30 s × 2 próby + 120 s + 30 s marginesu), a pusta odpowiedź agenta zapisywała się jako sukces (teraz `LLMError` → „Try again”, ręczne mutanty M14, M15). Wygasły znacznik analizy (180 s) pokazuje teraz „Try again” zamiast samemu wysyłać nową płatną analizę. Pomiaru realnego czasu analizy względem limitu 300 s proxy Railway nie da się zrobić atrapą — przechodzi do §3 Phase 5 (eval z prawdziwym modelem). Do przeniesienia przez `/10x-test-plan --refresh` (tu bez zmian w §2 / §4):
+  - §2 ryzyko #1, Source: incydent Q2 naprawiony ustawieniami 2026-10-07 (`dfe3e7d`); likelihood „High” opiera się częściowo na naprawionym zdarzeniu.
+  - §2 Risk Response Guidance #1, Context: dopisać `retry-after` SDK (do 120 s) do ścieżki timeoutów; „pusty wynik” rozbić na `output_parsed is None` (obsłużone wcześniej) i `reply=""` (obsłużone w tej fazie).
+  - §4 Stack, „granica LLM”: atrapa jest teraz na transporcie SDK (`httpx2.MockTransport`, `tests/fake_provider.py`), nie tylko na kliencie `OpenAI` / nad SDK.
 
 ## 7. What We Deliberately Don't Test
 

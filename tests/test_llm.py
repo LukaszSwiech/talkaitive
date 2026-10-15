@@ -19,6 +19,7 @@ from conversations.llm import (
 )
 from conversations.memory import Memory, PastMistake
 from conversations.topics import get_topic
+from tests.fake_provider import FakeProvider, UnscriptedRequest
 
 TOPIC = get_topic("bakery")
 assert TOPIC is not None
@@ -574,3 +575,144 @@ def test_analysis_missing_usage_raises_llm_error(fake_openai: SimpleNamespace) -
 
     with pytest.raises(LLMError):
         analyze()
+
+
+# --- SDK boundary on the HTTP transport -----------------------------------------
+#
+# These tests run the real SDK client on a scripted provider (`fake_provider`), so
+# its retry loop, `Retry-After` handling and timeouts behave as in production. They
+# pin the SDK behaviour that the "agent is typing" marker and the error page rely
+# on. Expected numbers come from the SDK and our settings, never from our code:
+#
+# - 30 s: `LLM_TIMEOUT_SECONDS` in `talkaitive/settings.py` (a turn's read limit);
+#   one retry (`LLM_MAX_RETRIES = 1`) means at most 2 requests per turn.
+# - 150 s: `LLM_ANALYSIS_TIMEOUT_SECONDS`; no retries (`LLM_ANALYSIS_MAX_RETRIES = 0`).
+# - 120 s: `MAX_RETRY_AFTER_DELAY = 2 * 60` in `openai/_constants.py`, the longest
+#   `Retry-After` the SDK honours; above it the SDK does not retry at all.
+# - 0.5 s: `INITIAL_RETRY_DELAY` in `openai/_constants.py`, the SDK's first backoff
+#   without a `Retry-After` (reduced by up to 25% jitter).
+
+
+def test_turn_that_hangs_twice_fails_after_two_requests_each_cut_at_30_s(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.hang(times=2)
+
+    with pytest.raises(LLMError) as failure:
+        call()
+
+    assert isinstance(failure.value.__cause__, openai.APITimeoutError)
+    assert fake_provider.read_timeouts == [30, 30]
+    # One short backoff between the two attempts, not a server-directed wait.
+    (sleep,) = fake_provider.sleeps
+    assert 0 < sleep <= 0.5
+
+
+def test_turn_retries_after_503_with_retry_after_and_returns_the_reply(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.fail(503, retry_after=56).reply("Guten Morgen!")
+
+    result = call()
+
+    assert result.reply == "Guten Morgen!"
+    assert len(fake_provider.requests) == 2
+    assert fake_provider.sleeps == [56]
+
+
+def test_turn_honours_retry_after_of_exactly_120_s(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.fail(429, retry_after=120).reply("Hallo!")
+
+    result = call()
+
+    assert result.reply == "Hallo!"
+    assert len(fake_provider.requests) == 2
+    assert fake_provider.sleeps == [120]
+
+
+def test_turn_does_not_retry_when_retry_after_exceeds_120_s(
+    fake_provider: FakeProvider,
+) -> None:
+    """Above the SDK's 120 s cap the first error is final: no wait, no retry.
+
+    The marker's length is built on this cap; if a future SDK changes it, this
+    test fails.
+    """
+    fake_provider.fail(429, retry_after=121)
+
+    with pytest.raises(LLMError) as failure:
+        call()
+
+    assert isinstance(failure.value.__cause__, openai.RateLimitError)
+    assert len(fake_provider.requests) == 1
+    assert fake_provider.sleeps == []
+
+
+def test_analysis_that_hangs_fails_after_one_request_cut_at_150_s(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.hang()
+
+    with pytest.raises(LLMError) as failure:
+        analyze()
+
+    assert isinstance(failure.value.__cause__, openai.APITimeoutError)
+    assert fake_provider.read_timeouts == [150]
+    assert fake_provider.sleeps == []
+
+
+def test_analysis_on_the_fake_provider_returns_the_report(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.analysis(mistakes=[MISTAKE], learner_facts=FACTS, scene_notes=NOTES)
+
+    result = analyze()
+
+    assert result.mistakes == [MISTAKE]
+    assert result.learner_facts == FACTS
+    assert result.scene_notes == NOTES
+    assert (result.input_tokens, result.cached_input_tokens) == (1200, 1000)
+    assert result.output_tokens == 40
+
+
+def test_fake_provider_fails_loudly_on_an_unscripted_request(
+    fake_provider: FakeProvider,
+) -> None:
+    # Nothing queued: the request must not get a silent answer or a retry.
+    with pytest.raises(UnscriptedRequest):
+        call()
+
+    assert len(fake_provider.unscripted) == 1
+    assert fake_provider.sleeps == []
+    fake_provider.unscripted.clear()  # Seen on purpose; keep the teardown check quiet.
+
+
+# --- empty agent reply ----------------------------------------------------------
+#
+# Oracle: test-plan.md §2 risk #1 guidance ("empty result -> message and Try
+# again") and decision P2 of testing-waiting-path-recovery (plan, 2026-10-15): a
+# reply that is empty or only whitespace is an unusable answer like any other.
+
+
+@pytest.mark.parametrize(
+    "reply", ["", " ", "\n\t "], ids=["empty", "space", "whitespace-mix"]
+)
+def test_blank_reply_is_an_llm_error(fake_provider: FakeProvider, reply: str) -> None:
+    fake_provider.reply(reply)
+
+    with pytest.raises(LLMError):
+        call()
+    # A 200 answer is never retried by the SDK, even a blank one.
+    assert len(fake_provider.requests) == 1
+
+
+def test_text_with_surrounding_spaces_is_kept_untrimmed(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.reply(" Hallo ")
+
+    # Text around whitespace is a real answer, returned as it came (untrimmed).
+    assert call().reply == " Hallo "
+    assert len(fake_provider.requests) == 1

@@ -276,6 +276,10 @@ def generate_turn(
         # A refusal or an empty answer: nothing usable came back.
         logger.error("LLM returned no parsed output (refusal or empty answer).")
         raise LLMError("The model returned no usable answer.")
+    if parsed.reply.strip() == "":
+        # A blank reply is no answer either. Log only the fact, never the text.
+        logger.error("LLM returned a blank agent reply.")
+        raise LLMError("The model returned no usable answer.")
     if response.usage is None:
         logger.error("LLM response has no usage; the turn cannot be priced.")
         raise LLMError("The model response has no token usage.")
