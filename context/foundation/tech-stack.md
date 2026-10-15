@@ -33,5 +33,7 @@ should pin model/view conventions and add `mypy` with `django-stubs` to compensa
 FastAPI was the typed alternative but would trade away the built-in auth and admin
 that FR-001 and FR-013 lean on. Railway replaces the card's Fly.io default: a
 first-time deployer gets a web UI, one-click Postgres and push-to-deploy inside a
-$10/month budget. CI on GitHub Actions runs tests on pull requests only, since
-Railway handles deploys on merge to `main`.
+$10/month budget. CI on GitHub Actions (`.github/workflows/ci.yml`: ruff check,
+ruff format --check, pytest) runs on every pull request and every push to `main`;
+Railway deploys a `main` commit only after that workflow is green ("Wait for CI")
+and skips the deploy when it fails.

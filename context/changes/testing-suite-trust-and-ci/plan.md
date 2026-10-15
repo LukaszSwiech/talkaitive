@@ -549,23 +549,23 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 6.1 Każdy przeżywający mutant z `uv run mutmut results` ma wpis w `accepted_survivors.md`
-- [x] 6.2 `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` przechodzą
-- [x] 6.3 Skrypt ręcznych mutantów dalej kończy się kodem 0
-- [ ] 6.4 Workflow `CI` jest zielony na commicie tej fazy
+- [x] 6.1 Każdy przeżywający mutant z `uv run mutmut results` ma wpis w `accepted_survivors.md` — de2e0d3
+- [x] 6.2 `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` przechodzą — de2e0d3
+- [x] 6.3 Skrypt ręcznych mutantów dalej kończy się kodem 0 — de2e0d3
+- [x] 6.4 Workflow `CI` jest zielony na commicie tej fazy — de2e0d3
 
 #### Manual
 
-- [x] 6.5 Użytkownik akceptuje klasyfikację wpisów `brak wymagania` i `przekazany do fazy N`
+- [x] 6.5 Użytkownik akceptuje klasyfikację wpisów `brak wymagania` i `przekazany do fazy N` — de2e0d3
 
 ### Phase 7: Plan testów i dokumenty
 
 #### Automated
 
-- [ ] 7.1 Wiersz bramki w test-plan §5 nie wymaga już ochrony gałęzi
-- [ ] 7.2 `grep -n "TBD — see §3 Phase 1" context/foundation/test-plan.md` nie zwraca nic
-- [ ] 7.3 Blok 10x-cli w `CLAUDE.md` jest bez zmian
+- [x] 7.1 Wiersz bramki w test-plan §5 nie wymaga już ochrony gałęzi
+- [x] 7.2 `grep -n "TBD — see §3 Phase 1" context/foundation/test-plan.md` nie zwraca nic
+- [x] 7.3 Blok 10x-cli w `CLAUDE.md` jest bez zmian
 
 #### Manual
 
-- [ ] 7.4 §5 i §6.1 są jasną instrukcją „jak dodać test i potwierdzić go mutacją”
+- [x] 7.4 §5 i §6.1 są jasną instrukcją „jak dodać test i potwierdzić go mutacją”
