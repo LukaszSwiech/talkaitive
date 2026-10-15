@@ -9,6 +9,7 @@ The user writes in English but is a junior developer: **every chat response must
 - Use plain, simple Polish: short sentences, one idea at a time. Explain each technical term the first time it appears (e.g. "zmienna środowiskowa (env var) — ustawienie trzymane poza kodem").
 - Keep code, commands, file paths, identifiers and error messages as they are (don't translate them); explain around them in Polish.
 - Code, code comments, commit messages and files written to disk keep the repo's existing language unless the user asks otherwise.
+- Pull request titles and descriptions are always in English, and so are review messages written for GitHub (review requests, approval comments), even though chat stays Polish.
 
 ## Explain every tool call before making it
 
