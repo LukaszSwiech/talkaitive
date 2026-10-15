@@ -186,6 +186,26 @@ MUTANTS: tuple[Mutant, ...] = (
         original='label = " (the most recent)" if number == 1 else ""',
         mutated='label = " (the most recent)" if number == 2 else ""',
     ),
+    Mutant(
+        id="M14",
+        area="pusta odpowiedź: generate_turn bez sprawdzenia pustej odpowiedzi",
+        path="conversations/llm.py",
+        original=(
+            '    if parsed.reply.strip() == "":\n'
+            "        # A blank reply is no answer either. "
+            "Log only the fact, never the text.\n"
+            '        logger.error("LLM returned a blank agent reply.")\n'
+            '        raise LLMError("The model returned no usable answer.")\n'
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M15",
+        area="pusta odpowiedź: sprawdzenie bez .strip() (przepuszcza same spacje)",
+        path="conversations/llm.py",
+        original='if parsed.reply.strip() == "":',
+        mutated='if parsed.reply == "":',
+    ),
 )
 
 

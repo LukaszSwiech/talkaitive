@@ -687,3 +687,30 @@ def test_fake_provider_fails_loudly_on_an_unscripted_request(
     assert len(fake_provider.unscripted) == 1
     assert fake_provider.sleeps == []
     fake_provider.unscripted.clear()  # Seen on purpose; keep the teardown check quiet.
+
+
+# --- empty agent reply ----------------------------------------------------------
+#
+# Oracle: test-plan.md §2 risk #1 guidance ("empty result -> message and Try
+# again") and decision P2 of testing-waiting-path-recovery (plan, 2026-10-15): a
+# reply that is empty or only whitespace is an unusable answer like any other.
+
+
+@pytest.mark.parametrize(
+    ("reply", "usable"),
+    [("", False), (" ", False), ("\n\t ", False), (" Hallo ", True)],
+    ids=["empty", "space", "whitespace-mix", "text-with-spaces"],
+)
+def test_blank_reply_is_an_llm_error_but_padded_text_is_kept(
+    fake_provider: FakeProvider, reply: str, usable: bool
+) -> None:
+    fake_provider.reply(reply)
+
+    if usable:
+        # Text around whitespace is a real answer, returned as it came (untrimmed).
+        assert call().reply == reply
+    else:
+        with pytest.raises(LLMError):
+            call()
+    # A 200 answer is never retried by the SDK, blank or not.
+    assert len(fake_provider.requests) == 1

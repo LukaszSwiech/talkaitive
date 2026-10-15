@@ -350,23 +350,23 @@ Brak migracji bazy: nowe ustawienie jest stałą, a stan „analiza nieudana” 
 
 #### Automated
 
-- [x] 1.1 Nowe testy z `tests/test_llm.py` i `tests/test_waiting_path.py` przechodzą: `uv run pytest tests/test_llm.py tests/test_waiting_path.py`
-- [x] 1.2 Cały zestaw przechodzi bez sieci i bez klucza: `uv run pytest`
-- [x] 1.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 1.4 Test `retry-after: 121` pada, gdy w atrapie zmieni się nagłówek na `120` (ręczne sprawdzenie wrażliwości testu, cofnięte przed commitem)
+- [x] 1.1 Nowe testy z `tests/test_llm.py` i `tests/test_waiting_path.py` przechodzą: `uv run pytest tests/test_llm.py tests/test_waiting_path.py` — 72ffd3e
+- [x] 1.2 Cały zestaw przechodzi bez sieci i bez klucza: `uv run pytest` — 72ffd3e
+- [x] 1.3 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 72ffd3e
+- [x] 1.4 Test `retry-after: 121` pada, gdy w atrapie zmieni się nagłówek na `120` (ręczne sprawdzenie wrażliwości testu, cofnięte przed commitem) — 72ffd3e
 
 #### Manual
 
-- [x] 1.5 Przegląd `tests/fake_provider.py`: scenariusz czyta się jak opis zachowania dostawcy, bez szczegółów HTTP w testach
+- [x] 1.5 Przegląd `tests/fake_provider.py`: scenariusz czyta się jak opis zachowania dostawcy, bez szczegółów HTTP w testach — 72ffd3e
 
 ### Phase 2: Pusta odpowiedź agenta = porażka
 
 #### Automated
 
-- [ ] 2.1 Najpierw czerwone: nowe testy padają na kodzie sprzed zmiany w `llm.py`: `uv run pytest tests/test_llm.py tests/test_waiting_path.py`
-- [ ] 2.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
-- [ ] 2.3 Nowe ręczne mutanty są `killed`, a lista zgodna z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0)
-- [ ] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Najpierw czerwone: nowe testy padają na kodzie sprzed zmiany w `llm.py`: `uv run pytest tests/test_llm.py tests/test_waiting_path.py`
+- [x] 2.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
+- [x] 2.3 Nowe ręczne mutanty są `killed`, a lista zgodna z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0)
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 ### Phase 3: Znacznik tury uwzględnia `Retry-After`
 

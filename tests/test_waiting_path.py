@@ -106,3 +106,88 @@ def test_hung_provider_shows_try_again_and_the_retry_brings_the_reply(
     assert "Gerne, zwei Brötchen. Sonst noch etwas?" in page
     assert "Try again" not in page
     assert "The agent could not reply" not in page
+
+
+# --- empty agent reply ----------------------------------------------------------
+#
+# Oracle: test-plan.md §2 risk #1 guidance ("empty result -> message and Try
+# again") and decision P2 of testing-waiting-path-recovery (plan, 2026-10-15): a
+# blank reply is a failed turn; nothing is saved and the page offers "Try again".
+
+BLANK_REPLY = " \n\t "
+
+
+def assert_waits_for_retry(page: str, conversation: Conversation) -> None:
+    assert "The agent could not reply" in page
+    assert f'action="/conversations/{conversation.pk}/retry/"' in page
+    assert "Try again" in page
+
+
+@pytest.mark.django_db
+def test_blank_reply_to_a_message_shows_try_again_and_the_retry_brings_the_reply(
+    anna_client: Client, fake_provider: FakeProvider
+) -> None:
+    fake_provider.reply("Guten Tag! Was darf es sein?")
+    anna_client.post(START_URL, {"topic": "bakery"})
+    conversation = Conversation.objects.get(status=Conversation.Status.ACTIVE)
+    before_message = len(fake_provider.requests)
+
+    fake_provider.reply(BLANK_REPLY)
+    failed = anna_client.post(
+        f"/conversations/{conversation.pk}/messages/",
+        {"text": "Ein Brot, bitte."},
+        follow=True,
+    )
+
+    conversation.refresh_from_db()
+    assert agent_texts(conversation) == ["Guten Tag! Was darf es sein?"]
+    assert list(conversation.messages.values_list("role", flat=True)) == [
+        "assistant",
+        "user",
+    ]
+    assert conversation.awaiting_agent_reply
+    assert conversation.agent_turn_started_at is None
+    assert_waits_for_retry(failed.content.decode(), conversation)
+
+    fake_provider.reply("Gerne, ein Brot.")
+    retried = anna_client.post(f"/conversations/{conversation.pk}/retry/", follow=True)
+
+    conversation.refresh_from_db()
+    # Counted from after the opening turn: 1 request with the blank reply (a 200,
+    # so the SDK does not retry it) + 1 request for "Try again" = 2.
+    assert len(fake_provider.requests) - before_message == 2
+    assert agent_texts(conversation) == [
+        "Guten Tag! Was darf es sein?",
+        "Gerne, ein Brot.",
+    ]
+    assert not conversation.awaiting_agent_reply
+    assert conversation.agent_turn_started_at is None
+    page = retried.content.decode()
+    assert "Gerne, ein Brot." in page
+    assert "Try again" not in page
+
+
+@pytest.mark.django_db
+def test_blank_opening_reply_leaves_the_conversation_waiting_for_retry(
+    anna_client: Client, fake_provider: FakeProvider
+) -> None:
+    fake_provider.reply(BLANK_REPLY)
+
+    started = anna_client.post(START_URL, {"topic": "bakery"}, follow=True)
+
+    conversation = Conversation.objects.get()
+    assert started.redirect_chain[-1][0] == detail_url(conversation)
+    assert not conversation.messages.exists()
+    assert conversation.awaiting_agent_reply
+    assert conversation.agent_turn_started_at is None
+    assert_waits_for_retry(started.content.decode(), conversation)
+
+    fake_provider.reply("Guten Tag!")
+    retried = anna_client.post(f"/conversations/{conversation.pk}/retry/", follow=True)
+
+    conversation.refresh_from_db()
+    assert len(fake_provider.requests) == 2
+    assert agent_texts(conversation) == ["Guten Tag!"]
+    assert not conversation.awaiting_agent_reply
+    assert "Guten Tag!" in retried.content.decode()
+    assert "Try again" not in retried.content.decode()
