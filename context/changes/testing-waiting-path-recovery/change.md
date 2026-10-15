@@ -1,7 +1,7 @@
 ---
 change_id: testing-waiting-path-recovery
 title: Test-plan Phase 2 — provider hang or error ends in a message and a working "Try again"
-status: implemented
+status: impl_reviewed
 created: 2026-10-15
 updated: 2026-10-15
 archived_at: null

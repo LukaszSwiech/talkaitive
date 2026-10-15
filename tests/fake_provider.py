@@ -44,7 +44,6 @@ class FakeProvider:
         self._steps: list[Step] = []
         self.requests: list[httpx2.Request] = []
         self.sleeps: list[float] = []
-        self.client_kwargs: list[dict[str, Any]] = []
         self.unscripted: list[httpx2.Request] = []
 
     # --- scenario ---------------------------------------------------------------
@@ -104,7 +103,6 @@ class FakeProvider:
 
     def make_client(self, **kwargs: Any) -> openai.OpenAI:
         """A real SDK client with the caller's settings, on the fake transport."""
-        self.client_kwargs.append(kwargs)
         http_client = httpx2.Client(transport=httpx2.MockTransport(self._handle))
         return openai.OpenAI(**kwargs, http_client=http_client)
 

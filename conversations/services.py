@@ -70,6 +70,8 @@ def _agent_turn_timeout() -> timedelta:
     # Longer than the SDK can wait: every attempt up to its timeout, the longest
     # Retry-After before each retry, plus 30 s. A live call is never taken for a
     # dead one, and a marker left by a killed worker still expires.
+    # Assumes a non-streaming call: httpx applies the timeout per phase and per
+    # read, so only a body that arrives at once makes it the length of an attempt.
     attempts = settings.LLM_MAX_RETRIES + 1
     waits = settings.LLM_MAX_RETRIES * settings.LLM_MAX_RETRY_AFTER_SECONDS
     return timedelta(seconds=waits + settings.LLM_TIMEOUT_SECONDS * attempts + 30)

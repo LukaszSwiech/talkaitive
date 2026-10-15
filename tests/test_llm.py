@@ -697,20 +697,22 @@ def test_fake_provider_fails_loudly_on_an_unscripted_request(
 
 
 @pytest.mark.parametrize(
-    ("reply", "usable"),
-    [("", False), (" ", False), ("\n\t ", False), (" Hallo ", True)],
-    ids=["empty", "space", "whitespace-mix", "text-with-spaces"],
+    "reply", ["", " ", "\n\t "], ids=["empty", "space", "whitespace-mix"]
 )
-def test_blank_reply_is_an_llm_error_but_padded_text_is_kept(
-    fake_provider: FakeProvider, reply: str, usable: bool
-) -> None:
+def test_blank_reply_is_an_llm_error(fake_provider: FakeProvider, reply: str) -> None:
     fake_provider.reply(reply)
 
-    if usable:
-        # Text around whitespace is a real answer, returned as it came (untrimmed).
-        assert call().reply == reply
-    else:
-        with pytest.raises(LLMError):
-            call()
-    # A 200 answer is never retried by the SDK, blank or not.
+    with pytest.raises(LLMError):
+        call()
+    # A 200 answer is never retried by the SDK, even a blank one.
+    assert len(fake_provider.requests) == 1
+
+
+def test_text_with_surrounding_spaces_is_kept_untrimmed(
+    fake_provider: FakeProvider,
+) -> None:
+    fake_provider.reply(" Hallo ")
+
+    # Text around whitespace is a real answer, returned as it came (untrimmed).
+    assert call().reply == " Hallo "
     assert len(fake_provider.requests) == 1
