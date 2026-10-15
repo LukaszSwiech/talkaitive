@@ -253,7 +253,8 @@ def test_is_exhausted_false_after_midnight_reset(anna: User) -> None:
 def test_daily_limit_end_exactly_at_midnight_closes_that_day(anna: User) -> None:
     """Ended by the limit at 00:00:00 Berlin: that day is closed, the next is not.
 
-    Source: PRD prd.md:114 (reset at midnight Europe/Berlin); a day is
+    Source: PRD Access Control "Koszty modeli" (reset at midnight Europe/Berlin);
+    a day is
     [midnight, next midnight), as in the "midnight inclusive" tests. Guards M5.
     """
     # 10 June 2026 00:00:00 CEST (UTC+2) is 9 June 22:00:00 UTC.
@@ -332,7 +333,8 @@ def test_is_final_turn_ignores_other_users_newer_agent_turn(
 ) -> None:
     """Anna's final-turn answer is the same with and without Lukasz's turns.
 
-    Source: PRD prd.md:114 (the $1 limit is per user) and Prywatność. Guards M4.
+    Source: PRD Access Control "Koszty modeli" (the $1 limit is per user) and
+    Prywatność. Guards M4.
     """
     conversation = make_conversation(anna)
     add_message(conversation, "0.100000", NOON.replace(hour=8))

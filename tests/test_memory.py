@@ -87,8 +87,8 @@ def test_pair_from_three_conversations_ranks_above_fresher_pair_from_two(
 ) -> None:
     """Frequency counts every conversation with the pair, not just "more than one".
 
-    Source: PRD prd.md:107 (frequency first — a mistake repeated in many
-    conversations — then freshness). Edge: three vs two conversations, with the
+    Source: PRD Business Logic "Kryterium wyboru błędów" (frequency first — a
+    mistake repeated in many conversations — then freshness). Edge: three vs two conversations, with the
     two-conversation pair fresher, so freshness alone would put it first. Guards
     mutmut `memory.x__mistakes__mutmut_57`.
     """
@@ -107,8 +107,8 @@ def test_two_pairs_repeated_in_the_same_two_conversations_both_count_twice(
 ) -> None:
     """Two mistakes made in both conversations, in a different order each time.
 
-    Both reach memory as mistakes from two conversations. Source: PRD prd.md:107
-    (frequency = repeated in many conversations) and FR-010 (earlier mistakes come
+    Both reach memory as mistakes from two conversations. Source: PRD Business
+    Logic "Kryterium wyboru błędów" (frequency = repeated in many conversations) and FR-010 (earlier mistakes come
     back). Edge: equal frequency and equal freshness; the order inside this tie has
     no source, so it is not asserted. Guards mutmut `memory.x__mistakes__mutmut_39`.
     """
@@ -182,7 +182,8 @@ def test_conversation_that_ended_later_counts_as_newer_than_one_created_later(
 ) -> None:
     """Freshness follows the end time, not the creation order.
 
-    Source: PRD prd.md:107 (frequency first, then freshness); user decision of
+    Source: PRD Business Logic "Kryterium wyboru błędów" (frequency first, then
+    freshness); user decision of
     2026-10-14 (the most recent conversation is the one that ended latest).
     Guards M12.
     """

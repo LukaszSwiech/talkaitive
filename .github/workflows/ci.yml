@@ -16,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # Latest release tags checked on 2026-10-15.
-      - uses: actions/checkout@v7.0.1
+      # Latest release tags checked on 2026-10-15, pinned to their commit SHAs
+      # (a tag can be moved; a SHA cannot).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       # Cache defaults to on for GitHub-hosted runners; uv reads Python 3.14 from .python-version.
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .

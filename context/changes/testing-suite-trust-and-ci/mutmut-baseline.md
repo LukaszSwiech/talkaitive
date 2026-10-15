@@ -119,8 +119,8 @@ Data: 2026-10-15. Gałąź `test-mutation-trust`, kod aplikacji bez zmian (`git 
 |---|---|---|
 | `tests/test_conversation_views.py::test_opening_turn_and_retry_show_typing_and_start_no_second_call` (parametry `opening`, `retry`) | PRD prd.md:96 (informacja zwrotna przez cały czas czekania); test-plan §2 ryzyko #1 (znacznik „w toku”) | `services.x_start_conversation__mutmut_31`, `_38`, `services.x_run_agent_turn__mutmut_17` |
 | `tests/test_conversation_views.py::test_ending_an_old_ended_conversation_leaves_the_current_one_active` | PRD FR-006 (przycisk kończy tę rozmowę), FR-004 | `services.x_end_conversation__mutmut_9` |
-| `tests/test_memory.py::test_pair_from_three_conversations_ranks_above_fresher_pair_from_two` | PRD prd.md:107 (najpierw częstość w wielu rozmowach, potem świeżość) | `memory.x__mistakes__mutmut_57` |
-| `tests/test_memory.py::test_two_pairs_repeated_in_the_same_two_conversations_both_count_twice` | PRD prd.md:107, FR-010 | `memory.x__mistakes__mutmut_39` |
+| `tests/test_memory.py::test_pair_from_three_conversations_ranks_above_fresher_pair_from_two` | PRD Business Logic „Kryterium wyboru błędów” (najpierw częstość w wielu rozmowach, potem świeżość) | `memory.x__mistakes__mutmut_57` |
+| `tests/test_memory.py::test_two_pairs_repeated_in_the_same_two_conversations_both_count_twice` | PRD Business Logic „Kryterium wyboru błędów”, FR-010 | `memory.x__mistakes__mutmut_39` |
 | `tests/test_conversation_views.py::test_refused_action_shows_a_reason` (parametry: limit, druga rozmowa, czekanie na agenta, nic do ponowienia) | PRD „Odmowa akcji” (prd.md:97, dopisane 2026-10-15 — decyzja D2): powód odmowy widoczny, nigdy pusty ani „None”; brzmienie nie jest wymaganiem | `services.x_start_conversation__mutmut_12`, `_39`, `services.x_send_message__mutmut_16`, `services.x_run_agent_turn__mutmut_4` |
 
 Każdy potwierdzony świeżym pełnym przebiegiem mutmut (status `killed`). `uv run pytest`: 217 passed.

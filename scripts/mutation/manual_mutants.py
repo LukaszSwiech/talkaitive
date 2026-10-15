@@ -8,13 +8,15 @@ working tree is never written, so interrupting the script is harmless.
 Usage: `uv run python scripts/mutation/manual_mutants.py [ID ...]` (no IDs = all).
 
 Exit codes: 0 every result matches its expectation, 1 at least one mismatch,
-2 a configuration error (unknown ID, fragment not found exactly once, missing
-interpreter, red baseline, pytest neither passing nor failing).
+2 a configuration error (unknown ID, fragment not found exactly once, mutated
+file does not compile, missing interpreter, red baseline, pytest neither passing
+nor failing, pytest over the time limit).
 
 A mutant whose survival is accepted on purpose has `expected="accepted"` and a row
 in `scripts/mutation/accepted_survivors.md`.
 """
 
+import os
 import shutil
 import subprocess
 import sys
@@ -28,7 +30,7 @@ REPO = Path(__file__).resolve().parents[2]
 VENV_PYTHON = REPO / ".venv" / "bin" / "python"
 ACCEPTED_REGISTER = "scripts/mutation/accepted_survivors.md"
 
-# Not needed by the tests, or heavy, or private (.env, the dev database).
+# Not needed by the tests, or heavy, or private (.env files, databases, keys).
 COPY_EXCLUDES = (
     ".venv",
     ".git",
@@ -37,8 +39,10 @@ COPY_EXCLUDES = (
     ".github",
     ".vscode",
     ".DS_Store",
-    ".env",
-    "db.sqlite3",
+    ".env*",
+    "*.sqlite3",
+    "*.pem",
+    "*.key",
     "context",
     "mutants",
     "node_modules",
@@ -49,6 +53,8 @@ COPY_EXCLUDES = (
     ".mypy_cache",
 )
 PYTEST_ARGS = ("-m", "pytest", "-q", "-x", "-p", "no:cacheprovider")
+# The full suite takes ~2 s; a mutant that loops forever must not hang the run.
+PYTEST_TIMEOUT_S = 300
 
 Expectation = Literal["killed", "accepted"]
 Result = Literal["KILLED", "SURVIVED"]
@@ -200,31 +206,54 @@ def select(ids: list[str]) -> list[Mutant]:
 
 
 def validate(mutants: list[Mutant]) -> None:
-    """Every fragment must occur exactly once in the real file (read only)."""
+    """Every fragment occurs exactly once and the mutated file compiles (read only)."""
     problems = []
     for mutant in mutants:
         source = REPO / mutant.path
         if not source.is_file():
             problems.append(f"{mutant.id}: file {mutant.path} does not exist")
             continue
-        count = source.read_text(encoding="utf-8").count(mutant.original)
+        text = source.read_text(encoding="utf-8")
+        count = text.count(mutant.original)
         if count != 1:
             problems.append(
                 f"{mutant.id}: fragment found {count} times in {mutant.path} "
                 f"(expected exactly 1): {mutant.original!r}"
             )
+            continue
+        # A mutant that does not compile fails the tests for the wrong reason
+        # (views.py only loads on the first request) and would look KILLED.
+        try:
+            compile(
+                text.replace(mutant.original, mutant.mutated, 1), mutant.path, "exec"
+            )
+        except SyntaxError as exc:
+            problems.append(
+                f"{mutant.id}: mutated {mutant.path} does not compile: "
+                f"{exc.msg} (line {exc.lineno})"
+            )
     if problems:
         raise ConfigError("invalid mutant list:\n  " + "\n  ".join(problems))
 
 
-def run_pytest(copy: Path) -> int:
-    completed = subprocess.run(
-        [str(VENV_PYTHON), *PYTEST_ARGS],
-        cwd=copy,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+def run_pytest(copy: Path, label: str) -> int:
+    try:
+        completed = subprocess.run(
+            [str(VENV_PYTHON), *PYTEST_ARGS],
+            cwd=copy,
+            # One copy serves every mutant: a .pyc is trusted by source mtime (whole
+            # seconds) and size, so a same-size mutant restored within the same
+            # second would keep running. Write no bytecode at all.
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=PYTEST_TIMEOUT_S,
+        )
+    except subprocess.TimeoutExpired:
+        raise ConfigError(
+            f"{label}: pytest did not finish within {PYTEST_TIMEOUT_S} s"
+        ) from None
     return completed.returncode
 
 
@@ -235,7 +264,7 @@ def run_mutant(copy: Path, mutant: Mutant) -> Result:
         original_text.replace(mutant.original, mutant.mutated, 1), encoding="utf-8"
     )
     try:
-        code = run_pytest(copy)
+        code = run_pytest(copy, mutant.id)
     finally:
         target.write_text(original_text, encoding="utf-8")
     # pytest: 0 all passed, 1 some test failed; anything else (collection error,
@@ -262,7 +291,7 @@ def main(argv: list[str]) -> int:
         with tempfile.TemporaryDirectory(prefix="manual-mutants-") as tmp:
             copy = Path(tmp) / "repo"
             shutil.copytree(REPO, copy, ignore=shutil.ignore_patterns(*COPY_EXCLUDES))
-            baseline = run_pytest(copy)
+            baseline = run_pytest(copy, "baseline")
             if baseline != 0:
                 raise ConfigError(f"baseline pytest on the copy exited with {baseline}")
             rows = []

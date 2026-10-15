@@ -373,7 +373,8 @@ def test_home_never_shows_another_users_active_conversation(
 ) -> None:
     """Lukasz's home page is the same with and without Anna's active conversation.
 
-    Source: PRD Prywatność (prd.md:46, :94, :113). Guards M1.
+    Source: PRD Prywatność (Guardrails, NFR "Prywatność", Access Control "Role").
+    Guards M1.
     """
     client.force_login(lukasz)
     before = client.get("/")
@@ -434,7 +435,7 @@ def test_llm_error_on_start_redirects_to_own_conversation_not_another_users(
     """A failed start leads Lukasz to his own new conversation, never to Anna's.
 
     Anna's older active conversation has the lower pk. Source: PRD Prywatność
-    (prd.md:46, :94, :113). Guards M2.
+    (Guardrails, NFR "Prywatność", Access Control "Role"). Guards M2.
     """
     client.force_login(anna)
     annas = start(client)
@@ -892,8 +893,8 @@ def test_conversation_page_lists_only_its_own_mistakes(
 ) -> None:
     """The page of conversation X lists X's mistakes and none from Y (same user).
 
-    Source: PRD prd.md:117 (the list of mistakes of *this* conversation, no view of
-    earlier ones). Guards M3.
+    Source: PRD Access Control "Widoczność danych we własnym koncie" (the list of
+    mistakes of *this* conversation, no view of earlier ones). Guards M3.
     """
     first = ended(anna_client)
     second = ended(anna_client)
