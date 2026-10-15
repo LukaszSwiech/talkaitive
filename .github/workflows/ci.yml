@@ -5,6 +5,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Manual runs on any branch (e.g. checking a phase commit before its PR).
+  workflow_dispatch:
 
 permissions:
   contents: read
