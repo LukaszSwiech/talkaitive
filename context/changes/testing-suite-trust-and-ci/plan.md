@@ -497,16 +497,16 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 2.1 `.github/workflows/ci.yml` przechodzi lokalnie te same kroki
-- [ ] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main`
-- [ ] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą
+- [x] 2.1 `.github/workflows/ci.yml` przechodzi lokalnie te same kroki — ccdd7f4
+- [x] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main`
+- [x] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą
 
 #### Manual
 
-- [ ] 2.4 PR z dowolną zmianą pokazuje check `CI` (zielony)
-- [ ] 2.5 Przełącznik „Wait for CI” jest włączony i po ponownym otwarciu ustawień dalej włączony
-- [ ] 2.6 Commit z kanarkiem: workflow czerwony, deployment Railway `SKIPPED`, produkcja na poprzedniej wersji
-- [ ] 2.7 Commit revert: workflow zielony, deployment udany, `/healthz/` zwraca 200
+- [x] 2.4 PR z dowolną zmianą pokazuje check `CI` (zielony)
+- [x] 2.5 Przełącznik „Wait for CI” jest włączony i po ponownym otwarciu ustawień dalej włączony
+- [x] 2.6 Commit z kanarkiem: workflow czerwony, deployment Railway `SKIPPED`, produkcja na poprzedniej wersji
+- [x] 2.7 Commit revert: workflow zielony, deployment udany, `/healthz/` zwraca 200
 
 ### Phase 3: Skrypt ręcznych mutantów
 

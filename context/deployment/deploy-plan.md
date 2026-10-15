@@ -4,11 +4,12 @@
 
 Legend used on the step headings below: ✅ done as planned · ⚠️ done, but differently (see the linked deviation) · ❌ not done.
 
-- **Deployed and working** at `https://web-production-5e685.up.railway.app`, verified on deploy `8331c90` (2026-09-25). A push to `main` auto-deploys, with no CI gate.
+- **Deployed and working** at `https://web-production-5e685.up.railway.app`, verified on deploy `8331c90` (2026-09-25). A push to `main` auto-deploys, but only after the GitHub Actions workflow `CI` (`.github/workflows/ci.yml`) passes on that commit (Railway "Wait for CI", since 2026-10-15).
 - **Biggest open risk: the database has no backup at all.** Railway backups are Pro only, and the off-platform `pg_dump` is not set up yet. See [TODO](#todo).
 - All plan steps (0–10) are finished. Steps 4, 5, 7 and 9 went differently from the plan; the step headings link to the matching deviation.
 - **2026-10-02:** the production database schema was reset because of `AUTH_USER_MODEL = "accounts.User"` (e-mail login); the superuser was recreated. See [Auth change: database reset](#auth-change-database-reset-2026-10-02).
 - **2026-10-06:** `OPENAI_API_KEY` added on `web` with change `first-corrected-conversation` (S-01, first LLM code). See [Live resources](#live-resources).
+- **2026-10-15:** CI gate on with change `testing-suite-trust-and-ci`. Workflow `CI` (ruff check, ruff format --check, pytest on SQLite) runs on every PR and every push to `main`; Railway "Wait for CI" (`checkSuites = true`) holds each deploy until it passes and skips it when it fails. Proven with a canary: `8ac139b` (deliberately failing test) → CI red, deploy `SKIPPED`, production stayed on `f93e499`; revert `3d97f46` → CI green, deploy `SUCCESS`, `/healthz/` 200. The gate blocks deploys, not merges: branch protection on a private repo needs GitHub Pro/Team (403, checked 2026-10-14).
 - Open work: [TODO](#todo).
 
 ## Prerequisites
@@ -147,7 +148,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ### Live resources
 | Item | Value |
 |---|---|
-| GitHub repo | `LukaszSwiech/talkaitive` (private). A push to `main` auto-deploys `web` (trigger checked 2026-09-28: branch `main`, `checkSuites` off, so no CI gate). No GitHub Actions for now; CI/CD comes in a later stage (user decision 2026-09-28). |
+| GitHub repo | `LukaszSwiech/talkaitive` (private). A push to `main` auto-deploys `web` after CI passes (trigger checked 2026-10-15 through the API: branch `main`, `checkSuites` on since 2026-10-15). Workflow `.github/workflows/ci.yml` runs on every PR and push to `main`; gate proven with canary `8ac139b` (`SKIPPED`) and revert `3d97f46` (`SUCCESS`). Railway waits for **all** workflows on a commit, so any slow workflow must not run on `push`. |
 | Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), workspace preferred region `europe-west4-drams3a` |
 | Railway plan | **Hobby** since 2026-09-28. Before that the account was on Trial; the 2026-09-25 run wrongly assumed Hobby. The Postgres volume (`4fd1fea4-0e5e-49a5-a92d-adaf64c1d18c` in `production`) is still 500 MB, the Trial size; Hobby allows up to 5 GB. |
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
@@ -164,7 +165,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
    - `healthcheckPath = /healthz/`, `healthcheckTimeout = 120`, `restartPolicyType = ON_FAILURE`
 
    These settings live only in Railway. Their copy is `context/deployment/web-settings.json` (IDs + input, read back from the live service on 2026-09-27; `preDeployTimeoutSeconds` taken from this log). Update the file whenever the settings change.
-   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first.
+   To re-apply them: `railway api 'mutation($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input) }' --variables @context/deployment/web-settings.json`. For a recreated service, change `serviceId` / `environmentId` first. The file's `deploymentTrigger` key is not part of this mutation's `input`: set "Wait for CI" by hand in the dashboard (`web` → Settings → Source → Wait for CI), then read it back with `railway api 'query { deploymentTriggers(projectId: "…", environmentId: "…", serviceId: "…") { edges { node { branch checkSuites } } } }'`.
    **Follow-up:** move this into Infrastructure as Code (`.railway/railway.ts` via `railway config init`, then `railway config plan`). Review the plan carefully first, because a whole-project file deletes resources it doesn't declare, such as Postgres.
 2. **GitHub was connected from the CLI** (`railway service source connect --repo … --branch main --service web`) after you installed the Railway GitHub App for this repo only. The dashboard source step was not needed.
 3. **Region:** the workspace `preferredRegion` was verified through the API before anything was created. `web` was pinned with `railway service scale --service web eu-west=1`.
@@ -206,7 +207,6 @@ Change `auth-and-access-scaffold` (F-01) replaced the default `auth.User` with a
   - **Needs:** the Hobby plan (done). Nothing else blocks it.
 - [ ] If upgrading to Pro later: turn on the daily and weekly backup schedules and consider PITR. Keep the `pg_dump`, because Railway backups are deleted with the volume.
   - **Needs:** the Pro plan.
-- [ ] Tests on PRs (CI). Deferred to the later CI/CD stage (user decision 2026-09-28); until then nothing runs tests before a deploy.
-  - **Needs:** the CI/CD stage. Tests now exist (`uv run pytest`, pytest-django, added 2026-10-02 with F-01), but nothing runs them automatically yet.
+- [x] Tests on PRs (CI). Done 2026-10-15 with change `testing-suite-trust-and-ci`: workflow `CI` on every PR and push to `main`, and Railway "Wait for CI" holds deploys until it passes (see [Status](#status-checked-2026-09-28)).
 - [ ] Move `web` service settings to Infrastructure as Code (`.railway/railway.ts`) and review `railway config plan` before any apply.
   - **Needs:** a config file that also declares Postgres, so an apply doesn't delete it.
