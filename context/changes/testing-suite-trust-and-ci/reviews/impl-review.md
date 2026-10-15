@@ -83,7 +83,7 @@ Zmiany poza planem, ocenione jako nieszkodliwe: `workflow_dispatch` i `persist-c
 - **Location**: .github/workflows/ci.yml:20, :24
 - **Detail**: `actions/checkout@v7.0.1` i `astral-sh/setup-uv@v10.3.0` mają pełne tagi wydań — plan na to pozwalał („pełny tag wydania albo SHA”). Tag da się przesunąć, a `setup-uv` to akcja zewnętrzna, która decyduje o wdrożeniu produkcji. Uprawnienia są minimalne (`contents: read`, bez sekretów), więc szkoda byłaby ograniczona.
 - **Fix**: Przypiąć obie akcje do pełnego SHA commita, z tagiem w komentarzu.
-- **Decision**: FIXED — `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1`, `astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0` (SHA z `gh api repos/<repo>/commits/<tag>`, 2026-10-15). Niezweryfikowane w CI — wymaga pushu gałęzi przez użytkownika i ręcznego uruchomienia (`workflow_dispatch`).
+- **Decision**: FIXED — `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1`, `astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0` (SHA z `gh api repos/<repo>/commits/<tag>`, 2026-10-15). Zweryfikowane w CI: przebieg `workflow_dispatch` 38727139806 na `1926b76` (2026-10-15) — obie akcje pobrane po SHA, wszystkie kroki zielone.
 
 ### F5 — Test M2 zabija mutanta tylko dzięki domyślnej kolejności po `pk`
 
