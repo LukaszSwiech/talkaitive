@@ -142,6 +142,7 @@ MUTANTS: tuple[Mutant, ...] = (
         path="conversations/services.py",
         original="now - started < _agent_turn_timeout()",
         mutated="now - started <= _agent_turn_timeout()",
+        expected="accepted",
     ),
     Mutant(
         id="M9",
@@ -163,6 +164,7 @@ MUTANTS: tuple[Mutant, ...] = (
         path="conversations/memory.py",
         original="            status=Conversation.Status.ENDED,\n",
         mutated="",
+        expected="accepted",
     ),
     Mutant(
         id="M12",

@@ -5,6 +5,9 @@ from typing import Any
 
 import pytest
 from django.db import DatabaseError
+from django.test import Client
+from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import PracticeLanguage, User
 from conversations import services
@@ -214,6 +217,40 @@ def test_analysis_in_progress_is_refused(
 
 
 @pytest.mark.django_db
+def test_request_during_the_model_call_waits_and_starts_no_second_call(
+    anna: User, fake_llm: FakeAnalyzeMistakes, client: Client
+) -> None:
+    """While the model analyses, a second request starts no second paid call.
+
+    The page meanwhile shows that the list is being prepared, and the one result is
+    saved. Source: test-plan §2 risk #1 (the "in progress" marker refuses a parallel
+    start); PRD prd.md:96 (feedback while waiting). Guards M7.
+    """
+    client.force_login(anna)
+    conversation = make_conversation(anna)
+    pages: list[str] = []
+
+    def second_request_while_the_model_runs(**kwargs: Any) -> AnalysisResult:
+        # A refresh submits the analysis again while this model call is running.
+        response = client.post(
+            reverse("conversation_analyze", kwargs={"pk": conversation.pk}),
+            follow=True,
+        )
+        pages.append(response.content.decode())
+        return make_result(found(1, "habe gegangen", "bin gegangen"))
+
+    fake_llm.outcomes.append(second_request_while_the_model_runs)
+
+    services.analyze_conversation(conversation, timezone.now())
+
+    assert len(fake_llm.calls) == 1
+    [page] = pages
+    assert '<span role="status">Preparing your list of mistakes…</span>' in page
+    assert 'http-equiv="refresh"' in page
+    assert saved(conversation) == [(1, "habe gegangen", "bin gegangen", 1)]
+
+
+@pytest.mark.django_db
 def test_expired_marker_lets_the_analysis_run(
     anna: User, fake_llm: FakeAnalyzeMistakes
 ) -> None:
@@ -337,6 +374,35 @@ def test_llm_error_marks_failure_and_retry_succeeds(
     assert conversation.analysis_failed_at is None
     assert conversation.analyzed_at == later
     assert saved(conversation) == [(1, "habe gegangen", "bin gegangen", 1)]
+
+
+@pytest.mark.django_db
+def test_failed_analysis_marks_only_that_conversation(
+    anna: User, fake_llm: FakeAnalyzeMistakes, client: Client
+) -> None:
+    """A failed analysis of X shows "Try again" on X only, not on Y of the same user.
+
+    Source: research §1 M6; interview Q2 (the list-of-mistakes incident), test-plan
+    §2 risk #1. Guards M6.
+    """
+    client.force_login(anna)
+    failing = make_conversation(anna)
+    other = make_conversation(anna)
+    fake_llm.outcomes.append(LLMError("down"))
+
+    with pytest.raises(LLMError):
+        services.analyze_conversation(failing, NOON)
+
+    def page(conversation: Conversation) -> str:
+        url = reverse("conversation_detail", kwargs={"pk": conversation.pk})
+        return client.get(url).content.decode()
+
+    failure = "We could not prepare your list of mistakes."
+    assert failure in page(failing)
+    other_page = page(other)
+    assert failure not in other_page
+    assert "Try again" not in other_page
+    assert "Show my mistakes" in other_page
 
 
 @pytest.mark.django_db

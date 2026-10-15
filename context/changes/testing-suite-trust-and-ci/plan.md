@@ -521,29 +521,29 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 4.1 `uv run pytest` przechodzi (198 + nowe testy)
-- [x] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED`
-- [x] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED`
-- [x] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
+- [x] 4.1 `uv run pytest` przechodzi (198 + nowe testy) — 390a04a
+- [x] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED` — 390a04a
+- [x] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED` — 390a04a
+- [x] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 390a04a
 - [ ] 4.5 Workflow `CI` jest zielony na commicie tej fazy
 
 #### Manual
 
-- [x] 4.6 Każdy nowy test ma źródło oczekiwanej wartości (PRD / decyzja) i nie powtarza wzoru z kodu
+- [x] 4.6 Każdy nowy test ma źródło oczekiwanej wartości (PRD / decyzja) i nie powtarza wzoru z kodu — 390a04a
 
 ### Phase 5: Testy stanu analizy i pamięci (M6, M7, M10, M12, M13)
 
 #### Automated
 
-- [ ] 5.1 `uv run pytest` przechodzi
-- [ ] 5.2 Skrypt kończy się kodem 0: M8, M11 `accepted`, pozostałe `KILLED`
-- [ ] 5.3 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
+- [x] 5.1 `uv run pytest` przechodzi
+- [x] 5.2 Skrypt kończy się kodem 0: M8, M11 `accepted`, pozostałe `KILLED`
+- [x] 5.3 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
 - [ ] 5.4 Workflow `CI` jest zielony na commicie tej fazy
 
 #### Manual
 
-- [ ] 5.5 Źródła oczekiwanych wartości w nowych testach są jawne, bez powtórzonych wzorów z kodu
-- [ ] 5.6 `accepted_survivors.md` ma czytelne uzasadnienia M8 i M11
+- [x] 5.5 Źródła oczekiwanych wartości w nowych testach są jawne, bez powtórzonych wzorów z kodu
+- [x] 5.6 `accepted_survivors.md` ma czytelne uzasadnienia M8 i M11
 
 ### Phase 6: Triage mutmut do stanu „zaufany”
 

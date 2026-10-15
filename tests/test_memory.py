@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from accounts.models import PracticeLanguage, User
+from conversations.llm import format_memory
 from conversations.memory import Memory, PastMistake, select_memory
 from conversations.models import Conversation, Mistake
 
@@ -117,6 +118,73 @@ def test_pair_only_in_21st_newest_conversation_is_left_out(anna: User) -> None:
         make_conversation(anna, day=day)
 
     assert select_memory(anna, "bakery", DE).mistakes == []
+
+
+def test_pair_only_in_20th_newest_conversation_is_kept(anna: User) -> None:
+    """A mistake from the 20th newest analysed conversation still reaches memory.
+
+    With the 21st-conversation test above: both sides of the window edge. Source:
+    user decision of 2026-10-14 (the mistake window is 20 conversations; the PRD
+    gives no number). Guards M10.
+    """
+    twentieth = make_conversation(anna, day=1)
+    add_mistake(twentieth, 1, "edge", "EDGE")
+    for day in range(2, 21):
+        make_conversation(anna, day=day)
+
+    assert pairs(select_memory(anna, "bakery", DE)) == [("edge", "EDGE", 1)]
+
+
+def test_conversation_that_ended_later_counts_as_newer_than_one_created_later(
+    anna: User,
+) -> None:
+    """Freshness follows the end time, not the creation order.
+
+    Source: PRD prd.md:107 (frequency first, then freshness); user decision of
+    2026-10-14 (the most recent conversation is the one that ended latest).
+    Guards M12.
+    """
+    # Created first, but ended a day after the conversation created after it.
+    ended_later = make_conversation(
+        anna, day=2, facts=("Fact of the later end.",), notes=("Later end.",)
+    )
+    ended_earlier = make_conversation(
+        anna, day=1, facts=("Fact of the earlier end.",), notes=("Earlier end.",)
+    )
+    assert ended_later.pk < ended_earlier.pk
+    add_mistake(ended_later, 1, "later", "LATER")
+    add_mistake(ended_earlier, 1, "earlier", "EARLIER")
+
+    memory = select_memory(anna, "bakery", DE)
+
+    assert memory.scene_notes == [["Later end."], ["Earlier end."]]
+    assert memory.learner_facts == [
+        "Fact of the later end.",
+        "Fact of the earlier end.",
+    ]
+    # Same frequency (one conversation each): the fresher pair goes first.
+    assert [m.wrong for m in memory.mistakes] == ["later", "earlier"]
+
+
+def test_most_recent_label_marks_the_notes_of_the_latest_ended_conversation(
+    anna: User,
+) -> None:
+    """In the prompt, "(the most recent)" stands at the latest-ended scene's notes.
+
+    Source: user decision of 2026-10-14 (the label belongs to the scene notes of
+    the conversation that ended latest). Guards M13.
+    """
+    make_conversation(anna, day=1, notes=("Older visit.",))
+    make_conversation(anna, day=2, notes=("Latest visit.",))
+
+    text = format_memory(select_memory(anna, "bakery", DE))
+
+    lines = text.splitlines()
+    labelled = [
+        lines[i + 1] for i, line in enumerate(lines) if "(the most recent)" in line
+    ]
+    assert labelled == ["- Latest visit."]
+    assert "Older visit." in text
 
 
 def test_at_most_ten_mistakes(anna: User) -> None:

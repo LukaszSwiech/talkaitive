@@ -19,3 +19,5 @@ Mutant, którego nie ma w tej tabeli, a przeżywa, to luka w testach do naprawie
 
 | id / nazwa mutmut | plik i funkcja | klasyfikacja | uzasadnienie | data |
 | --- | --- | --- | --- | --- |
+| `M8` | `conversations/services.py`, `agent_turn_in_progress` | `równoważny` | Równoważny w praktyce: `<` → `<=` przesuwa chwilę wygaśnięcia znacznika tury agenta o jeden takt zegara (mikrosekundę). Różnica dotyczy tylko żądania, które trafi dokładnie w tę mikrosekundę — użytkownik jej nie zobaczy. Decyzja użytkownika z 2026-10-14. | 2026-10-14 |
+| `M11` | `conversations/memory.py`, `select_memory` | `równoważny` | Analiza wymaga zakończonej rozmowy (`analyze_conversation` odrzuca aktywną, zanim ustawi `analyzed_at`), a rozmowa nigdy nie wraca z `ended` do `active`. Aktywna rozmowa nie ma więc `analyzed_at`, a filtr `status=ENDED` niczego nie dodaje do filtra `analyzed_at__isnull=False`. Decyzja użytkownika z 2026-10-14. | 2026-10-14 |
