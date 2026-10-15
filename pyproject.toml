@@ -14,6 +14,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mutmut>=3.8.0",
     "pytest>=9.1.1",
     "pytest-django>=4.14.0",
     "ruff>=0.16.8",
@@ -21,7 +22,7 @@ dev = [
 
 [tool.ruff]
 target-version = "py313"
-extend-exclude = ["**/migrations/*"]
+extend-exclude = ["**/migrations/*", "mutants"]  # mutants/: mutmut's working copy
 
 [tool.ruff.lint]
 # E/F: pycodestyle + pyflakes, I: import order, B: bugbear, UP: pyupgrade, DJ: Django-specific
@@ -33,3 +34,17 @@ DJANGO_SETTINGS_MODULE = "talkaitive.settings_test"
 python_files = ["test_*.py"]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.mutmut]
+# All three packages are copied to mutants/ so talkaitive.settings_test imports there;
+# only the critical deterministic logic is mutated.
+source_paths = ["accounts", "conversations", "talkaitive"]
+# pytest-django puts the directory of the nearest manage.py on sys.path. Without a copy
+# in mutants/ it finds the repo's own manage.py and the tests import the unmutated code.
+also_copy = ["manage.py"]
+only_mutate = [
+    "accounts/ownership.py",
+    "conversations/budget.py",
+    "conversations/memory.py",
+    "conversations/services.py",
+]
