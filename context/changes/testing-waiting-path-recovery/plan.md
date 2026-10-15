@@ -395,9 +395,9 @@ Brak migracji bazy: nowe ustawienie jest stałą, a stan „analiza nieudana” 
 
 #### Automated
 
-- [x] 5.1 W §6.3 nie ma już „TBD”: `grep -n "TBD — see §3 Phase 2" context/foundation/test-plan.md` nic nie zwraca
-- [x] 5.2 Pełna bramka lokalna zielona: `uv run pytest && uv run ruff check . && uv run ruff format --check .`
+- [x] 5.1 W §6.3 nie ma już „TBD”: `grep -n "TBD — see §3 Phase 2" context/foundation/test-plan.md` nic nie zwraca — 3949e8a
+- [x] 5.2 Pełna bramka lokalna zielona: `uv run pytest && uv run ruff check . && uv run ruff format --check .` — 3949e8a
 
 #### Manual
 
-- [x] 5.3 §6.3 czyta się jako samodzielna instrukcja: nowy test dla dostawcy da się napisać, czytając tylko §6.3 i testy referencyjne
+- [x] 5.3 §6.3 czyta się jako samodzielna instrukcja: nowy test dla dostawcy da się napisać, czytając tylko §6.3 i testy referencyjne — 3949e8a
