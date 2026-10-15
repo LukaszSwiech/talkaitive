@@ -382,22 +382,22 @@ Brak migracji bazy: nowe ustawienie jest stałą, a stan „analiza nieudana” 
 
 #### Automated
 
-- [x] 4.1 Najpierw czerwone: test strony z wygasłym znacznikiem pada na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py`
-- [x] 4.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
-- [x] 4.3 mutmut bez niewyjaśnionych przeżyć w `analysis_failed`: `uv run mutmut run` + `uv run mutmut results`
-- [x] 4.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 4.1 Najpierw czerwone: test strony z wygasłym znacznikiem pada na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py` — c179381
+- [x] 4.2 Po zmianie wszystkie testy przechodzą: `uv run pytest` — c179381
+- [x] 4.3 mutmut bez niewyjaśnionych przeżyć w `analysis_failed`: `uv run mutmut run` + `uv run mutmut results` — c179381
+- [x] 4.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — c179381
 
 #### Manual
 
-- [x] 4.5 Lokalnie (`uv run python manage.py runserver`): zakończona rozmowa z ręcznie ustawionym w shellu Django znacznikiem analizy sprzed 4 min pokazuje komunikat i „Try again”, strona sama się nie wysyła i nie odświeża
+- [x] 4.5 Lokalnie (`uv run python manage.py runserver`): zakończona rozmowa z ręcznie ustawionym w shellu Django znacznikiem analizy sprzed 4 min pokazuje komunikat i „Try again”, strona sama się nie wysyła i nie odświeża — c179381
 
 ### Phase 5: Cookbook i domknięcie fazy w test-plan
 
 #### Automated
 
-- [ ] 5.1 W §6.3 nie ma już „TBD”: `grep -n "TBD — see §3 Phase 2" context/foundation/test-plan.md` nic nie zwraca
-- [ ] 5.2 Pełna bramka lokalna zielona: `uv run pytest && uv run ruff check . && uv run ruff format --check .`
+- [x] 5.1 W §6.3 nie ma już „TBD”: `grep -n "TBD — see §3 Phase 2" context/foundation/test-plan.md` nic nie zwraca
+- [x] 5.2 Pełna bramka lokalna zielona: `uv run pytest && uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 5.3 §6.3 czyta się jako samodzielna instrukcja: nowy test dla dostawcy da się napisać, czytając tylko §6.3 i testy referencyjne
+- [x] 5.3 §6.3 czyta się jako samodzielna instrukcja: nowy test dla dostawcy da się napisać, czytając tylko §6.3 i testy referencyjne
