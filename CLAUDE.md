@@ -22,6 +22,15 @@ The user is still building trust in agents and wants to understand each action b
 
 Also write the Bash tool's `description` field in Polish, and let it run to one full sentence instead of 5–10 words. For a plain read (e.g. `cat`, `ls`, `git status`), one or two sentences covering the same points are enough.
 
+## Branches — never work on `main`
+
+This section is the single source for branch rules across `/10x-new` → `/10x-research` → `/10x-plan` → `/10x-implement` / `/10x-tdd` → `/10x-impl-review` → `/10x-archive`. Skill files are not edited for this (they are gitignored and `10x get` overwrites them), and `lessons.md` is not read by `/10x-new` or `/10x-archive`.
+
+- **Before `/10x-new`** (or any other work that will change files), check the current branch. On `main`, first create a branch from an up-to-date `main` (`git switch main && git pull --ff-only && git switch -c <change-id>`), named after the change-id, and only then create the change folder. Propose the branch name and wait for the user's OK before creating it.
+- **`/10x-plan` decides the branch layout.** A change may use one branch for everything, or a separate branch (and PR) per phase or group of phases. Analyse the phases — size, risk, whether a phase can be merged and deployed on its own (`main` auto-deploys), and whether later phases depend on earlier ones being merged — and add a `## Branches and PRs` section right after `## Implementation Approach` in `plan.md` with a one-sentence recommendation, e.g. "One branch `<change-id>` and one PR for all phases." or "Phases 1–2 on `<change-id>-p1`, phase 3 on `<change-id>-p3` after the first PR is merged." Mention it when presenting the plan, so the user confirms or changes it.
+- **Starting a phase that the plan puts on a new branch:** before its first edit, create that branch from an up-to-date `main` once the previous PR is merged (or from the previous branch, if the plan says the branches stack).
+- **`/10x-archive`, plan close-outs and review fixes** run on the change's branch, never on `main`. Commit straight to `main` only when the user explicitly asks for it.
+
 ## TalkAItive — project notes
 
 Django 6.1 web app for German conversation practice (B1–B2). Spec: `context/foundation/prd.md` (in Polish); stack rationale: `context/foundation/tech-stack.md`.
