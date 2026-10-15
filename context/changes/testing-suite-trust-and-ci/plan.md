@@ -498,24 +498,24 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 #### Automated
 
 - [x] 2.1 `.github/workflows/ci.yml` przechodzi lokalnie te same kroki — ccdd7f4
-- [x] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main`
-- [x] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą
+- [x] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main` — 868f3f4
+- [x] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą — 868f3f4
 
 #### Manual
 
-- [x] 2.4 PR z dowolną zmianą pokazuje check `CI` (zielony)
-- [x] 2.5 Przełącznik „Wait for CI” jest włączony i po ponownym otwarciu ustawień dalej włączony
-- [x] 2.6 Commit z kanarkiem: workflow czerwony, deployment Railway `SKIPPED`, produkcja na poprzedniej wersji
-- [x] 2.7 Commit revert: workflow zielony, deployment udany, `/healthz/` zwraca 200
+- [x] 2.4 PR z dowolną zmianą pokazuje check `CI` (zielony) — 868f3f4
+- [x] 2.5 Przełącznik „Wait for CI” jest włączony i po ponownym otwarciu ustawień dalej włączony — 868f3f4
+- [x] 2.6 Commit z kanarkiem: workflow czerwony, deployment Railway `SKIPPED`, produkcja na poprzedniej wersji — 868f3f4
+- [x] 2.7 Commit revert: workflow zielony, deployment udany, `/healthz/` zwraca 200 — 868f3f4
 
 ### Phase 3: Skrypt ręcznych mutantów
 
 #### Automated
 
-- [ ] 3.1 Skrypt raportuje C1, C2 i M9 jako `KILLED`, a M1–M8 i M10–M13 jako `SURVIVED`, kod wyjścia 1
-- [ ] 3.2 Fragment, którego nie ma w pliku, kończy skrypt błędem
-- [ ] 3.3 `git status` po przebiegu nie pokazuje zmian w `accounts/`, `conversations/`, `talkaitive/`
-- [ ] 3.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
+- [x] 3.1 Skrypt raportuje C1, C2 i M9 jako `KILLED`, a M1–M8 i M10–M13 jako `SURVIVED`, kod wyjścia 1
+- [x] 3.2 Fragment, którego nie ma w pliku, kończy skrypt błędem
+- [x] 3.3 `git status` po przebiegu nie pokazuje zmian w `accounts/`, `conversations/`, `talkaitive/`
+- [x] 3.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
 
 ### Phase 4: Testy izolacji i budżetu (M1–M5)
 
