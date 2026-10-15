@@ -327,6 +327,30 @@ def test_home_lists_topics_without_active_conversation(
 
 
 @pytest.mark.django_db
+def test_home_never_shows_another_users_active_conversation(
+    client: Client, anna: User, lukasz: User, fake_llm: FakeGenerateTurn
+) -> None:
+    """Lukasz's home page is the same with and without Anna's active conversation.
+
+    Source: PRD Prywatność (prd.md:46, :94, :113). Guards M1.
+    """
+    client.force_login(lukasz)
+    before = client.get("/")
+    client.force_login(anna)
+    annas = start(client)
+    client.force_login(lukasz)
+
+    after = client.get("/")
+
+    assert before.context["active_conversation"] is None
+    assert after.context["active_conversation"] == before.context["active_conversation"]
+    page = after.content.decode()
+    assert detail_url(annas) not in page
+    assert "Continue conversation" not in page
+    assert "Choose a topic" in page
+
+
+@pytest.mark.django_db
 def test_llm_error_keeps_user_message_and_retry_finishes_the_turn(
     anna_client: Client, fake_llm: FakeGenerateTurn
 ) -> None:
@@ -360,6 +384,27 @@ def test_llm_error_on_start_leaves_a_conversation_waiting_for_retry(
     assert response["Location"] == detail_url(conversation)
     assert not conversation.messages.exists()
     assert "Try again" in anna_client.get(detail_url(conversation)).content.decode()
+
+
+@pytest.mark.django_db
+def test_llm_error_on_start_redirects_to_own_conversation_not_another_users(
+    client: Client, anna: User, lukasz: User, fake_llm: FakeGenerateTurn
+) -> None:
+    """A failed start leads Lukasz to his own new conversation, never to Anna's.
+
+    Anna's older active conversation has the lower pk. Source: PRD Prywatność
+    (prd.md:46, :94, :113). Guards M2.
+    """
+    client.force_login(anna)
+    annas = start(client)
+    client.force_login(lukasz)
+    fake_llm.outcomes.append(LLMError("down"))
+
+    response = client.post(START_URL, {"topic": "bakery"})
+
+    lukaszs = Conversation.objects.get(user=lukasz)
+    assert response["Location"] == detail_url(lukaszs)
+    assert response["Location"] != detail_url(annas)
 
 
 @pytest.mark.django_db
@@ -733,6 +778,31 @@ def test_analysed_page_without_mistakes_says_so(
 
     assert "No mistakes found in this conversation." in page
     assert analysis_url(conversation) not in page
+
+
+@pytest.mark.django_db
+def test_conversation_page_lists_only_its_own_mistakes(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """The page of conversation X lists X's mistakes and none from Y (same user).
+
+    Source: PRD prd.md:117 (the list of mistakes of *this* conversation, no view of
+    earlier ones). Guards M3.
+    """
+    first = ended(anna_client)
+    second = ended(anna_client)
+    add_mistake(first, 1, wrong="Fehler aus X", correct="Korrektur X")
+    add_mistake(second, 1, wrong="Fehler aus Y", correct="Korrektur Y")
+    mark_analyzed(first)
+    mark_analyzed(second)
+
+    response = anna_client.get(detail_url(first))
+
+    assert [m.wrong for m in response.context["mistakes"]] == ["Fehler aus X"]
+    page = response.content.decode()
+    assert "Fehler aus X" in page
+    assert "Fehler aus Y" not in page
+    assert "Korrektur Y" not in page
 
 
 @pytest.mark.django_db

@@ -512,24 +512,24 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 3.1 Skrypt raportuje C1, C2 i M9 jako `KILLED`, a M1–M8 i M10–M13 jako `SURVIVED`, kod wyjścia 1
-- [x] 3.2 Fragment, którego nie ma w pliku, kończy skrypt błędem
-- [x] 3.3 `git status` po przebiegu nie pokazuje zmian w `accounts/`, `conversations/`, `talkaitive/`
-- [x] 3.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
+- [x] 3.1 Skrypt raportuje C1, C2 i M9 jako `KILLED`, a M1–M8 i M10–M13 jako `SURVIVED`, kod wyjścia 1 — 6f154df
+- [x] 3.2 Fragment, którego nie ma w pliku, kończy skrypt błędem — 6f154df
+- [x] 3.3 `git status` po przebiegu nie pokazuje zmian w `accounts/`, `conversations/`, `talkaitive/` — 6f154df
+- [x] 3.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 6f154df
 
 ### Phase 4: Testy izolacji i budżetu (M1–M5)
 
 #### Automated
 
-- [ ] 4.1 `uv run pytest` przechodzi (198 + nowe testy)
-- [ ] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED`
-- [ ] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED`
-- [ ] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
+- [x] 4.1 `uv run pytest` przechodzi (198 + nowe testy)
+- [x] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED`
+- [x] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED`
+- [x] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
 - [ ] 4.5 Workflow `CI` jest zielony na commicie tej fazy
 
 #### Manual
 
-- [ ] 4.6 Każdy nowy test ma źródło oczekiwanej wartości (PRD / decyzja) i nie powtarza wzoru z kodu
+- [x] 4.6 Każdy nowy test ma źródło oczekiwanej wartości (PRD / decyzja) i nie powtarza wzoru z kodu
 
 ### Phase 5: Testy stanu analizy i pamięci (M6, M7, M10, M12, M13)
 

@@ -250,6 +250,21 @@ def test_is_exhausted_false_after_midnight_reset(anna: User) -> None:
     assert not is_exhausted(anna, after_reset)
 
 
+def test_daily_limit_end_exactly_at_midnight_closes_that_day(anna: User) -> None:
+    """Ended by the limit at 00:00:00 Berlin: that day is closed, the next is not.
+
+    Source: PRD prd.md:114 (reset at midnight Europe/Berlin); a day is
+    [midnight, next midnight), as in the "midnight inclusive" tests. Guards M5.
+    """
+    # 10 June 2026 00:00:00 CEST (UTC+2) is 9 June 22:00:00 UTC.
+    end_by_daily_limit(make_conversation(anna), datetime(2026, 6, 9, 22, 0, tzinfo=UTC))
+    later_that_day = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)  # 12:00 CEST
+    next_midnight = datetime(2026, 6, 10, 22, 0, tzinfo=UTC)  # 11 June 00:00 CEST
+
+    assert is_exhausted(anna, later_that_day)
+    assert not is_exhausted(anna, next_midnight)
+
+
 def test_is_exhausted_ignores_other_users_daily_limit_end(
     anna: User, lukasz: User
 ) -> None:
@@ -310,3 +325,22 @@ def test_is_final_turn_ignores_other_users_spending(anna: User, lukasz: User) ->
     add_message(make_conversation(lukasz), "0.990000", NOON)
 
     assert not is_final_turn(anna, conversation, NOON)
+
+
+def test_is_final_turn_ignores_other_users_newer_agent_turn(
+    anna: User, lukasz: User
+) -> None:
+    """Anna's final-turn answer is the same with and without Lukasz's turns.
+
+    Source: PRD prd.md:114 (the $1 limit is per user) and Prywatność. Guards M4.
+    """
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.100000", NOON.replace(hour=8))
+    # Anna spent $0.10 of $1.00: one more turn like hers cannot be her last.
+    without_lukasz = is_final_turn(anna, conversation, NOON)
+    assert not without_lukasz
+
+    # Newer and expensive enough that counting it for Anna would cross $1.00.
+    add_message(make_conversation(lukasz), "0.950000", NOON.replace(hour=9))
+
+    assert is_final_turn(anna, conversation, NOON) == without_lukasz
