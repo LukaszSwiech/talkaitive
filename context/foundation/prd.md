@@ -94,6 +94,7 @@ Osoba przygotowująca się do części ustnej egzaminu Goethe-Institut. Poza zak
 - **Prywatność:** rozmowy, błędy i pamięć jednej osoby nigdy nie są widoczne dla innej osoby — w tym dla właściciela w produkcie.
 - **Usuwanie danych:** po usunięciu konta wszystkie dane użytkownika (rozmowy, błędy, pamięć) są trwale usunięte w ciągu 24 godzin. Termin dotyczy danych w bazie aplikacji (usuwane natychmiast po potwierdzeniu). Poza kontrolą produktu pozostają: kopie rozmów u dostawcy modelu (OpenAI może je trzymać do 30 dni w logach monitoringu nadużyć; brak zero data retention) oraz kopie zapasowe bazy (do 7 dni, gdy powstaną — reguła w `context/deployment/deploy-plan.md`).
 - **Informacja zwrotna podczas czekania:** użytkownik przez cały czas oczekiwania na odpowiedź agenta widzi, że odpowiedź jest przygotowywana.
+- **Odmowa akcji:** gdy aplikacja odrzuca akcję użytkownika (wyczerpany limit, rozmowa już trwa albo jest zakończona, agent jeszcze odpowiada, pusta wiadomość, nic do ponowienia), użytkownik widzi komunikat z powodem odmowy — nigdy pusty ani techniczny (np. „None”). Brzmienie komunikatu nie jest wymaganiem.
 - **Czas odpowiedzi agenta:** świadomie bez progu liczbowego — zależy od dostawcy modelu i jest poza kontrolą produktu.
 
 ## Business Logic

@@ -525,7 +525,7 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 - [x] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED` — 390a04a
 - [x] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED` — 390a04a
 - [x] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 390a04a
-- [ ] 4.5 Workflow `CI` jest zielony na commicie tej fazy
+- [x] 4.5 Workflow `CI` jest zielony na commicie tej fazy — 7914d18
 
 #### Manual
 
@@ -535,28 +535,28 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 5.1 `uv run pytest` przechodzi
-- [x] 5.2 Skrypt kończy się kodem 0: M8, M11 `accepted`, pozostałe `KILLED`
-- [x] 5.3 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
-- [ ] 5.4 Workflow `CI` jest zielony na commicie tej fazy
+- [x] 5.1 `uv run pytest` przechodzi — 7d591e9
+- [x] 5.2 Skrypt kończy się kodem 0: M8, M11 `accepted`, pozostałe `KILLED` — 7d591e9
+- [x] 5.3 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 7d591e9
+- [x] 5.4 Workflow `CI` jest zielony na commicie tej fazy — 7914d18
 
 #### Manual
 
-- [x] 5.5 Źródła oczekiwanych wartości w nowych testach są jawne, bez powtórzonych wzorów z kodu
-- [x] 5.6 `accepted_survivors.md` ma czytelne uzasadnienia M8 i M11
+- [x] 5.5 Źródła oczekiwanych wartości w nowych testach są jawne, bez powtórzonych wzorów z kodu — 7d591e9
+- [x] 5.6 `accepted_survivors.md` ma czytelne uzasadnienia M8 i M11 — 7d591e9
 
 ### Phase 6: Triage mutmut do stanu „zaufany”
 
 #### Automated
 
-- [ ] 6.1 Każdy przeżywający mutant z `uv run mutmut results` ma wpis w `accepted_survivors.md`
-- [ ] 6.2 `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` przechodzą
-- [ ] 6.3 Skrypt ręcznych mutantów dalej kończy się kodem 0
+- [x] 6.1 Każdy przeżywający mutant z `uv run mutmut results` ma wpis w `accepted_survivors.md`
+- [x] 6.2 `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` przechodzą
+- [x] 6.3 Skrypt ręcznych mutantów dalej kończy się kodem 0
 - [ ] 6.4 Workflow `CI` jest zielony na commicie tej fazy
 
 #### Manual
 
-- [ ] 6.5 Użytkownik akceptuje klasyfikację wpisów `brak wymagania` i `przekazany do fazy N`
+- [x] 6.5 Użytkownik akceptuje klasyfikację wpisów `brak wymagania` i `przekazany do fazy N`
 
 ### Phase 7: Plan testów i dokumenty
 

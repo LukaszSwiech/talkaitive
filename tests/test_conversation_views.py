@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from django.test import Client
 from django.utils import timezone
+from django.utils.html import escape
 
 from accounts.models import PracticeLanguage, User
 from conversations import services
@@ -315,6 +316,46 @@ def test_second_active_conversation_is_impossible(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "refusal",
+    ["daily limit", "second conversation", "waiting for reply", "nothing to retry"],
+)
+def test_refused_action_shows_a_reason(
+    anna_client: Client, fake_llm: FakeGenerateTurn, settings, refusal: str
+) -> None:
+    """A refused action shows the user a reason, never an empty or "None" notice.
+
+    Source: PRD "Odmowa akcji" (prd.md:97, decision 2026-10-15). The wording is not
+    a requirement, so only a meaningful reason on the page is asserted, not its text.
+    Edge: the refusals reached by a stale page or a double submit. Guards mutmut
+    `x_start_conversation__mutmut_12`, `_39`, `x_send_message__mutmut_16` and
+    `x_run_agent_turn__mutmut_4`.
+    """
+    if refusal == "daily limit":
+        # One estimated turn (0.03) does not fit into the budget.
+        settings.DAILY_BUDGET_USD = Decimal("0.03")
+        response = anna_client.post(START_URL, {"topic": "bakery"}, follow=True)
+    elif refusal == "second conversation":
+        start(anna_client)
+        response = anna_client.post(START_URL, {"topic": "pharmacy"}, follow=True)
+    else:
+        conversation = start(anna_client)
+        if refusal == "waiting for reply":
+            fake_llm.outcomes.append(LLMError("down"))
+            send(anna_client, conversation, "Hallo")
+            response = send(anna_client, conversation, "Hallo?", follow=True)
+        else:
+            response = anna_client.post(
+                f"/conversations/{conversation.pk}/retry/", follow=True
+            )
+
+    [notice] = list(response.context["messages"])
+    reason = str(notice).strip()
+    assert reason not in ("", "None")
+    assert escape(reason) in response.content.decode()
+
+
+@pytest.mark.django_db
 def test_home_lists_topics_without_active_conversation(
     anna_client: Client, anna: User
 ) -> None:
@@ -565,6 +606,48 @@ def test_retry_while_the_model_is_replying_does_not_call_it_again(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("turn", ["opening", "retry"])
+def test_opening_turn_and_retry_show_typing_and_start_no_second_call(
+    anna_client: Client, anna: User, fake_llm: FakeGenerateTurn, turn: str
+) -> None:
+    """While the model writes the opening turn or a retried turn, the page says so.
+
+    A refresh during the call shows "typing", not "Try again", and a "Try again"
+    sent meanwhile starts no second model call. Source: PRD prd.md:96 (the user sees
+    the reply being prepared for the whole wait); test-plan §2 risk #1 (the "in
+    progress" marker refuses a parallel start). Edge: the two turns the send test
+    above does not cover. Guards mutmut `x_start_conversation__mutmut_31`, `_38`
+    and `x_run_agent_turn__mutmut_17`.
+    """
+    pages: list[str] = []
+
+    def refresh_and_retry_while_the_model_runs(**kwargs: Any) -> TurnResult:
+        conversation = Conversation.objects.for_user(anna).get(
+            status=Conversation.Status.ACTIVE
+        )
+        pages.append(anna_client.get(detail_url(conversation)).content.decode())
+        anna_client.post(f"/conversations/{conversation.pk}/retry/")
+        return make_result("The only reply")
+
+    if turn == "opening":
+        calls_before = 0
+        fake_llm.outcomes.append(refresh_and_retry_while_the_model_runs)
+        services.start_conversation(anna, "bakery", timezone.now())
+    else:
+        conversation = start(anna_client)
+        fake_llm.outcomes.append(LLMError("down"))
+        send(anna_client, conversation, "Hallo")
+        calls_before = len(fake_llm.calls)
+        fake_llm.outcomes.append(refresh_and_retry_while_the_model_runs)
+        services.run_agent_turn(conversation, timezone.now())
+
+    [page] = pages
+    assert '<div class="typing">' in page
+    assert "Try again" not in page
+    assert len(fake_llm.calls) == calls_before + 1
+
+
+@pytest.mark.django_db
 def test_end_button_ends_with_user_reason_and_is_idempotent(
     anna_client: Client, fake_llm: FakeGenerateTurn
 ) -> None:
@@ -584,6 +667,29 @@ def test_end_button_ends_with_user_reason_and_is_idempotent(
     conversation.refresh_from_db()
     assert conversation.ended_at == ended_at
     assert "Choose a topic" in anna_client.get("/").content.decode()
+
+
+@pytest.mark.django_db
+def test_ending_an_old_ended_conversation_leaves_the_current_one_active(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """An "End" from a stale page of an ended conversation keeps the new one going.
+
+    Source: PRD FR-006 (the "End" button ends that conversation) and FR-004 (the user
+    keeps talking in the current one). Edge: two conversations of one user, the end
+    request aimed at the one that has already ended. Guards mutmut
+    `x_end_conversation__mutmut_9` (the update without `pk=`).
+    """
+    old = start(anna_client)
+    anna_client.post(f"/conversations/{old.pk}/end/")
+    current = start(anna_client)
+
+    anna_client.post(f"/conversations/{old.pk}/end/")
+
+    current.refresh_from_db()
+    assert current.status == Conversation.Status.ACTIVE
+    assert current.ended_at is None
+    assert detail_url(current) in anna_client.get("/").content.decode()
 
 
 @pytest.mark.django_db

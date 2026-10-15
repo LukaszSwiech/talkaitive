@@ -82,6 +82,48 @@ def test_pair_in_more_conversations_ranks_above_pair_repeated_in_one(
     assert pairs(memory) == [("b", "B", 2), ("a", "A", 1)]
 
 
+def test_pair_from_three_conversations_ranks_above_fresher_pair_from_two(
+    anna: User,
+) -> None:
+    """Frequency counts every conversation with the pair, not just "more than one".
+
+    Source: PRD prd.md:107 (frequency first — a mistake repeated in many
+    conversations — then freshness). Edge: three vs two conversations, with the
+    two-conversation pair fresher, so freshness alone would put it first. Guards
+    mutmut `memory.x__mistakes__mutmut_57`.
+    """
+    for day in (1, 2, 3):
+        add_mistake(make_conversation(anna, day=day), 1, "dreimal", "DREIMAL")
+    for day in (4, 5):
+        add_mistake(make_conversation(anna, day=day), 1, "zweimal", "ZWEIMAL")
+
+    memory = select_memory(anna, "bakery", DE)
+
+    assert pairs(memory) == [("dreimal", "DREIMAL", 3), ("zweimal", "ZWEIMAL", 2)]
+
+
+def test_two_pairs_repeated_in_the_same_two_conversations_both_count_twice(
+    anna: User,
+) -> None:
+    """Two mistakes made in both conversations, in a different order each time.
+
+    Both reach memory as mistakes from two conversations. Source: PRD prd.md:107
+    (frequency = repeated in many conversations) and FR-010 (earlier mistakes come
+    back). Edge: equal frequency and equal freshness; the order inside this tie has
+    no source, so it is not asserted. Guards mutmut `memory.x__mistakes__mutmut_39`.
+    """
+    older = make_conversation(anna, day=1)
+    newer = make_conversation(anna, day=2)
+    add_mistake(older, 1, "a", "A")
+    add_mistake(older, 2, "b", "B")
+    add_mistake(newer, 1, "b", "B")
+    add_mistake(newer, 2, "a", "A")
+
+    memory = select_memory(anna, "bakery", DE)
+
+    assert sorted(pairs(memory)) == [("a", "A", 2), ("b", "B", 2)]
+
+
 def test_tie_goes_to_pair_from_newer_conversation_then_lower_position(
     anna: User,
 ) -> None:
