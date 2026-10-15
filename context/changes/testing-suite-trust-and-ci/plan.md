@@ -484,20 +484,20 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 1.1 `uv run mutmut run` kończy się bez błędu konfiguracji, a `uv run mutmut results` pokazuje mutanty z 4 modułów
-- [x] 1.2 Mutant `>=` → `>` w `is_exhausted` jest w wynikach mutmut zabity (kontrola sensu)
-- [x] 1.3 `uv run pytest` dalej 198 passed
-- [x] 1.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą mimo istniejącego katalogu `mutants/`
+- [x] 1.1 `uv run mutmut run` kończy się bez błędu konfiguracji, a `uv run mutmut results` pokazuje mutanty z 4 modułów — 9c64b66
+- [x] 1.2 Mutant `>=` → `>` w `is_exhausted` jest w wynikach mutmut zabity (kontrola sensu) — 9c64b66
+- [x] 1.3 `uv run pytest` dalej 198 passed — 9c64b66
+- [x] 1.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą mimo istniejącego katalogu `mutants/` — 9c64b66
 
 #### Manual
 
-- [x] 1.5 `mutmut-baseline.md` zawiera czas przebiegu, liczby i listę przeżywających mutantów, a użytkownik akceptuje decyzję go/no-go dla mutmut
+- [x] 1.5 `mutmut-baseline.md` zawiera czas przebiegu, liczby i listę przeżywających mutantów, a użytkownik akceptuje decyzję go/no-go dla mutmut — 9c64b66
 
 ### Phase 2: Próg CI i bramka Railway
 
 #### Automated
 
-- [ ] 2.1 `.github/workflows/ci.yml` przechodzi lokalnie te same kroki
+- [x] 2.1 `.github/workflows/ci.yml` przechodzi lokalnie te same kroki
 - [ ] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main`
 - [ ] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą
 

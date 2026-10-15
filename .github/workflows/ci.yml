@@ -1,0 +1,27 @@
+name: CI
+
+# No paths filters: Railway's "Wait for CI" waits on every commit to main, docs-only ones too.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Latest release tags checked on 2026-10-15.
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      # Cache defaults to on for GitHub-hosted runners; uv reads Python 3.14 from .python-version.
+      - uses: astral-sh/setup-uv@v10.3.0
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      # SQLite via talkaitive.settings_test; no secrets or network needed.
+      - run: uv run pytest
