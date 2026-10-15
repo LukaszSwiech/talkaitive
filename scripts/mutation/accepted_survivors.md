@@ -2,7 +2,7 @@
 
 Jedno miejsce dla każdego mutanta, który przeżywa testy i którego **świadomie** nie zabijamy. Dotyczy obu źródeł:
 
-- ręcznej listy w `scripts/mutation/manual_mutants.py` (id `C1`, `C2`, `M1`–`M13`); wpis tutaj idzie w parze z `expected="accepted"` przy tym mutancie w skrypcie,
+- ręcznej listy w `scripts/mutation/manual_mutants.py` (id `C1`, `C2`, `M1`–`M18`); wpis tutaj idzie w parze z `expected="accepted"` przy tym mutancie w skrypcie,
 - przebiegów mutmut (nazwa mutanta z raportu, np. `conversations.budget.x_is_exhausted__mutmut_3`).
 
 Mutant, którego nie ma w tej tabeli, a przeżywa, to luka w testach do naprawienia, nie wynik do przyjęcia.
@@ -21,6 +21,7 @@ Mutant, którego nie ma w tej tabeli, a przeżywa, to luka w testach do naprawie
 | --- | --- | --- | --- | --- |
 | `M8` | `conversations/services.py`, `agent_turn_in_progress` | `równoważny` | Równoważny w praktyce: `<` → `<=` przesuwa chwilę wygaśnięcia znacznika tury agenta o jeden takt zegara (mikrosekundę). Różnica dotyczy tylko żądania, które trafi dokładnie w tę mikrosekundę — użytkownik jej nie zobaczy. Decyzja użytkownika z 2026-10-14. | 2026-10-14 |
 | `M11` | `conversations/memory.py`, `select_memory` | `równoważny` | Analiza wymaga zakończonej rozmowy (`analyze_conversation` odrzuca aktywną, zanim ustawi `analyzed_at`), a rozmowa nigdy nie wraca z `ended` do `active`. Aktywna rozmowa nie ma więc `analyzed_at`, a filtr `status=ENDED` niczego nie dodaje do filtra `analyzed_at__isnull=False`. Decyzja użytkownika z 2026-10-14. | 2026-10-14 |
+| `M17` | `conversations/memory.py`, `_mistakes` | `równoważny` | Lista `conversation_ids` pochodzi z `select_memory`, które czyta tylko rozmowy użytkownika (`Conversation.objects.for_user(user)`; jego usunięcie to `M16`). `Mistake.user` jest zawsze użytkownikiem rozmowy (`_save_mistakes`, `conversations/services.py:421-434`), więc filtr `conversation_id__in=` wybiera już tylko jego błędy, a `for_user` niczego nie odejmuje. | 2026-10-15 |
 | `conversations.services.x_agent_turn_in_progress__mutmut_5` | `conversations/services.py`, `agent_turn_in_progress` | `równoważny` | Ten sam mutant co `M8` (`<` → `<=`); uzasadnienie w wierszu `M8`. | 2026-10-15 |
 | `conversations.memory.x_select_memory__mutmut_9` | `conversations/memory.py`, `select_memory` | `równoważny` | Ten sam mutant co `M11` (bez `status=ENDED`); uzasadnienie w wierszu `M11`. | 2026-10-15 |
 | `conversations.services.x__mark_turn_started__mutmut_2` | `conversations/services.py`, `_mark_turn_started` | `równoważny` | `update_fields=None` zapisuje wszystkie pola obiektu odczytanego przed chwilą pod blokadą wiersza (`select_for_update`); poza znacznikiem tury zapisuje te same wartości, które są w bazie. | 2026-10-15 |

@@ -206,6 +206,34 @@ MUTANTS: tuple[Mutant, ...] = (
         original='if parsed.reply.strip() == "":',
         mutated='if parsed.reply == "":',
     ),
+    Mutant(
+        id="M16",
+        area="izolacja: pamięć, select_memory bez for_user (rozmowy)",
+        path="conversations/memory.py",
+        original="Conversation.objects.for_user(user)",
+        mutated="Conversation.objects.all()",
+    ),
+    Mutant(
+        id="M17",
+        area="izolacja: pamięć, _mistakes bez for_user (błędy)",
+        path="conversations/memory.py",
+        original=(
+            "Mistake.objects.for_user(user).filter(conversation_id__in=conversation_ids)"
+        ),
+        mutated="Mistake.objects.filter(conversation_id__in=conversation_ids)",
+        expected="accepted",
+    ),
+    Mutant(
+        id="M18",
+        area="izolacja: nowa trasa z id bez decyzji w ID_ROUTES (strażnik tras)",
+        path="conversations/urls.py",
+        original="urlpatterns = [\n",
+        mutated=(
+            "urlpatterns = [\n"
+            '    path("conversations/<int:pk>/copy/", views.conversation_detail, '
+            'name="conversation_copy"),\n'
+        ),
+    ),
 )
 
 
