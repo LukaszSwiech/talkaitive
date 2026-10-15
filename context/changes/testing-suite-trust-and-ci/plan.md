@@ -562,10 +562,10 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 
 #### Automated
 
-- [x] 7.1 Wiersz bramki w test-plan §5 nie wymaga już ochrony gałęzi
-- [x] 7.2 `grep -n "TBD — see §3 Phase 1" context/foundation/test-plan.md` nie zwraca nic
-- [x] 7.3 Blok 10x-cli w `CLAUDE.md` jest bez zmian
+- [x] 7.1 Wiersz bramki w test-plan §5 nie wymaga już ochrony gałęzi — 2e5d951
+- [x] 7.2 `grep -n "TBD — see §3 Phase 1" context/foundation/test-plan.md` nie zwraca nic — 2e5d951
+- [x] 7.3 Blok 10x-cli w `CLAUDE.md` jest bez zmian — 2e5d951
 
 #### Manual
 
-- [x] 7.4 §5 i §6.1 są jasną instrukcją „jak dodać test i potwierdzić go mutacją”
+- [x] 7.4 §5 i §6.1 są jasną instrukcją „jak dodać test i potwierdzić go mutacją” — 2e5d951
