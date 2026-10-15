@@ -61,6 +61,11 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5.4")
 LLM_REASONING_EFFORT = os.environ.get("LLM_REASONING_EFFORT", "none")
 LLM_TIMEOUT_SECONDS = 30
 LLM_MAX_RETRIES = 1
+# The longest Retry-After the OpenAI SDK waits before a retry (its
+# MAX_RETRY_AFTER_DELAY; pinned by tests/test_llm.py::
+# test_turn_does_not_retry_when_retry_after_exceeds_120_s). Not a choice of ours:
+# the "in progress" markers add it per retry so a live call never looks dead.
+LLM_MAX_RETRY_AFTER_SECONDS = 120
 # Post-conversation mistake analysis. The accuracy of the mistake list is a PRD
 # success criterion, so it gets more reasoning than a chat turn. Measured on a
 # 20-turn conversation: "medium" took 52 s, "high" took 165 s, cost 3x more and
@@ -71,6 +76,8 @@ LLM_ANALYSIS_REASONING_EFFORT = os.environ.get(
 # Deliberate UX choice: about 3x the measured time, then a failure that "Try again"
 # fixes. Not a server limit: gunicorn gthread does not cut long requests; the
 # ceiling is Railway's proxy, which drops a request after 5 minutes without data.
+# The whole wait (timeouts plus Retry-After waits, turn and analysis) must stay
+# under it; tests/test_waiting_path.py checks this.
 LLM_ANALYSIS_TIMEOUT_SECONDS = 150
 LLM_ANALYSIS_MAX_RETRIES = 0
 

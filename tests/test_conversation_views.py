@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -546,17 +546,71 @@ def test_reply_is_dropped_when_another_request_already_answered(
     assert not conversation.messages.filter(text="Late reply").exists()
 
 
+# How long the agent's turn may still be running after its marker was set: the
+# longest the SDK can wait for one turn plus a margin. Written out by hand, never
+# computed from `services`:
+# - 2 attempts x 30 s: `LLM_TIMEOUT_SECONDS = 30`, `LLM_MAX_RETRIES = 1`
+#   (talkaitive/settings.py);
+# - 1 x 120 s: the longest `Retry-After` the SDK honours before its one retry
+#   (`MAX_RETRY_AFTER_DELAY` in openai/_constants.py, pinned by
+#   tests/test_llm.py::test_turn_honours_retry_after_of_exactly_120_s and
+#   ::test_turn_does_not_retry_when_retry_after_exceeds_120_s);
+# - 30 s margin: decision P3 of testing-waiting-path-recovery (2026-10-15).
+TURN_MARKER_LIFETIME = timedelta(seconds=210)
+
+FIXED_START = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    ("age", "in_progress"),
+    [
+        (TURN_MARKER_LIFETIME - timedelta(microseconds=1), True),
+        # Not exactly 210 s: whether the marker expires at or just after it is the
+        # accepted equivalent mutant M8 (scripts/mutation/accepted_survivors.md).
+        (TURN_MARKER_LIFETIME + timedelta(microseconds=1), False),
+    ],
+    ids=["210s-minus-1us", "210s-plus-1us"],
+)
+def test_turn_marker_lives_as_long_as_the_sdk_can_wait_plus_a_margin(
+    age: timedelta, in_progress: bool
+) -> None:
+    """A marker is "in progress" for 210 s, then it expires.
+
+    Shorter, and "Try again" appears while the SDK may still be waiting out a
+    `Retry-After`; the provider's late reply then races a second paid call.
+    Source: see `TURN_MARKER_LIFETIME`; PRD prd.md:96 (the user sees the reply being
+    prepared for the whole wait); test-plan §2 risk #1 (the marker expires).
+    """
+    conversation = Conversation(agent_turn_started_at=FIXED_START)
+
+    assert services.agent_turn_in_progress(conversation, FIXED_START + age) is (
+        in_progress
+    )
+
+
+def wait_for_retry(client: Client, fake_llm: FakeGenerateTurn) -> Conversation:
+    """An active conversation whose last turn failed, so it waits for "Try again"."""
+    conversation = start(client)
+    fake_llm.outcomes.append(LLMError("down"))
+    send(client, conversation, "Hallo")
+    return conversation
+
+
 @pytest.mark.django_db
-def test_page_shows_agent_typing_while_a_turn_is_running(
+def test_page_shows_agent_typing_while_the_sdk_may_still_be_waiting(
     anna_client: Client, fake_llm: FakeGenerateTurn
 ) -> None:
-    conversation = start(anna_client)
-    fake_llm.outcomes.append(LLMError("down"))
-    send(anna_client, conversation, "Hallo")
-    retry_url = f"/conversations/{conversation.pk}/retry/"
-    # Another request is generating the agent's turn right now.
+    """About 200 s after the start, the turn may still be running.
+
+    The SDK can wait up to 210 s (`TURN_MARKER_LIFETIME`), e.g. a 30 s timeout,
+    then a 120 s `Retry-After`, then a second attempt. The page keeps "typing"
+    and refuses "Try again" without a model call. Source: PRD prd.md:96; test-plan
+    §2 risk #1.
+    """
+    conversation = wait_for_retry(anna_client, fake_llm)
+    calls_before = len(fake_llm.calls)
     Conversation.objects.filter(pk=conversation.pk).update(
-        agent_turn_started_at=timezone.now()
+        agent_turn_started_at=timezone.now() - timedelta(seconds=200)
     )
 
     page = anna_client.get(detail_url(conversation)).content.decode()
@@ -565,20 +619,117 @@ def test_page_shows_agent_typing_while_a_turn_is_running(
     assert 'http-equiv="refresh"' in page
     assert "Try again" not in page
 
-    response = anna_client.post(retry_url, follow=True)
+    response = anna_client.post(f"/conversations/{conversation.pk}/retry/", follow=True)
 
-    assert len(fake_llm.calls) == 2
+    assert len(fake_llm.calls) == calls_before
     assert roles(conversation) == ["assistant", "user"]
     assert "The agent is still replying." in response.content.decode()
 
-    # A marker left behind by a killed worker expires.
+
+@pytest.mark.django_db
+def test_expired_turn_marker_offers_try_again_and_the_retry_calls_the_model(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """About 220 s after the start, past `TURN_MARKER_LIFETIME`, the marker expired.
+
+    A marker left behind by a killed worker must not block the page forever.
+    Source: test-plan §2 risk #1 (the marker expires; the retry really starts a new
+    call).
+    """
+    conversation = wait_for_retry(anna_client, fake_llm)
+    calls_before = len(fake_llm.calls)
     Conversation.objects.filter(pk=conversation.pk).update(
-        agent_turn_started_at=timezone.now() - timedelta(minutes=2)
+        agent_turn_started_at=timezone.now() - timedelta(seconds=220)
     )
+
     page = anna_client.get(detail_url(conversation)).content.decode()
 
     assert "Try again" in page
     assert 'http-equiv="refresh"' not in page
+
+    fake_llm.outcomes.append(make_result("Entschuldigung, hallo!"))
+    retried = anna_client.post(f"/conversations/{conversation.pk}/retry/", follow=True)
+
+    assert len(fake_llm.calls) == calls_before + 1
+    assert roles(conversation) == ["assistant", "user", "assistant"]
+    conversation.refresh_from_db()
+    assert conversation.agent_turn_started_at is None
+    page = retried.content.decode()
+    assert "Entschuldigung, hallo!" in page
+    assert "Try again" not in page
+
+
+# The marker race: request A started the turn at `a_started`; its model call ran
+# past the marker's lifetime, so request B took over at `b_started` (A's start +
+# 211 s) and is still waiting for the model. A's outcome must leave B's marker
+# alone, and only one agent reply may be saved. Pattern:
+# tests/test_analysis.py::test_failure_does_not_mark_a_conversation_a_newer_request_is_analysing.
+# Source: test-plan §2 risk #1 (marker lifecycle); module docstring of
+# `services` (a parallel retry is refused instead of paying for a second call).
+
+
+def race_times() -> tuple[datetime, datetime]:
+    # B's marker is "now", so the page (which uses the real clock) sees B running.
+    b_started = timezone.now()
+    return b_started - timedelta(seconds=211), b_started
+
+
+@pytest.mark.django_db
+def test_failed_late_request_leaves_the_newer_requests_marker_alone(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+    a_started, b_started = race_times()
+
+    def b_takes_over_then_a_fails(**kwargs: Any) -> TurnResult:
+        Conversation.objects.filter(pk=conversation.pk).update(
+            agent_turn_started_at=b_started
+        )
+        raise LLMError("down")
+
+    fake_llm.outcomes.append(b_takes_over_then_a_fails)
+
+    with pytest.raises(LLMError):
+        services.send_message(conversation, "Hallo", a_started)
+
+    conversation.refresh_from_db()
+    assert conversation.agent_turn_started_at == b_started
+    page = anna_client.get(detail_url(conversation)).content.decode()
+    assert '<div class="typing">' in page
+    assert "Try again" not in page
+
+
+@pytest.mark.django_db
+def test_late_requests_reply_is_saved_once_and_the_newer_reply_is_dropped(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+    a_started, b_started = race_times()
+
+    def b_takes_over_then_a_answers(**kwargs: Any) -> TurnResult:
+        Conversation.objects.filter(pk=conversation.pk).update(
+            agent_turn_started_at=b_started
+        )
+        return make_result("Reply A")
+
+    fake_llm.outcomes.append(b_takes_over_then_a_answers)
+
+    services.send_message(conversation, "Hallo", a_started)
+
+    conversation.refresh_from_db()
+    assert roles(conversation) == ["assistant", "user", "assistant"]
+    assert conversation.messages.last().text == "Reply A"
+    assert conversation.agent_turn_started_at == b_started
+
+    # B's model call ends now. Its start (lock check + marker) already happened
+    # above, so only the rest of B's turn runs here.
+    fake_llm.outcomes.append(make_result("Reply B"))
+    services._generate_and_save(conversation, b_started)
+
+    assert roles(conversation) == ["assistant", "user", "assistant"]
+    assert not conversation.messages.filter(text="Reply B").exists()
+    conversation.refresh_from_db()
+    assert conversation.agent_turn_started_at is None
 
 
 @pytest.mark.django_db

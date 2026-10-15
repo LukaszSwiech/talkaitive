@@ -363,20 +363,20 @@ Brak migracji bazy: nowe ustawienie jest stałą, a stan „analiza nieudana” 
 
 #### Automated
 
-- [x] 2.1 Najpierw czerwone: nowe testy padają na kodzie sprzed zmiany w `llm.py`: `uv run pytest tests/test_llm.py tests/test_waiting_path.py`
-- [x] 2.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
-- [x] 2.3 Nowe ręczne mutanty są `killed`, a lista zgodna z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0)
-- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Najpierw czerwone: nowe testy padają na kodzie sprzed zmiany w `llm.py`: `uv run pytest tests/test_llm.py tests/test_waiting_path.py` — cf14043
+- [x] 2.2 Po zmianie wszystkie testy przechodzą: `uv run pytest` — cf14043
+- [x] 2.3 Nowe ręczne mutanty są `killed`, a lista zgodna z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0) — cf14043
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — cf14043
 
 ### Phase 3: Znacznik tury uwzględnia `Retry-After`
 
 #### Automated
 
-- [ ] 3.1 Najpierw czerwone: test granicy 209 s / 210 s i test strony przy ok. 200 s padają na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py`
-- [ ] 3.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
-- [ ] 3.3 mutmut bez niewyjaśnionych przeżyć w `_agent_turn_timeout`, `_analysis_timeout`, `_clear_turn_marker`: `uv run mutmut run` + `uv run mutmut results`
-- [ ] 3.4 Ręczne mutanty zgodne z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0)
-- [ ] 3.5 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Najpierw czerwone: test granicy 209 s / 210 s i test strony przy ok. 200 s padają na kodzie sprzed zmiany: `uv run pytest tests/test_conversation_views.py`
+- [x] 3.2 Po zmianie wszystkie testy przechodzą: `uv run pytest`
+- [x] 3.3 mutmut bez niewyjaśnionych przeżyć w `_agent_turn_timeout`, `_analysis_timeout`, `_clear_turn_marker`: `uv run mutmut run` + `uv run mutmut results`
+- [x] 3.4 Ręczne mutanty zgodne z oczekiwaniami: `uv run python scripts/mutation/manual_mutants.py` (kod 0)
+- [x] 3.5 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 ### Phase 4: Wygasły znacznik analizy = porażka
 
