@@ -53,7 +53,7 @@ Przewidywania z research §2: potwierdzone `services.py:256` (`_clear_analysis_m
 
 ## Przeżyte mutanty (65) — wstępne grupy
 
-Grupy są tylko opisem, nie decyzją. Klasyfikacja (test / `równoważny` / `brak wymagania` / `przekazany do fazy N`) to zadanie fazy 6.
+Grupy są tylko opisem, nie decyzją. Klasyfikacja (test / `równoważny` / `brak wymagania` / `przekazany do test-plan Phase N`) to zadanie fazy 6.
 
 **A. Treść komunikatów błędów (26)** — zmieniony tekst (`"XX…XX"`, małe/wielkie litery albo `None`) w wyjątkach `ConversationError` / `AnalysisNotNeeded` / `ImproperlyConfigured`:
 - `services.x_start_conversation__mutmut_5`, `_12`, `_13`, `_14`, `_15`, `_39`, `_40`, `_41`, `_42`
@@ -94,3 +94,46 @@ Grupy są tylko opisem, nie decyzją. Klasyfikacja (test / `równoważny` / `bra
 ## Decyzja go/no-go
 
 **Rekomendacja: GO.** mutmut działa z pytest-django po jednej poprawce konfiguracji (`also_copy = ["manage.py"]`), przebieg trwa ~23 s, kontrola sensu przechodzi, a wynik pokrywa się z ręcznym pomiarem z researchu (M4, M6, M7, M8, M11, M12 przeżywają też w mutmut). Plan awaryjny niepotrzebny. Faza 6 zaczyna od tej listy 65 nazw.
+
+## Wynik końcowy (Faza 6)
+
+Data: 2026-10-15. Gałąź `test-mutation-trust`, kod aplikacji bez zmian (`git diff -- accounts conversations talkaitive` pusty).
+
+**Uwaga o pamięci podręcznej mutmut.** `uv run mutmut run` na istniejącym `mutants/` po samych zmianach w testach nie liczy mutantów od nowa: przebieg trwał 3,7 s („0.00 mutations/second”) i pokazał stare 65 przeżyć. mutmut 3 przelicza tylko funkcje, których kod się zmienił. Po dopisaniu testów trzeba usunąć (albo przenieść) katalog `mutants/` i dopiero wtedy uruchomić `mutmut run`.
+
+| Moduł | Mutanty | Przeżyte — Faza 1 | Przeżyte — start Fazy 6 (po fazach 4–5) | Przeżyte — koniec Fazy 6 | Zabite — koniec |
+|---|---:|---:|---:|---:|---:|
+| `accounts/ownership.py` | 2 | 0 | 0 | 0 | 2 |
+| `conversations/budget.py` | 107 | 4 | 3 | 3 | 104 |
+| `conversations/memory.py` | 133 | 11 | 10 | 8 | 125 |
+| `conversations/services.py` | 425 | 50 | 48 | 40 | 385 |
+| **Razem** | **667** | **65** | **61** | **51** | **616** |
+
+- Czas: start Fazy 6 — **23,7 s** zegarowo; pełny przebieg po pierwszych czterech testach (świeży `mutants/`) — **25,4 s** (55 przeżyć); końcowy pełny przebieg po teście komunikatów odmowy (decyzja D2) — **24,5 s** zegarowo (151,9 s CPU, 35 mutacji/s), 0 timeoutów.
+- Fazy 4–5 zabiły w mutmut dokładnie cztery mutanty z ręcznej listy: M4 (`budget.x_is_final_turn__mutmut_8`), M6 (`services.x__mark_analysis_failed__mutmut_9`), M7 (`services.x_analyze_conversation__mutmut_51`), M12 (`memory.x_select_memory__mutmut_4`). M8 i M11 przeżywają zgodnie z rejestrem.
+- Kontrola sensu: `conversations.budget.x_is_exhausted__mutmut_14` dalej **killed**.
+
+### Nowe testy (Faza 6) i mutanty, które zabijają
+
+| Test | Źródło oczekiwanej wartości | Zabite mutanty |
+|---|---|---|
+| `tests/test_conversation_views.py::test_opening_turn_and_retry_show_typing_and_start_no_second_call` (parametry `opening`, `retry`) | PRD prd.md:96 (informacja zwrotna przez cały czas czekania); test-plan §2 ryzyko #1 (znacznik „w toku”) | `services.x_start_conversation__mutmut_31`, `_38`, `services.x_run_agent_turn__mutmut_17` |
+| `tests/test_conversation_views.py::test_ending_an_old_ended_conversation_leaves_the_current_one_active` | PRD FR-006 (przycisk kończy tę rozmowę), FR-004 | `services.x_end_conversation__mutmut_9` |
+| `tests/test_memory.py::test_pair_from_three_conversations_ranks_above_fresher_pair_from_two` | PRD Business Logic „Kryterium wyboru błędów” (najpierw częstość w wielu rozmowach, potem świeżość) | `memory.x__mistakes__mutmut_57` |
+| `tests/test_memory.py::test_two_pairs_repeated_in_the_same_two_conversations_both_count_twice` | PRD Business Logic „Kryterium wyboru błędów”, FR-010 | `memory.x__mistakes__mutmut_39` |
+| `tests/test_conversation_views.py::test_refused_action_shows_a_reason` (parametry: limit, druga rozmowa, czekanie na agenta, nic do ponowienia) | PRD „Odmowa akcji” (prd.md:97, dopisane 2026-10-15 — decyzja D2): powód odmowy widoczny, nigdy pusty ani „None”; brzmienie nie jest wymaganiem | `services.x_start_conversation__mutmut_12`, `_39`, `services.x_send_message__mutmut_16`, `services.x_run_agent_turn__mutmut_4` |
+
+Każdy potwierdzony świeżym pełnym przebiegiem mutmut (status `killed`). `uv run pytest`: 217 passed.
+
+### Klasyfikacja 51 pozostałych przeżyć
+
+Każda nazwa ma wiersz w `scripts/mutation/accepted_survivors.md` (data 2026-10-15). Klasyfikację zaakceptował użytkownik 2026-10-15 (decyzje D1–D8): nowe testy zostają; do PRD dopisano tylko „Odmowa akcji” (D2); dokładne brzmienie komunikatów (D3), limit długości wiadomości (D4), kolejność błędów spoza `1..N` (D5) i wyjaśnienie w pamięci (D6) zostają jako wpisy; timeouty tury zostają w test-plan Phase 2 (D7); remisy co do mikrosekundy — `równoważny` jak M8 (D8).
+
+| Klasyfikacja | Liczba | Co obejmuje |
+|---|---:|---|
+| `równoważny` | 23 | M8 i M11 (nazwy mutmut), pełny zapis obiektu pod blokadą (`update_fields=None`), tekst `AnalysisNotNeeded` (nigdy nie pokazywany), klucze sortowania bez wpływu, remisy co do mikrosekundy, `_analysis_timeout` przy 0 ponowień |
+| `przekazany do test-plan Phase 2` | 6 | długość timeoutu tury (5) i czyszczenie cudzego znacznika tury po wygaśnięciu (1) |
+| `przekazany do test-plan Phase 4` | 1 | granica limitu długości wiadomości (`send_message__mutmut_7`) |
+| `brak wymagania` | 21 | brzmienie komunikatów (17; 4 warianty `None` zabija `test_refused_action_shows_a_reason`), kolejność błędów przy numerach spoza `1..N` (2), wyjaśnienie w bloku pamięci (1), treść `ImproperlyConfigured` (1) |
+
+Przewidywania z research §2: `services.py:256` (`_clear_analysis_marker` bez `pk=`) — przeżywa, ale sklasyfikowany jako `równoważny` w praktyce (wymaga identycznej mikrosekundy znacznika). `services.py:279` i `:380` — przeżywają jako `brak wymagania` (widoczne tylko przy numerach wiadomości spoza zakresu, reguła z docstringu). `budget.py:107` — zabity już w Fazie 1.

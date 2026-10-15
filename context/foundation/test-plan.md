@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-10-14
+> Last updated: 2026-10-15
 
 ## 1. Strategy
 
@@ -69,7 +69,7 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|------------|-----------------|---------------|------------|--------|---------------|
-| 1 | Suite trust and CI floor | Udowodnić, że zepsucie krytycznej logiki wywraca testy, i że testy uruchamiają się same przed merge do `main` | #2 (cross-cutting) | mutation testing + CI gate (pytest, ruff) | researched | testing-suite-trust-and-ci |
+| 1 | Suite trust and CI floor | Udowodnić, że zepsucie krytycznej logiki wywraca testy, i że testy uruchamiają się same przed wdrożeniem z `main` | #2 (cross-cutting) | mutation testing + CI gate (pytest, ruff) | researched | testing-suite-trust-and-ci |
 | 2 | Waiting-path recovery | Udowodnić, że zawieszenie lub błąd dostawcy kończy się komunikatem i działającym „Try again”, nie wiecznym spinnerem | #1 | integration | not started | — |
 | 3 | Privacy and deletion boundaries | Udowodnić, że żaden widok ani blok pamięci nie ujawnia cudzych danych, a usunięcie konta usuwa wszystko | #3, #6 | integration | not started | — |
 | 4 | Budget ceiling | Udowodnić, że limit $1/dzień trzyma się także przy błędach, ponowieniach i drogich wywołaniach | #4 | unit + integration | not started | — |
@@ -92,8 +92,8 @@ Profil bazy testów (2026-10-13): `meaningful` (na granicy) — pytest skonfigur
 |-------|------|---------|-------|
 | unit + integration | pytest + pytest-django (klient testowy Django) | 9.1.1 / 4.14.0 | ustawienia `talkaitive.settings_test`; bez sieci i bez klucza |
 | granica LLM | atrapy w repo na granicy OpenAI SDK | openai 3.24.0 | testy klasyczne nigdy nie wołają prawdziwego API |
-| lint + format | ruff | 0.16.8 | lokalnie przez post-edit hook; CI — §3 Phase 1 |
-| mutation testing | mutmut — checked: 2026-10-13 | 3.8.0 | jeszcze nie zainstalowany — §3 Phase 1; tylko pytest, obsługuje testy Django; uruchamiany okresowo, nie na każdy PR (wolny) |
+| lint + format | ruff | 0.16.8 | lokalnie przez post-edit hook; CI (`.github/workflows/ci.yml`, PR i push do `main`) — wired |
+| mutation testing | mutmut — checked: 2026-10-15 | 3.8.0 | zainstalowany (dev), `[tool.mutmut]` w `pyproject.toml` na 4 modułach (`accounts/ownership.py`, `conversations/budget.py`, `conversations/memory.py`, `conversations/services.py`); obok niego ręczna lista `scripts/mutation/manual_mutants.py`; oba lokalnie i okresowo, nie w CI (Railway czeka na wszystkie workflow na commicie) |
 | e2e | none — see §7 | — | świadomie bez Playwright, dopóki research nie pokaże awarii widocznej tylko w JS |
 | AI-native eval | np. DeepEval albo wtyczka pytest z LLM-as-judge — checked: 2026-10-13 | n/a | §3 Phase 5. When NOT to use: logika deterministyczna (koszt, ranking pamięci, scalanie błędów, izolacja) — tam wystarczy zwykły test; nie w CI na każdy PR (koszt, niedeterminizm) |
 
@@ -111,12 +111,14 @@ phase lands; before that, the gate is `planned`.
 
 | Gate | Where | Required? | Catches |
 |------|-------|-----------|---------|
-| lint + format (ruff) | local (post-edit hook) + CI | local: wired; CI: required after §3 Phase 1 | błędy składni, styl, proste błędy logiczne |
-| unit + integration (pytest) | local + CI on PR | required after §3 Phase 1 | regresje logiki i przepływów |
-| merge do `main` tylko po zielonym CI | GitHub (ochrona gałęzi — ustawia właściciel repo) | required after §3 Phase 1 | wdrożenie z czerwonymi testami |
-| mutation score na logice krytycznej | local, okresowo | recommended after §3 Phase 1 | testy, które przechodzą na zepsutym kodzie |
+| lint + format (ruff) | local (post-edit hook) + CI (`ci.yml`) | local: wired; CI: wired | błędy składni, styl, proste błędy logiczne |
+| unit + integration (pytest) | local + CI (PR i push do `main`) | wired | regresje logiki i przepływów |
+| wdrożenie na produkcję tylko po zielonym CI | Railway „Wait for CI” + workflow `ci.yml` na push do `main` i PR | wired | wdrożenie z czerwonymi testami, także przy bezpośrednim pushu na `main` |
+| mutation score na logice krytycznej | local, okresowo: `uv run python scripts/mutation/manual_mutants.py` (kod 0) oraz `uv run mutmut run` / `uv run mutmut results` | wired (lokalnie, nie w CI); kryterium: 0 niewyjaśnionych przeżyć — każde przeżycie ma wiersz w `scripts/mutation/accepted_survivors.md` | testy, które przechodzą na zepsutym kodzie |
 | AI eval (golden dataset, prawdziwy model) | local, przy zmianie promptu lub modelu | recommended after §3 Phase 5 | spadek jakości korekty i listy błędów |
 | pre-prod smoke (health check Railway) | Railway, przy każdym wdrożeniu | wired | crash startu po zmianie ustawień lub zmiennych środowiskowych |
+
+Bramka CI blokuje wdrożenie, nie merge: czerwony commit może trafić na `main`, ale Railway go nie wdroży (deployment `SKIPPED`, produkcja zostaje na poprzedniej wersji; dowód kanarkiem `8ac139b`, 2026-10-15). Ochrona gałęzi na prywatnym repo wymaga GitHub Pro / Team (403, sprawdzone 2026-10-14) — świadomie nie wybrana. Ustawienie Railway i jego kopia: `context/deployment/deploy-plan.md`, `context/deployment/web-settings.json`.
 
 Typecheck (`mypy` + `django-stubs`) jest zaplanowany w CLAUDE.md, ale żadna faza tego planu go nie podpina — dodaj go przez `--refresh`, gdy zostanie wprowadzony.
 
@@ -129,8 +131,18 @@ the relevant rollout phase ships; before that, the sub-section reads
 ### 6.1 Adding a unit test (logika deterministyczna: koszt, granice dnia, ranking pamięci)
 
 - **Location**: `tests/`, plik `test_<obszar>.py` (z konfiguracji pytest).
-- **Run locally**: `uv run pytest`.
-- **Reference test + wzorzec potwierdzenia mutacją**: TBD — see §3 Phase 1.
+- **Run locally**: `uv run pytest`. CI (`ci.yml`) uruchamia to samo, razem z `ruff check` i `ruff format --check`, na każdym PR i każdym pushu do `main`.
+- **Reference tests**:
+  - `tests/test_budget.py::test_is_final_turn_ignores_other_users_newer_agent_turn` — wzorzec metamorficzny. Gdy wymaganie mówi tylko „wynik dla A nie zależy od danych B”, porównaj wynik dla A bez danych B i z nimi, zamiast liczyć oczekiwaną wartość wzorem z kodu.
+  - `tests/test_budget.py::test_daily_limit_end_exactly_at_midnight_closes_that_day` — granica dnia: północ Europe/Berlin wpisana ręcznie jako czas UTC, nie liczona przez `day_start()` z kodu.
+- **Wzorzec potwierdzenia mutacją**:
+  1. Oczekiwana wartość pochodzi z PRD, tego planu albo zapisanej decyzji; źródło stoi w docstringu testu. Nigdy z kodu, który test sprawdza.
+  2. Test jest zielony: `uv run pytest`.
+  3. Podłóż mutanta, w którego celuje test, i sprawdź, że jest `KILLED`:
+     - ręczny: `uv run python scripts/mutation/manual_mutants.py <ID>` (bez argumentu — cała lista; kod 0 = każdy wynik zgodny z oczekiwaniem);
+     - mutmut: usuń katalog `mutants/` (mutmut 3 po samych zmianach w testach pokazuje stare wyniki), potem `uv run mutmut run`, `uv run mutmut results` (tylko przeżyte) i `uv run mutmut show <nazwa>` (diff mutanta).
+  4. Zepsucie, którego mutmut nie wygeneruje (usunięte `.for_user()` albo filtr, stała modułowa, etykieta w prompcie), dopisz jako nowy mutant do listy w `scripts/mutation/manual_mutants.py` (domyślnie `expected="killed"`).
+  5. Przeżycie, którego świadomie nie zabijasz, dostaje wiersz w `scripts/mutation/accepted_survivors.md` (`równoważny` / `brak wymagania` / `przekazany do test-plan Phase N`) i `expected="accepted"` w skrypcie, jeśli to mutant ręczny.
 
 ### 6.2 Adding a test for a view with per-user data (cudzy obiekt → 404)
 
@@ -152,6 +164,8 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 (Optional. After each phase lands, /10x-implement appends a 2-3 line note
 here capturing anything surprising the rollout phase taught.)
+
+- **Phase 1 — Suite trust and CI floor (2026-10-15):** przy zielonych 198 testach przeżywało 12 z 13 celowanych ręcznych mutantów, w tym M1–M4 (usunięte filtry danych w widokach i w budżecie) — zielone testy nie świadczyły o izolacji. mutmut na 4 modułach: 667 mutantów, ok. 24 s lokalnie, przeżycia 65 → 51, każde z wierszem w rejestrze; mutmut kończy się kodem 0 mimo przeżyć, więc sam nie jest bramką. Bramkę CI udowodnił kanarek: `8ac139b` → deploy `SKIPPED`, revert `3d97f46` → `SUCCESS`.
 
 ## 7. What We Deliberately Don't Test
 

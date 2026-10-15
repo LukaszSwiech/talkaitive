@@ -498,74 +498,74 @@ Brak migracji danych. Zmiana ustawień Railway jest odwracalna przełącznikiem 
 #### Automated
 
 - [x] 2.1 `.github/workflows/ci.yml` przechodzi lokalnie te same kroki — ccdd7f4
-- [x] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main`
-- [x] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą
+- [x] 2.2 `gh run list --workflow ci.yml` pokazuje zielony przebieg dla commita z workflow na `main` — 868f3f4
+- [x] 2.3 `context/deployment/web-settings.json` jest poprawnym JSON-em, a obiekt `input` jest bajtowo taki sam jak przed zmianą — 868f3f4
 
 #### Manual
 
-- [x] 2.4 PR z dowolną zmianą pokazuje check `CI` (zielony)
-- [x] 2.5 Przełącznik „Wait for CI” jest włączony i po ponownym otwarciu ustawień dalej włączony
-- [x] 2.6 Commit z kanarkiem: workflow czerwony, deployment Railway `SKIPPED`, produkcja na poprzedniej wersji
-- [x] 2.7 Commit revert: workflow zielony, deployment udany, `/healthz/` zwraca 200
+- [x] 2.4 PR z dowolną zmianą pokazuje check `CI` (zielony) — 868f3f4
+- [x] 2.5 Przełącznik „Wait for CI” jest włączony i po ponownym otwarciu ustawień dalej włączony — 868f3f4
+- [x] 2.6 Commit z kanarkiem: workflow czerwony, deployment Railway `SKIPPED`, produkcja na poprzedniej wersji — 868f3f4
+- [x] 2.7 Commit revert: workflow zielony, deployment udany, `/healthz/` zwraca 200 — 868f3f4
 
 ### Phase 3: Skrypt ręcznych mutantów
 
 #### Automated
 
-- [ ] 3.1 Skrypt raportuje C1, C2 i M9 jako `KILLED`, a M1–M8 i M10–M13 jako `SURVIVED`, kod wyjścia 1
-- [ ] 3.2 Fragment, którego nie ma w pliku, kończy skrypt błędem
-- [ ] 3.3 `git status` po przebiegu nie pokazuje zmian w `accounts/`, `conversations/`, `talkaitive/`
-- [ ] 3.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
+- [x] 3.1 Skrypt raportuje C1, C2 i M9 jako `KILLED`, a M1–M8 i M10–M13 jako `SURVIVED`, kod wyjścia 1 — 6f154df
+- [x] 3.2 Fragment, którego nie ma w pliku, kończy skrypt błędem — 6f154df
+- [x] 3.3 `git status` po przebiegu nie pokazuje zmian w `accounts/`, `conversations/`, `talkaitive/` — 6f154df
+- [x] 3.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 6f154df
 
 ### Phase 4: Testy izolacji i budżetu (M1–M5)
 
 #### Automated
 
-- [ ] 4.1 `uv run pytest` przechodzi (198 + nowe testy)
-- [ ] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED`
-- [ ] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED`
-- [ ] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
-- [ ] 4.5 Workflow `CI` jest zielony na commicie tej fazy
+- [x] 4.1 `uv run pytest` przechodzi (198 + nowe testy) — 390a04a
+- [x] 4.2 Skrypt raportuje M1, M2, M3, M4, M5 jako `KILLED` — 390a04a
+- [x] 4.3 Skrypt raportuje C1, C2, M9 dalej jako `KILLED` — 390a04a
+- [x] 4.4 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 390a04a
+- [x] 4.5 Workflow `CI` jest zielony na commicie tej fazy — 7914d18
 
 #### Manual
 
-- [ ] 4.6 Każdy nowy test ma źródło oczekiwanej wartości (PRD / decyzja) i nie powtarza wzoru z kodu
+- [x] 4.6 Każdy nowy test ma źródło oczekiwanej wartości (PRD / decyzja) i nie powtarza wzoru z kodu — 390a04a
 
 ### Phase 5: Testy stanu analizy i pamięci (M6, M7, M10, M12, M13)
 
 #### Automated
 
-- [ ] 5.1 `uv run pytest` przechodzi
-- [ ] 5.2 Skrypt kończy się kodem 0: M8, M11 `accepted`, pozostałe `KILLED`
-- [ ] 5.3 `uv run ruff check .` i `uv run ruff format --check .` przechodzą
-- [ ] 5.4 Workflow `CI` jest zielony na commicie tej fazy
+- [x] 5.1 `uv run pytest` przechodzi — 7d591e9
+- [x] 5.2 Skrypt kończy się kodem 0: M8, M11 `accepted`, pozostałe `KILLED` — 7d591e9
+- [x] 5.3 `uv run ruff check .` i `uv run ruff format --check .` przechodzą — 7d591e9
+- [x] 5.4 Workflow `CI` jest zielony na commicie tej fazy — 7914d18
 
 #### Manual
 
-- [ ] 5.5 Źródła oczekiwanych wartości w nowych testach są jawne, bez powtórzonych wzorów z kodu
-- [ ] 5.6 `accepted_survivors.md` ma czytelne uzasadnienia M8 i M11
+- [x] 5.5 Źródła oczekiwanych wartości w nowych testach są jawne, bez powtórzonych wzorów z kodu — 7d591e9
+- [x] 5.6 `accepted_survivors.md` ma czytelne uzasadnienia M8 i M11 — 7d591e9
 
 ### Phase 6: Triage mutmut do stanu „zaufany”
 
 #### Automated
 
-- [ ] 6.1 Każdy przeżywający mutant z `uv run mutmut results` ma wpis w `accepted_survivors.md`
-- [ ] 6.2 `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` przechodzą
-- [ ] 6.3 Skrypt ręcznych mutantów dalej kończy się kodem 0
-- [ ] 6.4 Workflow `CI` jest zielony na commicie tej fazy
+- [x] 6.1 Każdy przeżywający mutant z `uv run mutmut results` ma wpis w `accepted_survivors.md` — de2e0d3
+- [x] 6.2 `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` przechodzą — de2e0d3
+- [x] 6.3 Skrypt ręcznych mutantów dalej kończy się kodem 0 — de2e0d3
+- [x] 6.4 Workflow `CI` jest zielony na commicie tej fazy — de2e0d3
 
 #### Manual
 
-- [ ] 6.5 Użytkownik akceptuje klasyfikację wpisów `brak wymagania` i `przekazany do fazy N`
+- [x] 6.5 Użytkownik akceptuje klasyfikację wpisów `brak wymagania` i `przekazany do fazy N` — de2e0d3
 
 ### Phase 7: Plan testów i dokumenty
 
 #### Automated
 
-- [ ] 7.1 Wiersz bramki w test-plan §5 nie wymaga już ochrony gałęzi
-- [ ] 7.2 `grep -n "TBD — see §3 Phase 1" context/foundation/test-plan.md` nie zwraca nic
-- [ ] 7.3 Blok 10x-cli w `CLAUDE.md` jest bez zmian
+- [x] 7.1 Wiersz bramki w test-plan §5 nie wymaga już ochrony gałęzi — 2e5d951
+- [x] 7.2 `grep -n "TBD — see §3 Phase 1" context/foundation/test-plan.md` nie zwraca nic — 2e5d951
+- [x] 7.3 Blok 10x-cli w `CLAUDE.md` jest bez zmian — 2e5d951
 
 #### Manual
 
-- [ ] 7.4 §5 i §6.1 są jasną instrukcją „jak dodać test i potwierdzić go mutacją”
+- [x] 7.4 §5 i §6.1 są jasną instrukcją „jak dodać test i potwierdzić go mutacją” — 2e5d951
