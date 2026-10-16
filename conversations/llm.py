@@ -21,10 +21,10 @@ fixed text first, then only the language.
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from django.conf import settings
-from openai import APIError, OpenAI
+from openai import APIError, APITimeoutError, OpenAI
 from openai.types.responses import EasyInputMessageParam
 from pydantic import BaseModel, ValidationError
 
@@ -142,8 +142,58 @@ class AnalysisResult:
     output_tokens: int
 
 
+@dataclass(frozen=True)
+class CallUsage:
+    """Tokens of a call that returned no usable answer; priced by the budget."""
+
+    model: str
+    input_tokens: int
+    cached_input_tokens: int
+    output_tokens: int
+
+
 class LLMError(Exception):
-    """Any failure of the model call that the user can only retry later."""
+    """Any failure of the model call that the user can only retry later.
+
+    It also tells what is known about the call's cost, without any prices: `usage`
+    when the answer came with token usage but nothing usable, `billed_without_usage`
+    when the call most likely cost money but its usage is unknown (a timeout, a
+    malformed or usage-less answer). Neither means the call cost nothing (the
+    provider refused it at once, or there is no API key).
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        usage: CallUsage | None = None,
+        billed_without_usage: bool = False,
+    ) -> None:
+        super().__init__(message)
+        self.usage = usage
+        self.billed_without_usage = billed_without_usage
+
+
+def _call_usage(response: Any) -> CallUsage | None:
+    usage = response.usage
+    if usage is None:
+        return None
+    return CallUsage(
+        model=settings.LLM_MODEL,
+        input_tokens=usage.input_tokens,
+        cached_input_tokens=usage.input_tokens_details.cached_tokens,
+        output_tokens=usage.output_tokens,
+    )
+
+
+def _no_usable_answer(response: Any) -> LLMError:
+    """The answer came but is unusable; it was paid for whether or not usage is known."""
+    usage = _call_usage(response)
+    return LLMError(
+        "The model returned no usable answer.",
+        usage=usage,
+        billed_without_usage=usage is None,
+    )
 
 
 def _get_client(*, timeout: float, max_retries: int) -> OpenAI:
@@ -256,8 +306,13 @@ def generate_turn(
             reasoning={"effort": settings.LLM_REASONING_EFFORT},
             store=False,
         )
+    except APITimeoutError as exc:
+        # Before `APIError`, its base class. The provider may have generated (and
+        # billed) the answer that never arrived.
+        logger.error("LLM call failed: %s (status None)", type(exc).__name__)
+        raise LLMError("The model call failed.", billed_without_usage=True) from exc
     except APIError as exc:
-        # Base class of timeout, connection, rate limit and status errors.
+        # Base class of connection, rate limit and status errors.
         # Log the error type and status only, never the conversation text.
         logger.error(
             "LLM call failed: %s (status %s)",
@@ -269,20 +324,24 @@ def generate_turn(
         # Truncated or malformed structured output. The error text quotes the
         # model's output, so log only that it happened.
         logger.error("LLM output does not match the AgentTurn schema.")
-        raise LLMError("The model returned no usable answer.") from None
+        raise LLMError(
+            "The model returned no usable answer.", billed_without_usage=True
+        ) from None
 
     parsed = response.output_parsed
     if parsed is None:
         # A refusal or an empty answer: nothing usable came back.
         logger.error("LLM returned no parsed output (refusal or empty answer).")
-        raise LLMError("The model returned no usable answer.")
+        raise _no_usable_answer(response)
     if parsed.reply.strip() == "":
         # A blank reply is no answer either. Log only the fact, never the text.
         logger.error("LLM returned a blank agent reply.")
-        raise LLMError("The model returned no usable answer.")
+        raise _no_usable_answer(response)
     if response.usage is None:
         logger.error("LLM response has no usage; the turn cannot be priced.")
-        raise LLMError("The model response has no token usage.")
+        raise LLMError(
+            "The model response has no token usage.", billed_without_usage=True
+        )
 
     usage = response.usage
     return TurnResult(
@@ -332,6 +391,10 @@ def analyze_mistakes(
             reasoning={"effort": settings.LLM_ANALYSIS_REASONING_EFFORT},
             store=False,
         )
+    except APITimeoutError as exc:
+        # Before `APIError`, its base class; the analysis may have been billed.
+        logger.error("LLM analysis call failed: %s (status None)", type(exc).__name__)
+        raise LLMError("The model call failed.", billed_without_usage=True) from exc
     except APIError as exc:
         # Log the error type and status only, never the conversation text.
         logger.error(
@@ -343,15 +406,19 @@ def analyze_mistakes(
     except ValidationError:
         # The error text quotes the model's output, so log only that it happened.
         logger.error("LLM output does not match the MistakeReport schema.")
-        raise LLMError("The model returned no usable answer.") from None
+        raise LLMError(
+            "The model returned no usable answer.", billed_without_usage=True
+        ) from None
 
     parsed = response.output_parsed
     if parsed is None:
         logger.error("LLM analysis returned no parsed output (refusal or empty).")
-        raise LLMError("The model returned no usable answer.")
+        raise _no_usable_answer(response)
     if response.usage is None:
         logger.error("LLM analysis response has no usage; it cannot be priced.")
-        raise LLMError("The model response has no token usage.")
+        raise LLMError(
+            "The model response has no token usage.", billed_without_usage=True
+        )
 
     usage = response.usage
     return AnalysisResult(

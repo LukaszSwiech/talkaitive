@@ -19,11 +19,20 @@ import openai
 
 from conversations.llm import FoundMistake
 
-# Every successful answer reports this usage, so later tests can rely on the
-# numbers (for example to compute the cost of a turn with the configured prices).
+# Every answer reports this usage unless the scenario gives its own, so tests can
+# rely on the numbers (for example to compute the cost of a turn with the
+# configured prices).
 USAGE_INPUT_TOKENS = 1200
 USAGE_CACHED_INPUT_TOKENS = 1000
 USAGE_OUTPUT_TOKENS = 40
+
+# (input tokens including the cached ones, cached input tokens, output tokens)
+Usage = tuple[int, int, int]
+DEFAULT_USAGE: Usage = (
+    USAGE_INPUT_TOKENS,
+    USAGE_CACHED_INPUT_TOKENS,
+    USAGE_OUTPUT_TOKENS,
+)
 
 Step = Callable[[httpx2.Request], httpx2.Response]
 
@@ -73,23 +82,34 @@ class FakeProvider:
         self._steps.append(step)
         return self
 
-    def reply(self, text: str, *, end_conversation: bool = False) -> Self:
-        """A valid agent turn (`AgentTurn`)."""
-        return self._answer({"reply": text, "end_conversation": end_conversation})
+    def reply(
+        self,
+        text: str,
+        *,
+        end_conversation: bool = False,
+        usage: Usage | None = None,
+    ) -> Self:
+        """An agent turn (`AgentTurn`); `usage` is (input, cached input, output)."""
+        return self._answer(
+            {"reply": text, "end_conversation": end_conversation}, usage
+        )
 
     def analysis(
         self,
         mistakes: Sequence[FoundMistake] = (),
         learner_facts: Sequence[str] = (),
         scene_notes: Sequence[str] = (),
+        *,
+        usage: Usage | None = None,
     ) -> Self:
-        """A valid post-conversation analysis (`MistakeReport`)."""
+        """A valid post-conversation analysis (`MistakeReport`); `usage` as above."""
         return self._answer(
             {
                 "mistakes": [mistake.model_dump() for mistake in mistakes],
                 "learner_facts": list(learner_facts),
                 "scene_notes": list(scene_notes),
-            }
+            },
+            usage,
         )
 
     # --- what happened ----------------------------------------------------------
@@ -121,9 +141,11 @@ class FakeProvider:
         self.requests.append(request)
         return self._steps.pop(0)(request)
 
-    def _answer(self, payload: dict[str, Any]) -> Self:
+    def _answer(self, payload: dict[str, Any], usage: Usage | None) -> Self:
+        body = _response_body(payload, usage or DEFAULT_USAGE)
+
         def step(request: httpx2.Request) -> httpx2.Response:
-            return httpx2.Response(200, json=_response_body(payload), request=request)
+            return httpx2.Response(200, json=body, request=request)
 
         self._steps.append(step)
         return self
@@ -137,8 +159,9 @@ def _seconds(value: float) -> str:
     return str(int(value)) if float(value).is_integer() else str(value)
 
 
-def _response_body(payload: dict[str, Any]) -> dict[str, Any]:
+def _response_body(payload: dict[str, Any], usage: Usage) -> dict[str, Any]:
     """The smallest Responses API body the SDK parses into `output_parsed`."""
+    input_tokens, cached_input_tokens, output_tokens = usage
     return {
         "id": "resp_fake",
         "object": "response",
@@ -164,10 +187,10 @@ def _response_body(payload: dict[str, Any]) -> dict[str, Any]:
         "tool_choice": "auto",
         "tools": [],
         "usage": {
-            "input_tokens": USAGE_INPUT_TOKENS,
-            "input_tokens_details": {"cached_tokens": USAGE_CACHED_INPUT_TOKENS},
-            "output_tokens": USAGE_OUTPUT_TOKENS,
+            "input_tokens": input_tokens,
+            "input_tokens_details": {"cached_tokens": cached_input_tokens},
+            "output_tokens": output_tokens,
             "output_tokens_details": {"reasoning_tokens": 0},
-            "total_tokens": USAGE_INPUT_TOKENS + USAGE_OUTPUT_TOKENS,
+            "total_tokens": input_tokens + output_tokens,
         },
     }

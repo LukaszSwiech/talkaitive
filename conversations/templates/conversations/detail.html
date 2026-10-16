@@ -69,6 +69,12 @@
         <span class="spinner" aria-hidden="true"></span>
         <span role="status">Preparing your list of mistakes…</span>
       </div>
+    {% elif analysis_failed and analysis_retry_reset_at %}
+      {# The limit is reached: a retry would be refused, so no "Try again". #}
+      <p class="error">
+        We could not prepare your list of mistakes. You have used today's limit.
+        {% include "conversations/_reset_notice.html" with reset_at=analysis_retry_reset_at action="get your list of mistakes" %}
+      </p>
     {% elif analysis_failed %}
       <p class="error">We could not prepare your list of mistakes. Please try again.</p>
       <form method="post" action="{% url 'conversation_analyze' pk=conversation.pk %}" data-waits-for-agent data-waiting-text="Preparing your list of mistakes…">

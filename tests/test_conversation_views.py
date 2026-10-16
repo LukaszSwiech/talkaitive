@@ -1,4 +1,5 @@
-from collections.abc import Callable, Sequence
+import re
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -22,10 +23,9 @@ from conversations.llm import (
 from conversations.memory import select_memory
 from conversations.models import Conversation, Message, Mistake
 from conversations.topics import get_topic
+from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn, add_charge
 
 START_URL = "/conversations/start/"
-
-Outcome = TurnResult | Exception | Callable[..., TurnResult]
 
 
 def make_result(reply: str = "Guten Tag!", end: bool = False) -> TurnResult:
@@ -43,48 +43,12 @@ def make_result(reply: str = "Guten Tag!", end: bool = False) -> TurnResult:
 TURN_COST = Decimal("0.0034")
 
 
-class FakeGenerateTurn:
-    """Stands in for `llm.generate_turn`; nothing in these tests touches the network.
-
-    Each call takes the next queued outcome (a result, an exception to raise, or a
-    function called with the same kwargs); with an empty queue it returns a plain
-    reply.
-    """
-
-    def __init__(self) -> None:
-        self.calls: list[dict[str, Any]] = []
-        self.outcomes: list[Outcome] = []
-
-    def __call__(self, **kwargs: Any) -> TurnResult:
-        self.calls.append(kwargs)
-        outcome = self.outcomes.pop(0) if self.outcomes else make_result()
-        if isinstance(outcome, Exception):
-            raise outcome
-        if isinstance(outcome, TurnResult):
-            return outcome
-        return outcome(**kwargs)
-
-
 @pytest.fixture
 def fake_llm(monkeypatch: pytest.MonkeyPatch) -> FakeGenerateTurn:
-    fake = FakeGenerateTurn()
+    # With an empty queue: a plain reply.
+    fake = FakeGenerateTurn(default=make_result)
     monkeypatch.setattr(services, "generate_turn", fake)
     return fake
-
-
-class FakeAnalyzeMistakes:
-    """Stands in for `llm.analyze_mistakes`; queued results or exceptions, else none."""
-
-    def __init__(self) -> None:
-        self.calls: list[dict[str, Any]] = []
-        self.outcomes: list[AnalysisResult | Exception] = []
-
-    def __call__(self, **kwargs: Any) -> AnalysisResult:
-        self.calls.append(kwargs)
-        outcome = self.outcomes.pop(0) if self.outcomes else make_analysis()
-        if isinstance(outcome, Exception):
-            raise outcome
-        return outcome
 
 
 def make_analysis(*mistakes: FoundMistake) -> AnalysisResult:
@@ -102,7 +66,8 @@ def make_analysis(*mistakes: FoundMistake) -> AnalysisResult:
 @pytest.fixture(autouse=True)
 def fake_analysis(monkeypatch: pytest.MonkeyPatch) -> FakeAnalyzeMistakes:
     # Autouse: no test in this module may reach the network through the analysis.
-    fake = FakeAnalyzeMistakes()
+    # With an empty queue: no mistakes.
+    fake = FakeAnalyzeMistakes(default=make_analysis)
     monkeypatch.setattr(services, "analyze_mistakes", fake)
     return fake
 
@@ -327,7 +292,14 @@ def test_second_active_conversation_is_impossible(
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "refusal",
-    ["daily limit", "second conversation", "waiting for reply", "nothing to retry"],
+    [
+        "daily limit",
+        "second conversation",
+        "waiting for reply",
+        "nothing to retry",
+        "turn retry at the daily limit",
+        "analysis retry at the daily limit",
+    ],
 )
 def test_refused_action_shows_a_reason(
     anna_client: Client, fake_llm: FakeGenerateTurn, settings, refusal: str
@@ -336,9 +308,11 @@ def test_refused_action_shows_a_reason(
 
     Source: PRD "Odmowa akcji" (prd.md:97, decision 2026-10-15). The wording is not
     a requirement, so only a meaningful reason on the page is asserted, not its text.
-    Edge: the refusals reached by a stale page or a double submit. Guards mutmut
-    `x_start_conversation__mutmut_12`, `_39`, `x_send_message__mutmut_16` and
-    `x_run_agent_turn__mutmut_4`.
+    Edge: the refusals reached by a stale page or a double submit, and the retries
+    refused once today's sum reached the limit (plan testing-budget-ceiling, phase 2).
+    Guards mutmut `x_start_conversation__mutmut_12`, `_39`,
+    `x_send_message__mutmut_16`, `x_run_agent_turn__mutmut_4`, `_31` and
+    `x_analyze_conversation__mutmut_60`.
     """
     if refusal == "daily limit":
         # One estimated turn (0.03) does not fit into the budget.
@@ -353,6 +327,24 @@ def test_refused_action_shows_a_reason(
             fake_llm.outcomes.append(LLMError("down"))
             send(anna_client, conversation, "Hallo")
             response = send(anna_client, conversation, "Hallo?", follow=True)
+        elif refusal == "turn retry at the daily limit":
+            fake_llm.outcomes.append(LLMError("down"))
+            send(anna_client, conversation, "Hallo")
+            # A ledger entry of today worth the whole daily budget.
+            add_charge(conversation, "1.00", timezone.now())
+            response = anna_client.post(
+                f"/conversations/{conversation.pk}/retry/", follow=True
+            )
+        elif refusal == "analysis retry at the daily limit":
+            send(anna_client, conversation, "Ich habe gegangen.")
+            anna_client.post(f"/conversations/{conversation.pk}/end/")
+            Conversation.objects.filter(pk=conversation.pk).update(
+                analysis_failed_at=timezone.now()
+            )
+            add_charge(conversation, "1.00", timezone.now())
+            response = anna_client.post(
+                f"/conversations/{conversation.pk}/analysis/", follow=True
+            )
         else:
             response = anna_client.post(
                 f"/conversations/{conversation.pk}/retry/", follow=True
@@ -525,9 +517,30 @@ def test_too_long_message_does_not_call_the_model_and_shows_a_notice(
     )
 
     assert response.redirect_chain == [(detail_url(conversation), 302)]
-    assert "Please keep your message under" in response.content.decode()
+    assert "Please keep your message to" in response.content.decode()
     assert len(fake_llm.calls) == 1
     assert roles(conversation) == ["assistant"]
+
+
+@pytest.mark.django_db
+def test_message_as_long_as_the_field_allows_is_accepted(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """The server accepts every message the form lets the user type.
+
+    Oracle: the field's own `maxlength`, not the server constant. Guards mutmut
+    `x_send_message__mutmut_7` (`>` → `>=`: the longest allowed message refused).
+    """
+    conversation = start(anna_client)
+    page = anna_client.get(detail_url(conversation)).content.decode()
+    match = re.search(r'maxlength="(\d+)"', page)
+    assert match is not None
+    allowed = int(match.group(1))
+
+    send(anna_client, conversation, "a" * allowed)
+
+    assert len(fake_llm.calls) == 2
+    assert roles(conversation) == ["assistant", "user", "assistant"]
 
 
 @pytest.mark.django_db

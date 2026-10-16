@@ -9,11 +9,14 @@ from conversations.budget import (
     day_start,
     is_exhausted,
     is_final_turn,
+    limit_reached,
     next_reset,
+    next_turn_estimate,
     spent_today,
     turn_cost,
 )
 from conversations.models import Conversation, Message
+from tests.fakes import add_charge
 
 # Wednesday 10 June 2026, 12:00 Berlin time (CEST, UTC+2).
 NOON = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)
@@ -26,6 +29,7 @@ YESTERDAY = datetime(2026, 6, 9, 15, 0, tzinfo=UTC)
 def pinned_budget(settings) -> None:
     settings.DAILY_BUDGET_USD = Decimal("1.00")
     settings.LLM_TURN_COST_ESTIMATE_USD = Decimal("0.03")
+    settings.LLM_ANALYSIS_COST_ESTIMATE_USD = Decimal("0.07")
 
 
 @pytest.fixture
@@ -245,7 +249,8 @@ def test_is_exhausted_false_after_midnight_reset(anna: User) -> None:
     conversation = make_conversation(anna)
     add_message(conversation, "0.990000", NOON)
     end_by_daily_limit(conversation, NOON)
-    after_reset = next_reset(NOON)
+    # 11 June 2026 00:00 CEST (UTC+2), the midnight after NOON.
+    after_reset = datetime(2026, 6, 10, 22, 0, tzinfo=UTC)
 
     assert not is_exhausted(anna, after_reset)
 
@@ -346,3 +351,109 @@ def test_is_final_turn_ignores_other_users_newer_agent_turn(
     add_message(make_conversation(lukasz), "0.950000", NOON.replace(hour=9))
 
     assert is_final_turn(anna, conversation, NOON) == without_lukasz
+
+
+# --- the ledger (LLMCharge): paid calls that left no message and no analysis -------
+#
+# Source: PRD Access Control "Koszty modeli" (the $1 limit covers every model call of
+# the day, per user, reset at midnight Europe/Berlin) and the decision of
+# context/changes/testing-budget-ceiling/plan.md (failed and late calls count).
+
+
+def test_spent_today_counts_todays_ledger_entry(anna: User) -> None:
+    add_charge(make_conversation(anna), "0.030000", NOON)
+
+    assert spent_today(anna, NOON) == Decimal("0.03")
+
+
+def test_spent_today_ignores_ledger_entry_from_before_midnight(anna: User) -> None:
+    add_charge(make_conversation(anna), "0.400000", MIDNIGHT - timedelta(seconds=1))
+
+    assert spent_today(anna, NOON) == Decimal(0)
+
+
+def test_spent_today_counts_ledger_entry_at_midnight(anna: User) -> None:
+    add_charge(make_conversation(anna), "0.200000", MIDNIGHT)
+
+    assert spent_today(anna, NOON) == Decimal("0.2")
+
+
+def test_spent_today_ignores_other_users_ledger_entries(
+    anna: User, lukasz: User
+) -> None:
+    """Guards M29 (the ledger read without `for_user`)."""
+    add_charge(make_conversation(lukasz), "0.900000", NOON)
+
+    assert spent_today(anna, NOON) == Decimal(0)
+
+
+def test_spent_today_adds_turns_analyses_and_ledger(anna: User) -> None:
+    """Guards M28 (the ledger left out of the day's sum)."""
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.100000", NOON)
+    add_analysis(conversation, "0.050000", NOON)
+    add_charge(conversation, "0.030000", NOON)
+
+    # 0.10 turn + 0.05 analysis + 0.03 ledger entry.
+    assert spent_today(anna, NOON) == Decimal("0.18")
+
+
+def test_spent_today_on_the_day_clocks_go_forward(anna: User) -> None:
+    # 29 March 2026: midnight is still CET (UTC+1), so the day starts at
+    # 28 March 23:00 UTC; 12:00 CEST (UTC+2) that day is 10:00 UTC.
+    conversation = make_conversation(anna)
+    add_charge(conversation, "0.400000", datetime(2026, 3, 28, 22, 59, 59, tzinfo=UTC))
+    add_charge(conversation, "0.200000", datetime(2026, 3, 28, 23, 0, tzinfo=UTC))
+
+    assert spent_today(anna, datetime(2026, 3, 29, 10, 0, tzinfo=UTC)) == Decimal("0.2")
+
+
+def test_spent_today_on_the_day_clocks_go_back(anna: User) -> None:
+    # 25 October 2026: midnight is still CEST (UTC+2), so the day starts at
+    # 24 October 22:00 UTC; 12:00 CET (UTC+1) that day is 11:00 UTC.
+    conversation = make_conversation(anna)
+    add_charge(conversation, "0.400000", datetime(2026, 10, 24, 21, 59, 59, tzinfo=UTC))
+    add_charge(conversation, "0.200000", datetime(2026, 10, 24, 22, 0, tzinfo=UTC))
+
+    assert spent_today(anna, datetime(2026, 10, 25, 11, 0, tzinfo=UTC)) == Decimal(
+        "0.2"
+    )
+
+
+def test_next_turn_estimate_without_agent_turn_is_the_fixed_estimate(
+    anna: User,
+) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0", NOON, role=Message.Role.USER)
+
+    # LLM_TURN_COST_ESTIMATE_USD pinned to 0.03 above.
+    assert next_turn_estimate(anna, conversation) == Decimal("0.03")
+
+
+def test_next_turn_estimate_is_the_cost_of_the_last_agent_turn(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.500000", NOON.replace(hour=8))
+    add_message(conversation, "0.020000", NOON.replace(hour=9))
+
+    assert next_turn_estimate(anna, conversation) == Decimal("0.02")
+
+
+# --- the hard ceiling: once the day's sum reaches the limit -------------------------
+
+
+def test_limit_reached_false_just_below_the_budget(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.900000", NOON)
+    add_charge(conversation, "0.099999", NOON)
+
+    # 0.90 + 0.099999 = 0.999999 < 1.00: no forecast, only what was spent.
+    assert not limit_reached(anna, NOON)
+
+
+def test_limit_reached_true_at_exactly_the_budget(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.900000", NOON)
+    add_charge(conversation, "0.100000", NOON)
+
+    # 0.90 + 0.10 = 1.00, the budget itself.
+    assert limit_reached(anna, NOON)

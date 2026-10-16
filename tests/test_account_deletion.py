@@ -12,7 +12,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
-from conversations.models import Conversation, Message, Mistake
+from conversations.models import Conversation, LLMCharge, Message, Mistake
+from tests.fakes import add_charge
 from tests.ownership_testapp.models import OwnedNote
 
 PASSWORD = "pass-12345-xyz"
@@ -150,6 +151,8 @@ def test_every_relation_to_user_data_is_known_and_cascades() -> None:
         (Mistake, "user"),
         (Mistake, "conversation"),
         (Message, "conversation"),
+        (LLMCharge, "user"),
+        (LLMCharge, "conversation"),
         (LogEntry, "user"),
         (OwnedNote, "user"),
     }
@@ -182,6 +185,7 @@ MODEL_DECISIONS: dict[type[models.Model], str] = {
     Conversation: CASCADE,
     Message: CASCADE,
     Mistake: CASCADE,
+    LLMCharge: CASCADE,
     OwnedNote: CASCADE,
 }
 
@@ -247,6 +251,10 @@ def make_mistake_rows(user: User) -> list[models.Model]:
     return list(make_analysed_conversation(user).mistakes.all())
 
 
+def make_llm_charge_rows(user: User) -> list[models.Model]:
+    return [add_charge(make_analysed_conversation(user), "0.03", timezone.now())]
+
+
 def make_owned_note_rows(user: User) -> list[models.Model]:
     return [OwnedNote.objects.create(user=user, text="A note.")]
 
@@ -275,6 +283,7 @@ FACTORIES: dict[type[models.Model], Callable[[User], list[models.Model]]] = {
     Conversation: make_conversation_rows,
     Message: make_message_rows,
     Mistake: make_mistake_rows,
+    LLMCharge: make_llm_charge_rows,
     OwnedNote: make_owned_note_rows,
     LogEntry: make_log_entry_rows,
 }

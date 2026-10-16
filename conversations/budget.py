@@ -2,8 +2,10 @@
 
 One place for everything about the per-user daily limit: the cost of a turn (also
 used for the cost of a post-conversation analysis), what was spent today (agent
-turns plus analyses), whether the budget is exhausted, whether the next turn must
-be the last one and when talking is allowed again. Functions take `now` as a parameter so
+turns, analyses and the `LLMCharge` ledger of paid calls that saved neither),
+whether the budget is exhausted, whether the day's sum already reached the limit
+(the hard ceiling), whether the next turn must be the last one and when talking is
+allowed again. Functions take `now` as a parameter so
 tests can use fixed dates (including daylight-saving changes).
 """
 
@@ -17,7 +19,7 @@ from django.db.models import Sum
 
 from accounts.models import User
 
-from .models import Conversation, Message
+from .models import Conversation, LLMCharge, Message
 
 _TOKENS_PER_PRICE_UNIT = Decimal(1_000_000)
 
@@ -60,7 +62,7 @@ def next_reset(now: datetime) -> datetime:
 
 
 def spent_today(user: User, now: datetime) -> Decimal:
-    """Agent turns plus mistake analyses since the last midnight."""
+    """Agent turns, mistake analyses and ledger entries since the last midnight."""
     start = day_start(now)
     turns = Message.objects.filter(
         conversation__in=Conversation.objects.for_user(user),
@@ -71,15 +73,21 @@ def spent_today(user: User, now: datetime) -> Decimal:
         .filter(analyzed_at__gte=start)
         .aggregate(total=Sum("analysis_cost_usd"))["total"]
     )
-    return (turns or Decimal(0)) + (analyses or Decimal(0))
+    charges = (
+        LLMCharge.objects.for_user(user)
+        .filter(charged_at__gte=start)
+        .aggregate(total=Sum("cost_usd"))["total"]
+    )
+    return (turns or Decimal(0)) + (analyses or Decimal(0)) + (charges or Decimal(0))
 
 
 def is_exhausted(user: User, now: datetime) -> bool:
-    """The only "budget exhausted" predicate (home page, starting, reset notice).
+    """Whether a new conversation may start (home page, starting, reset notice).
 
-    A conversation ended by the daily limit closes the day even when the spent sum
-    is still just below the budget; otherwise the next conversation would say
-    goodbye in its opening turn.
+    Keeps room for one more turn, unlike `limit_reached`, which only says the day's
+    sum already reached the budget. A conversation ended by the daily limit closes
+    the day even when the spent sum is still just below the budget; otherwise the
+    next conversation would say goodbye in its opening turn.
     """
     ended_by_limit = (
         Conversation.objects.for_user(user)
@@ -97,8 +105,27 @@ def is_exhausted(user: User, now: datetime) -> bool:
     )
 
 
+def limit_reached(user: User, now: datetime) -> bool:
+    """The hard ceiling: today's sum already reached the budget.
+
+    No new paid turn and no analysis retry starts once this is true. Unlike
+    `is_exhausted`, it does not forecast the next call.
+    """
+    return spent_today(user, now) >= settings.DAILY_BUDGET_USD
+
+
 def is_final_turn(user: User, conversation: Conversation, now: datetime) -> bool:
     """True when the budget would not cover one more turn like the last one."""
+    estimate = next_turn_estimate(user, conversation)
+    return spent_today(user, now) + estimate >= settings.DAILY_BUDGET_USD
+
+
+def next_turn_estimate(user: User, conversation: Conversation) -> Decimal:
+    """The expected cost of the conversation's next agent turn.
+
+    The cost of its last agent turn, or `LLM_TURN_COST_ESTIMATE_USD` before the
+    first one. Also what a turn that timed out is charged.
+    """
     last_agent_turn = (
         Message.objects.filter(
             conversation__in=Conversation.objects.for_user(user).filter(
@@ -109,9 +136,6 @@ def is_final_turn(user: User, conversation: Conversation, now: datetime) -> bool
         .order_by("-created_at", "-id")
         .first()
     )
-    estimate = (
-        last_agent_turn.cost_usd
-        if last_agent_turn is not None
-        else settings.LLM_TURN_COST_ESTIMATE_USD
-    )
-    return spent_today(user, now) + estimate >= settings.DAILY_BUDGET_USD
+    if last_agent_turn is None:
+        return settings.LLM_TURN_COST_ESTIMATE_USD
+    return last_agent_turn.cost_usd

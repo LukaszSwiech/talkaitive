@@ -1,8 +1,9 @@
 """Hand-written mutants that mutmut cannot generate.
 
 Removed `.for_user()` calls and query filters, deletion cleanup and signal wiring,
-cascade rules, guard registries (a new route or model), module constants and prompt
-labels.
+cascade rules, guard registries (a new route or model), module constants, prompt
+labels, and the budget's cost paths (error branches in `llm.py`, which mutmut does
+not mutate, ledger terms and writes, and the hard ceiling's checks).
 For each mutant the repo is copied to a temporary directory, exactly one fragment is
 replaced there and the test suite runs with the project's `.venv` interpreter. The
 working tree is never written, so interrupting the script is harmless.
@@ -197,7 +198,7 @@ MUTANTS: tuple[Mutant, ...] = (
             "        # A blank reply is no answer either. "
             "Log only the fact, never the text.\n"
             '        logger.error("LLM returned a blank agent reply.")\n'
-            '        raise LLMError("The model returned no usable answer.")\n'
+            "        raise _no_usable_answer(response)\n"
         ),
         mutated="",
     ),
@@ -303,6 +304,125 @@ MUTANTS: tuple[Mutant, ...] = (
             "        )\n"
         ),
         mutated="        pass\n",
+    ),
+    # M25 and M26 differ in the comment and log line of each branch.
+    Mutant(
+        id="M25",
+        area="budżet: generate_turn bez gałęzi APITimeoutError (timeout za 0)",
+        path="conversations/llm.py",
+        original=(
+            "    except APITimeoutError as exc:\n"
+            "        # Before `APIError`, its base class. The provider may have generated (and\n"
+            "        # billed) the answer that never arrived.\n"
+            '        logger.error("LLM call failed: %s (status None)", type(exc).__name__)\n'
+            '        raise LLMError("The model call failed.", billed_without_usage=True) from exc\n'
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M26",
+        area="budżet: analyze_mistakes bez gałęzi APITimeoutError (timeout za 0)",
+        path="conversations/llm.py",
+        original=(
+            "    except APITimeoutError as exc:\n"
+            "        # Before `APIError`, its base class; the analysis may have been billed.\n"
+            '        logger.error("LLM analysis call failed: %s (status None)", type(exc).__name__)\n'
+            '        raise LLMError("The model call failed.", billed_without_usage=True) from exc\n'
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M27",
+        area="budżet: generate_turn, pusty reply jako LLMError bez usage",
+        path="conversations/llm.py",
+        original=(
+            '        logger.error("LLM returned a blank agent reply.")\n'
+            "        raise _no_usable_answer(response)\n"
+        ),
+        mutated=(
+            '        logger.error("LLM returned a blank agent reply.")\n'
+            '        raise LLMError("The model returned no usable answer.")\n'
+        ),
+    ),
+    Mutant(
+        id="M28",
+        area="budżet: spent_today bez składnika księgi",
+        path="conversations/budget.py",
+        original=" + (charges or Decimal(0))",
+        mutated="",
+    ),
+    Mutant(
+        id="M29",
+        area="budżet + izolacja: spent_today, księga bez for_user",
+        path="conversations/budget.py",
+        original="LLMCharge.objects.for_user(user)",
+        mutated="LLMCharge.objects",
+    ),
+    Mutant(
+        id="M30",
+        area="budżet: _generate_and_save, spóźniona tura bez wpisu w księdze",
+        path="conversations/services.py",
+        original=(
+            "            # A late turn: dropped, but paid for.\n"
+            "            _charge(\n"
+            "                locked,\n"
+            "                LLMCharge.Kind.TURN,\n"
+            "                LLMCharge.Reason.LATE_RESULT,\n"
+            "                _result_cost(result),\n"
+            "                now,\n"
+            "            )\n"
+        ),
+        mutated="            pass\n",
+    ),
+    Mutant(
+        id="M31",
+        area="budżet: send_message bez sprawdzenia dachu",
+        path="conversations/services.py",
+        original=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+        ),
+        mutated=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = False\n"
+        ),
+    ),
+    Mutant(
+        id="M32",
+        area="budżet: run_agent_turn bez sprawdzenia dachu",
+        path="conversations/services.py",
+        original=(
+            'raise ConversationError("The agent is still replying. Please wait.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+        ),
+        mutated=(
+            'raise ConversationError("The agent is still replying. Please wait.")\n'
+            "        at_ceiling = False\n"
+        ),
+    ),
+    Mutant(
+        id="M33",
+        area="budżet: send_message odmawia na dachu, ale nie kończy rozmowy",
+        path="conversations/services.py",
+        original=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+            "        if at_ceiling:\n"
+            "            end_conversation(locked, Conversation.EndReason.DAILY_LIMIT, now)\n"
+        ),
+        mutated=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+            "        if at_ceiling:\n"
+            "            pass\n"
+        ),
+    ),
+    Mutant(
+        id="M34",
+        area="budżet: analyze_conversation bez dachu na ponowienie",
+        path="conversations/services.py",
+        original="if analysis_failed(locked, now) and limit_reached(locked.user, now):",
+        mutated="if False:",
     ),
 )
 

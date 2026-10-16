@@ -101,6 +101,43 @@ class Message(models.Model):
         return f"{self.role}: {self.text[:40]}"
 
 
+class LLMCharge(UserOwned):
+    """The cost of a model call that left no agent turn and no analysis result.
+
+    A successful turn keeps its cost in `Message.cost_usd` and a successful analysis
+    in `Conversation.analysis_cost_usd`; a call that most likely cost money but saved
+    neither (a timeout, an unusable answer, a late result, a failed save) is counted
+    here, so the day's sum still includes it. `user` is always the conversation's
+    user (set by the service).
+    """
+
+    class Kind(models.TextChoices):
+        TURN = "turn", "Agent turn"
+        ANALYSIS = "analysis", "Mistake analysis"
+
+    class Reason(models.TextChoices):
+        # A timeout or a bad answer without usage: the cost is estimated.
+        ESTIMATE = "estimate", "Estimated cost"
+        # An answer with usage but nothing usable in it.
+        NO_USABLE_ANSWER = "no_usable_answer", "No usable answer"
+        # The result was no longer needed when it arrived.
+        LATE_RESULT = "late_result", "Late result"
+        # The result was paid for, but saving it failed.
+        SAVE_FAILED = "save_failed", "Save failed"
+
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="charges"
+    )
+    kind = models.CharField(max_length=10, choices=Kind)
+    reason = models.CharField(max_length=20, choices=Reason)
+    cost_usd = models.DecimalField(max_digits=10, decimal_places=6)
+    # Set from the service's `now`, so the day's sum puts it on the right day.
+    charged_at = models.DateTimeField(db_index=True)
+
+    def __str__(self) -> str:
+        return f"{self.kind} ({self.reason}): {self.cost_usd}"
+
+
 class Mistake(UserOwned):
     """One mistake found in a conversation by the post-conversation analysis.
 

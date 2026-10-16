@@ -21,32 +21,59 @@ list positions here: chronological order, identical pairs merged into one item.
 The same analysis returns notes for later conversations (`learner_facts`,
 `scene_notes`); they are saved together with the list, in the same locked block, so
 a late result drops them too.
+
+Every model call that most likely cost money counts towards the day's budget. A
+saved turn keeps its cost in `Message.cost_usd` and a saved analysis in
+`analysis_cost_usd`; a call that saved neither goes to the `LLMCharge` ledger: a
+late result is dropped, but its cost is counted, and so is a timeout (estimated),
+an unusable answer (its usage) and an analysis whose save failed.
+
+The hard ceiling: once today's sum reached the limit (`limit_reached`), no new paid
+call starts. Sending a message and retrying the agent's turn are refused and the
+conversation ends by the daily limit; the day can go over the limit only by a turn
+that started below it. The analysis is different: the first attempt runs whatever
+is left; a retry waits for the reset once the limit is reached.
 """
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
 
 from accounts.models import User
 
-from .budget import is_exhausted, is_final_turn, turn_cost
+from .budget import (
+    is_exhausted,
+    is_final_turn,
+    limit_reached,
+    next_turn_estimate,
+    turn_cost,
+)
 from .llm import (
+    AnalysisResult,
+    CallUsage,
     FoundMistake,
+    LLMError,
     TurnResult,
     analyze_mistakes,
     format_memory,
     generate_turn,
 )
 from .memory import select_memory
-from .models import Conversation, Message, Mistake
+from .models import Conversation, LLMCharge, Message, Mistake
 from .topics import Topic, get_topic
+
+logger = logging.getLogger(__name__)
 
 # Chat turns are short. The cap keeps one pasted text from eating the daily budget
 # or overflowing the model's context (which would make every retry fail).
 MAX_MESSAGE_LENGTH = 2000
+
+DAILY_LIMIT_REACHED = "You have used today's conversation limit."
 
 
 class ConversationError(Exception):
@@ -106,7 +133,7 @@ def start_conversation(user: User, topic_key: str, now: datetime) -> Conversatio
     if topic is None:
         raise ConversationError("Unknown topic. Please choose one from the list.")
     if is_exhausted(user, now):
-        raise ConversationError("You have used today's conversation limit.")
+        raise ConversationError(DAILY_LIMIT_REACHED)
     memory_prompt = format_memory(
         select_memory(user, topic.key, user.practice_language)
     )
@@ -137,13 +164,15 @@ def send_message(conversation: Conversation, text: str, now: datetime) -> None:
     Only for an active conversation that does not wait for the agent; the check, the
     save and the turn marker happen under one row lock, so a double submit cannot
     save two messages and a parallel retry cannot start a second model call.
+    Once today's sum reached the limit, the message is not saved and the
+    conversation ends by the daily limit.
     """
     text = text.strip()
     if not text:
         raise ConversationError("Please write a message first.")
     if len(text) > MAX_MESSAGE_LENGTH:
         raise ConversationError(
-            f"Please keep your message under {MAX_MESSAGE_LENGTH} characters."
+            f"Please keep your message to {MAX_MESSAGE_LENGTH} characters or fewer."
         )
     with transaction.atomic():
         locked = _lock(conversation)
@@ -151,16 +180,26 @@ def send_message(conversation: Conversation, text: str, now: datetime) -> None:
             raise ConversationError("This conversation has ended.")
         if locked.awaiting_agent_reply:
             raise ConversationError("Please wait for the agent's reply.")
-        Message.objects.create(conversation=locked, role=Message.Role.USER, text=text)
-        _mark_turn_started(locked, now)
+        at_ceiling = limit_reached(locked.user, now)
+        if at_ceiling:
+            end_conversation(locked, Conversation.EndReason.DAILY_LIMIT, now)
+        else:
+            Message.objects.create(
+                conversation=locked, role=Message.Role.USER, text=text
+            )
+            _mark_turn_started(locked, now)
+    # Refused only after the commit: raising inside the block would undo the end.
+    if at_ceiling:
+        raise ConversationError(DAILY_LIMIT_REACHED)
     _generate_and_save(locked, now)
 
 
 def run_agent_turn(conversation: Conversation, now: datetime) -> None:
     """Retry the agent's turn of a conversation that waits for it.
 
-    Refused while another request is still generating that turn. `LLMError`
-    propagates and nothing is saved.
+    Refused while another request is still generating that turn. Once today's sum
+    reached the limit, refused and the conversation ends by the daily limit.
+    `LLMError` propagates and nothing is saved.
     """
     with transaction.atomic():
         locked = _lock(conversation)
@@ -168,7 +207,15 @@ def run_agent_turn(conversation: Conversation, now: datetime) -> None:
             raise ConversationError("There is nothing to retry.")
         if agent_turn_in_progress(locked, now):
             raise ConversationError("The agent is still replying. Please wait.")
-        _mark_turn_started(locked, now)
+        at_ceiling = limit_reached(locked.user, now)
+        if at_ceiling:
+            end_conversation(locked, Conversation.EndReason.DAILY_LIMIT, now)
+        else:
+            _mark_turn_started(locked, now)
+    # Refused only after the commit: raising inside the block would undo the end.
+    if at_ceiling:
+        conversation.refresh_from_db()
+        raise ConversationError(DAILY_LIMIT_REACHED)
     _generate_and_save(locked, now)
     conversation.refresh_from_db()
 
@@ -177,9 +224,12 @@ def _generate_and_save(conversation: Conversation, now: datetime) -> None:
     """Generate one agent turn and save it; the turn marker must be set to `now`.
 
     A reply that is no longer needed when it arrives (the user ended the
-    conversation meanwhile) is dropped, and its cost is not counted.
+    conversation meanwhile) is dropped, but its cost is counted. A failed call that
+    most likely cost money is counted too (see `_charge_failed_call`).
     """
     final = is_final_turn(conversation.user, conversation, now)
+    # The same estimate as the final-turn forecast; charged if the call times out.
+    estimate = next_turn_estimate(conversation.user, conversation)
     history = list(conversation.messages.values_list("role", "text"))
     # The topic comes from the conversation's own copy, not from TOPICS.
     topic = Topic(
@@ -195,17 +245,75 @@ def _generate_and_save(conversation: Conversation, now: datetime) -> None:
             final_turn=final,
             memory=conversation.memory_prompt,
         )
-    except Exception:
+    except Exception as error:
         # Free the conversation at once, so "Try again" works right away.
         _clear_turn_marker(conversation, now)
+        if isinstance(error, LLMError):
+            _charge_failed_call(conversation, LLMCharge.Kind.TURN, error, estimate, now)
         raise
 
     with transaction.atomic():
         locked = _lock(conversation)
         if locked.awaiting_agent_reply:
             _save_agent_turn(locked, result, final, now)
+        else:
+            # A late turn: dropped, but paid for.
+            _charge(
+                locked,
+                LLMCharge.Kind.TURN,
+                LLMCharge.Reason.LATE_RESULT,
+                _result_cost(result),
+                now,
+            )
         _clear_turn_marker(locked, now)
     conversation.refresh_from_db()
+
+
+def _result_cost(result: TurnResult | AnalysisResult | CallUsage) -> Decimal:
+    return turn_cost(
+        result.model,
+        result.input_tokens,
+        result.cached_input_tokens,
+        result.output_tokens,
+    )
+
+
+def _charge(
+    conversation: Conversation,
+    kind: LLMCharge.Kind,
+    reason: LLMCharge.Reason,
+    cost: Decimal,
+    now: datetime,
+) -> None:
+    """Count a paid call that left no agent turn and no analysis result."""
+    LLMCharge.objects.create(
+        user=conversation.user,
+        conversation=conversation,
+        kind=kind,
+        reason=reason,
+        cost_usd=cost,
+        charged_at=now,
+    )
+
+
+def _charge_failed_call(
+    conversation: Conversation,
+    kind: LLMCharge.Kind,
+    error: LLMError,
+    estimate: Decimal,
+    now: datetime,
+) -> None:
+    """Count a failed call at its real usage, at `estimate`, or not at all.
+
+    The real usage when the answer carried it; `estimate` when the call most likely
+    cost money but its usage is unknown (a timeout, a malformed answer); nothing
+    when the provider refused it at once.
+    """
+    if error.usage is not None:
+        cost = _result_cost(error.usage)
+        _charge(conversation, kind, LLMCharge.Reason.NO_USABLE_ANSWER, cost, now)
+    elif error.billed_without_usage:
+        _charge(conversation, kind, LLMCharge.Reason.ESTIMATE, estimate, now)
 
 
 def _save_agent_turn(
@@ -283,8 +391,8 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
     """Find the learner's mistakes in an ended conversation and save the list.
 
     Runs at most once per conversation. Raises `ConversationError` for an active
-    conversation and `AnalysisNotNeeded` when the list is ready or still being
-    prepared. `LLMError` propagates; the conversation is then marked as failed and
+    conversation and for a retry once today's sum reached the limit, and
+    `AnalysisNotNeeded` when the list is ready or still being prepared. `LLMError` propagates; the conversation is then marked as failed and
     can be analysed again.
     """
     with transaction.atomic():
@@ -317,32 +425,51 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
             )
             conversation.refresh_from_db()
             return
+        if analysis_failed(locked, now) and limit_reached(locked.user, now):
+            # The first attempt runs whatever is left; a retry waits for the reset.
+            raise ConversationError(
+                "You have used today's limit. "
+                "You can get your list of mistakes after the reset."
+            )
         locked.analysis_started_at = now
         locked.save(update_fields=["analysis_started_at"])
 
     try:
         result = analyze_mistakes(language=locked.language, history=history)
-    except Exception:
+    except Exception as error:
         _mark_analysis_failed(conversation, now)
+        if isinstance(error, LLMError):
+            _charge_failed_call(
+                conversation,
+                LLMCharge.Kind.ANALYSIS,
+                error,
+                settings.LLM_ANALYSIS_COST_ESTIMATE_USD,
+                now,
+            )
         raise
 
+    cost = _result_cost(result)
     try:
         with transaction.atomic():
             locked = _lock(conversation)
-            # A late result (a parallel request finished first) is dropped, unpaid.
-            if locked.analyzed_at is None:
+            if locked.analyzed_at is not None:
+                # A late result (a parallel request finished first): dropped, but
+                # paid for.
+                _charge(
+                    locked,
+                    LLMCharge.Kind.ANALYSIS,
+                    LLMCharge.Reason.LATE_RESULT,
+                    cost,
+                    now,
+                )
+            else:
                 _save_mistakes(
                     locked, _merge_mistakes(result.mistakes, learner_messages)
                 )
                 locked.learner_facts = _clean_notes(result.learner_facts)
                 locked.scene_notes = _clean_notes(result.scene_notes)
                 locked.analyzed_at = now
-                locked.analysis_cost_usd = turn_cost(
-                    result.model,
-                    result.input_tokens,
-                    result.cached_input_tokens,
-                    result.output_tokens,
-                )
+                locked.analysis_cost_usd = cost
                 locked.analysis_failed_at = None
                 locked.save(
                     update_fields=[
@@ -355,8 +482,23 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
                 )
             _clear_analysis_marker(locked, now)
     except Exception:
-        # The save failed after a paid call: show "Try again", not a silent re-run.
+        # The save failed after a paid call: show "Try again", not a silent re-run,
+        # and count the cost outside the failed transaction.
         _mark_analysis_failed(conversation, now)
+        try:
+            _charge(
+                conversation,
+                LLMCharge.Kind.ANALYSIS,
+                LLMCharge.Reason.SAVE_FAILED,
+                cost,
+                now,
+            )
+        except Exception as charge_error:
+            # The database may be down; the original error matters more.
+            logger.error(
+                "Could not count the cost of an unsaved analysis: %s",
+                type(charge_error).__name__,
+            )
         raise
     conversation.refresh_from_db()
 
