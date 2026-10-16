@@ -64,3 +64,10 @@
 - **Problem**: `UserOwned.objects` jest też zwykłym domyślnym managerem, więc `Model.objects.get(pk=pk)` i `get_object_or_404(Model, pk=pk)` nie filtrują po właścicielu. Użytkownik B, zmieniając id w adresie, zobaczy rekord użytkownika A (IDOR). Model podrzędny bez własnego pola `user`, pobierany po `pk`, ma tę samą lukę. Reguła „czytaj przez for_user” wyżej tego nie wymusza mechanicznie.
 - **Rule**: Pojedynczy rekord pobieraj zawsze przez zawężony queryset: `get_object_or_404(Model.objects.for_user(request.user), pk=pk)` — cudzy obiekt daje 404, nie 403 (nie zdradzamy, że istnieje). Model podrzędny filtruj przez właściciela rodzica (np. `Message.objects.filter(conversation__in=Conversation.objects.for_user(request.user))`). Każdy widok z `pk` w URL-u ma test „użytkownik B dostaje 404 na obiekt użytkownika A”.
 - **Applies to**: all
+
+## Nowy model dostaje decyzję w MODEL_DECISIONS, nowa trasa z id — wpis w ID_ROUTES
+
+- **Context**: Każdy slice, który dodaje model danych (także bez klucza obcego do `User`) albo trasę z parametrem w adresie (np. `<int:pk>`). Strażniki: `tests/test_account_deletion.py` (`MODEL_DECISIONS`, `FACTORIES`) i `tests/test_conversation_views.py` (`ID_ROUTES`). Wzorzec: `context/foundation/test-plan.md` §6.2.
+- **Problem**: Ręczna lista testów nie zauważa nowego modelu ani nowej trasy — dane zostają po usunięciu konta albo cudzy obiekt jest dostępny po id, a testy dalej są zielone.
+- **Rule**: Nowy model → wpis w `MODEL_DECISIONS` (`CASCADE` albo uzasadnienie, dlaczego to nie są dane użytkownika); model kasowany z kontem → także fabryka w `FACTORIES`. Nowa trasa z id → wpis w `ID_ROUTES` (dostaje test „inny użytkownik → 404”). Strażniki wywracają testy, gdy wpisu brak — dopisz wpis, nie osłabiaj strażnika.
+- **Applies to**: all
