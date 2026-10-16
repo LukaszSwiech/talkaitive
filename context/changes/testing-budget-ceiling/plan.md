@@ -401,11 +401,11 @@ Migracja `0006` tylko dodaje tabelę — bezpieczna dla Railway (pre-deploy `mig
 
 #### Automated
 
-- [x] 3.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py`
-- [x] 3.2 Każde przeżycie mutmut ma wiersz w rejestrze: `rm -rf mutants && uv run mutmut run && uv run mutmut results`
-- [x] 3.3 Testy przechodzą: `uv run pytest`
-- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py` — 834e476
+- [x] 3.2 Każde przeżycie mutmut ma wiersz w rejestrze: `rm -rf mutants && uv run mutmut run && uv run mutmut results` — 834e476
+- [x] 3.3 Testy przechodzą: `uv run pytest` — 834e476
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 834e476
 
 #### Manual
 
-- [x] 3.5 Przegląd §6.4 i §6.6 test-planu oraz dopisku Q-07: zgodne z decyzjami tego planu
+- [x] 3.5 Przegląd §6.4 i §6.6 test-planu oraz dopisku Q-07: zgodne z decyzjami tego planu — 834e476
