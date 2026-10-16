@@ -72,7 +72,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 1 | Suite trust and CI floor | Udowodnić, że zepsucie krytycznej logiki wywraca testy, i że testy uruchamiają się same przed wdrożeniem z `main` | #2 (cross-cutting) | mutation testing + CI gate (pytest, ruff) | complete | testing-suite-trust-and-ci |
 | 2 | Waiting-path recovery | Udowodnić, że zawieszenie lub błąd dostawcy kończy się komunikatem i działającym „Try again”, nie wiecznym spinnerem | #1 | integration | complete | testing-waiting-path-recovery |
 | 3 | Privacy and deletion boundaries | Udowodnić, że żaden widok ani blok pamięci nie ujawnia cudzych danych, a usunięcie konta usuwa wszystko | #3, #6 | integration | complete | testing-privacy-and-deletion-boundaries |
-| 4 | Budget ceiling | Udowodnić, że limit $1/dzień trzyma się także przy błędach, ponowieniach i drogich wywołaniach | #4 | unit + integration | not started | — |
+| 4 | Budget ceiling | Udowodnić, że limit $1/dzień trzyma się także przy błędach, ponowieniach i drogich wywołaniach | #4 | unit + integration | change opened | testing-budget-ceiling |
 | 5 | AI eval layer | Dać mierzalny wynik jakości korekty i listy błędów przy każdej zmianie promptu lub modelu | #5 | AI-native eval (real model, golden dataset) | not started | — |
 
 Kolejność: faza 1 jest najtańsza i wzmacnia wszystkie kolejne — wynik mutacji pokazuje fazom 2–4, gdzie obecne testy są puste, a CI od razu uruchamia nowe testy. Fazy 2–4 idą wg impact × likelihood. Faza 5 jest ostatnia, bo jest najdroższa w przebiegu i opłaca się dopiero przed pierwszą optymalizacją promptu lub modelu.

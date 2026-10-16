@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -22,10 +22,9 @@ from conversations.llm import (
 from conversations.memory import select_memory
 from conversations.models import Conversation, Message, Mistake
 from conversations.topics import get_topic
+from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn
 
 START_URL = "/conversations/start/"
-
-Outcome = TurnResult | Exception | Callable[..., TurnResult]
 
 
 def make_result(reply: str = "Guten Tag!", end: bool = False) -> TurnResult:
@@ -43,48 +42,12 @@ def make_result(reply: str = "Guten Tag!", end: bool = False) -> TurnResult:
 TURN_COST = Decimal("0.0034")
 
 
-class FakeGenerateTurn:
-    """Stands in for `llm.generate_turn`; nothing in these tests touches the network.
-
-    Each call takes the next queued outcome (a result, an exception to raise, or a
-    function called with the same kwargs); with an empty queue it returns a plain
-    reply.
-    """
-
-    def __init__(self) -> None:
-        self.calls: list[dict[str, Any]] = []
-        self.outcomes: list[Outcome] = []
-
-    def __call__(self, **kwargs: Any) -> TurnResult:
-        self.calls.append(kwargs)
-        outcome = self.outcomes.pop(0) if self.outcomes else make_result()
-        if isinstance(outcome, Exception):
-            raise outcome
-        if isinstance(outcome, TurnResult):
-            return outcome
-        return outcome(**kwargs)
-
-
 @pytest.fixture
 def fake_llm(monkeypatch: pytest.MonkeyPatch) -> FakeGenerateTurn:
-    fake = FakeGenerateTurn()
+    # With an empty queue: a plain reply.
+    fake = FakeGenerateTurn(default=make_result)
     monkeypatch.setattr(services, "generate_turn", fake)
     return fake
-
-
-class FakeAnalyzeMistakes:
-    """Stands in for `llm.analyze_mistakes`; queued results or exceptions, else none."""
-
-    def __init__(self) -> None:
-        self.calls: list[dict[str, Any]] = []
-        self.outcomes: list[AnalysisResult | Exception] = []
-
-    def __call__(self, **kwargs: Any) -> AnalysisResult:
-        self.calls.append(kwargs)
-        outcome = self.outcomes.pop(0) if self.outcomes else make_analysis()
-        if isinstance(outcome, Exception):
-            raise outcome
-        return outcome
 
 
 def make_analysis(*mistakes: FoundMistake) -> AnalysisResult:
@@ -102,7 +65,8 @@ def make_analysis(*mistakes: FoundMistake) -> AnalysisResult:
 @pytest.fixture(autouse=True)
 def fake_analysis(monkeypatch: pytest.MonkeyPatch) -> FakeAnalyzeMistakes:
     # Autouse: no test in this module may reach the network through the analysis.
-    fake = FakeAnalyzeMistakes()
+    # With an empty queue: no mistakes.
+    fake = FakeAnalyzeMistakes(default=make_analysis)
     monkeypatch.setattr(services, "analyze_mistakes", fake)
     return fake
 

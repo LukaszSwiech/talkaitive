@@ -577,6 +577,126 @@ def test_analysis_missing_usage_raises_llm_error(fake_openai: SimpleNamespace) -
         analyze()
 
 
+# --- what LLMError tells about the cost of a failed call ------------------------
+#
+# The service counts the cost of every call that most likely cost money (decision of
+# context/changes/testing-budget-ceiling/plan.md): the real usage when the answer
+# carried it, an estimate when the call was paid but its usage is unknown (timeout,
+# malformed or usage-less answer), nothing when the provider refused at once.
+
+PAID_USAGE = SimpleNamespace(
+    input_tokens=900,
+    input_tokens_details=SimpleNamespace(cached_tokens=300),
+    output_tokens=70,
+)
+
+
+def _malformed(schema: type[pydantic.BaseModel]) -> pydantic.ValidationError:
+    with pytest.raises(pydantic.ValidationError) as truncated:
+        schema.model_validate_json('{"reply": "Gerne')
+    return truncated.value
+
+
+def _failure(run: Any) -> LLMError:
+    with pytest.raises(LLMError) as failure:
+        run()
+    return failure.value
+
+
+@pytest.mark.parametrize(
+    ("run", "schema"),
+    [(call, AgentTurn), (analyze, MistakeReport)],
+    ids=["turn", "analysis"],
+)
+@pytest.mark.parametrize(
+    "outcome",
+    [
+        "timeout",
+        "malformed",
+        "no-usage",
+        "empty-without-usage",
+    ],
+)
+def test_paid_failure_without_usage_is_billed_without_usage(
+    fake_openai: SimpleNamespace, run: Any, schema: Any, outcome: str
+) -> None:
+    """Guards M25 (turn) and M26 (analysis): a timeout is not a free failure."""
+    valid = (
+        AgentTurn(reply="Guten Tag!", end_conversation=False)
+        if schema is AgentTurn
+        else MistakeReport(mistakes=[], learner_facts=[], scene_notes=[])
+    )
+    fake_openai.responses.outcome = {
+        "timeout": openai.APITimeoutError(request=SimpleNamespace()),
+        "malformed": _malformed(schema),
+        "no-usage": make_response(valid, usage=None),
+        "empty-without-usage": SimpleNamespace(output_parsed=None, usage=None),
+    }[outcome]
+
+    error = _failure(run)
+
+    assert error.billed_without_usage is True
+    assert error.usage is None
+
+
+@pytest.mark.parametrize(
+    ("run", "parsed"),
+    [
+        (call, None),
+        (call, AgentTurn(reply="   ", end_conversation=False)),
+        (analyze, None),
+    ],
+    ids=["turn-empty", "turn-blank-reply", "analysis-empty"],
+)
+def test_unusable_answer_with_usage_carries_its_usage(
+    fake_openai: SimpleNamespace, run: Any, parsed: Any, settings
+) -> None:
+    """Guards M27: a blank reply that was paid for reports its tokens."""
+    settings.LLM_MODEL = "gpt-5.4"
+    fake_openai.responses.outcome = SimpleNamespace(
+        output_parsed=parsed, usage=PAID_USAGE
+    )
+
+    error = _failure(run)
+
+    assert error.usage == llm.CallUsage(
+        model="gpt-5.4", input_tokens=900, cached_input_tokens=300, output_tokens=70
+    )
+    assert error.billed_without_usage is False
+
+
+@pytest.mark.parametrize("run", [call, analyze], ids=["turn", "analysis"])
+@pytest.mark.parametrize(
+    "error",
+    [
+        _status_error(openai.InternalServerError, 503),
+        _status_error(openai.RateLimitError, 429),
+        openai.APIConnectionError(request=SimpleNamespace()),
+    ],
+    ids=["503", "429", "connection"],
+)
+def test_refused_call_carries_no_cost(
+    fake_openai: SimpleNamespace, run: Any, error: Exception
+) -> None:
+    fake_openai.responses.outcome = error
+
+    failure = _failure(run)
+
+    assert failure.usage is None
+    assert failure.billed_without_usage is False
+
+
+def test_missing_api_key_carries_no_cost(
+    fake_openai: SimpleNamespace, settings
+) -> None:
+    settings.OPENAI_API_KEY = None
+
+    failure = _failure(call)
+
+    assert failure.usage is None
+    assert failure.billed_without_usage is False
+
+
 # --- SDK boundary on the HTTP transport -----------------------------------------
 #
 # These tests run the real SDK client on a scripted provider (`fake_provider`), so

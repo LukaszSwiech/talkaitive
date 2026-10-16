@@ -101,6 +101,10 @@ DAILY_BUDGET_USD = Decimal(os.environ.get("DAILY_BUDGET_USD", "1.00"))
 BUDGET_TIME_ZONE = "Europe/Berlin"
 # Estimated cost of one agent turn, used when a conversation has no agent turn yet.
 LLM_TURN_COST_ESTIMATE_USD = Decimal("0.03")
+# Estimated cost of one mistake analysis, counted when it timed out or returned a
+# malformed answer (no usage to price). Measured on a 20-turn conversation with
+# "medium" effort: 0.067 USD (see LLM_ANALYSIS_REASONING_EFFORT above).
+LLM_ANALYSIS_COST_ESTIMATE_USD = Decimal("0.07")
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
