@@ -14,7 +14,7 @@ from django.views.decorators.http import require_GET, require_POST
 from accounts.http import AuthenticatedHttpRequest
 
 from . import services
-from .budget import is_exhausted, next_reset
+from .budget import is_exhausted, limit_reached, next_reset
 from .llm import LLMError
 from .models import Conversation, Mistake
 from .services import AnalysisNotNeeded, ConversationError
@@ -81,6 +81,13 @@ def conversation_detail(request: AuthenticatedHttpRequest, pk: int) -> HttpRespo
         and conversation.ended_at is not None
         else None
     )
+    analysis_failed = services.analysis_failed(conversation, now)
+    # A failed analysis is retried only after the reset once the limit is reached.
+    analysis_retry_reset_at = (
+        next_reset(now)
+        if analysis_failed and limit_reached(request.user, now)
+        else None
+    )
     return render(
         request,
         "conversations/detail.html",
@@ -96,7 +103,8 @@ def conversation_detail(request: AuthenticatedHttpRequest, pk: int) -> HttpRespo
                 conversation=conversation
             ),
             "analysis_in_progress": services.analysis_in_progress(conversation, now),
-            "analysis_failed": services.analysis_failed(conversation, now),
+            "analysis_failed": analysis_failed,
+            "analysis_retry_reset_at": analysis_retry_reset_at,
             "reset_at": reset_at,
             "budget_time_zone": settings.BUDGET_TIME_ZONE,
             "max_message_length": services.MAX_MESSAGE_LENGTH,

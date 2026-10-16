@@ -9,6 +9,7 @@ from conversations.budget import (
     day_start,
     is_exhausted,
     is_final_turn,
+    limit_reached,
     next_reset,
     next_turn_estimate,
     spent_today,
@@ -446,3 +447,24 @@ def test_next_turn_estimate_is_the_cost_of_the_last_agent_turn(anna: User) -> No
     add_message(conversation, "0.020000", NOON.replace(hour=9))
 
     assert next_turn_estimate(anna, conversation) == Decimal("0.02")
+
+
+# --- the hard ceiling: once the day's sum reaches the limit -------------------------
+
+
+def test_limit_reached_false_just_below_the_budget(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.900000", NOON)
+    add_charge(conversation, "0.099999", NOON)
+
+    # 0.90 + 0.099999 = 0.999999 < 1.00: no forecast, only what was spent.
+    assert not limit_reached(anna, NOON)
+
+
+def test_limit_reached_true_at_exactly_the_budget(anna: User) -> None:
+    conversation = make_conversation(anna)
+    add_message(conversation, "0.900000", NOON)
+    add_charge(conversation, "0.100000", NOON)
+
+    # 0.90 + 0.10 = 1.00, the budget itself.
+    assert limit_reached(anna, NOON)

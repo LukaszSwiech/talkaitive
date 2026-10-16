@@ -376,26 +376,26 @@ Migracja `0006` tylko dodaje tabelę — bezpieczna dla Railway (pre-deploy `mig
 
 #### Automated
 
-- [x] 1.1 Migracja jest kompletna: `uv run python manage.py makemigrations --check --dry-run`
-- [x] 1.2 Testy przechodzą: `uv run pytest`
-- [x] 1.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 1.4 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C2 M4 M5 M25 M26 M27 M28 M29 M30`
+- [x] 1.1 Migracja jest kompletna: `uv run python manage.py makemigrations --check --dry-run` — d37e240
+- [x] 1.2 Testy przechodzą: `uv run pytest` — d37e240
+- [x] 1.3 Lint i format: `uv run ruff check . && uv run ruff format --check .` — d37e240
+- [x] 1.4 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C2 M4 M5 M25 M26 M27 M28 M29 M30` — d37e240
 
 #### Manual
 
-- [x] 1.5 Przegląd diffu: każda oczekiwana kwota w nowych testach jest literałem z rachunkiem w komentarzu, nie wynikiem `turn_cost` / `next_turn_estimate`
+- [x] 1.5 Przegląd diffu: każda oczekiwana kwota w nowych testach jest literałem z rachunkiem w komentarzu, nie wynikiem `turn_cost` / `next_turn_estimate` — d37e240
 
 ### Phase 2: Twardy dach — po osiągnięciu limitu żadne nowe płatne wywołanie (#4)
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą: `uv run pytest`
-- [ ] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C2 M31 M32 M33 M34`
+- [x] 2.1 Testy przechodzą: `uv run pytest`
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C2 M31 M32 M33 M34`
 
 #### Manual
 
-- [ ] 2.4 Lokalnie z prawdziwym modelem (`uv run --env-file .env python manage.py runserver`): po dopisaniu w trakcie aktywnej rozmowy wpisu `LLMCharge` na dziś z kwotą równą `DAILY_BUDGET_USD` (kroki w Manual Testing Steps) kolejna wiadomość kończy rozmowę z komunikatem o limicie i godziną resetu, a w logach serwera nie ma nowego wywołania modelu
+- [x] 2.4 Lokalnie z prawdziwym modelem (`uv run --env-file .env python manage.py runserver`): po dopisaniu w trakcie aktywnej rozmowy wpisu `LLMCharge` na dziś z kwotą równą `DAILY_BUDGET_USD` (kroki w Manual Testing Steps) kolejna wiadomość kończy rozmowę z komunikatem o limicie i godziną resetu, a w logach serwera nie ma nowego wywołania modelu
 
 ### Phase 3: Domknięcie
 

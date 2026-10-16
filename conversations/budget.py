@@ -3,8 +3,9 @@
 One place for everything about the per-user daily limit: the cost of a turn (also
 used for the cost of a post-conversation analysis), what was spent today (agent
 turns, analyses and the `LLMCharge` ledger of paid calls that saved neither),
-whether the budget is exhausted, whether the next turn must be the last one and
-when talking is allowed again. Functions take `now` as a parameter so
+whether the budget is exhausted, whether the day's sum already reached the limit
+(the hard ceiling), whether the next turn must be the last one and when talking is
+allowed again. Functions take `now` as a parameter so
 tests can use fixed dates (including daylight-saving changes).
 """
 
@@ -81,11 +82,12 @@ def spent_today(user: User, now: datetime) -> Decimal:
 
 
 def is_exhausted(user: User, now: datetime) -> bool:
-    """The only "budget exhausted" predicate (home page, starting, reset notice).
+    """Whether a new conversation may start (home page, starting, reset notice).
 
-    A conversation ended by the daily limit closes the day even when the spent sum
-    is still just below the budget; otherwise the next conversation would say
-    goodbye in its opening turn.
+    Keeps room for one more turn, unlike `limit_reached`, which only says the day's
+    sum already reached the budget. A conversation ended by the daily limit closes
+    the day even when the spent sum is still just below the budget; otherwise the
+    next conversation would say goodbye in its opening turn.
     """
     ended_by_limit = (
         Conversation.objects.for_user(user)
@@ -101,6 +103,15 @@ def is_exhausted(user: User, now: datetime) -> bool:
         spent_today(user, now) + settings.LLM_TURN_COST_ESTIMATE_USD
         >= settings.DAILY_BUDGET_USD
     )
+
+
+def limit_reached(user: User, now: datetime) -> bool:
+    """The hard ceiling: today's sum already reached the budget.
+
+    No new paid turn and no analysis retry starts once this is true. Unlike
+    `is_exhausted`, it does not forecast the next call.
+    """
+    return spent_today(user, now) >= settings.DAILY_BUDGET_USD
 
 
 def is_final_turn(user: User, conversation: Conversation, now: datetime) -> bool:

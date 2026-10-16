@@ -27,6 +27,12 @@ saved turn keeps its cost in `Message.cost_usd` and a saved analysis in
 `analysis_cost_usd`; a call that saved neither goes to the `LLMCharge` ledger: a
 late result is dropped, but its cost is counted, and so is a timeout (estimated),
 an unusable answer (its usage) and an analysis whose save failed.
+
+The hard ceiling: once today's sum reached the limit (`limit_reached`), no new paid
+call starts. Sending a message and retrying the agent's turn are refused and the
+conversation ends by the daily limit; the day can go over the limit only by a turn
+that started below it. The analysis is different: the first attempt runs whatever
+is left; a retry waits for the reset once the limit is reached.
 """
 
 import logging
@@ -40,7 +46,13 @@ from django.db import IntegrityError, transaction
 
 from accounts.models import User
 
-from .budget import is_exhausted, is_final_turn, next_turn_estimate, turn_cost
+from .budget import (
+    is_exhausted,
+    is_final_turn,
+    limit_reached,
+    next_turn_estimate,
+    turn_cost,
+)
 from .llm import (
     AnalysisResult,
     CallUsage,
@@ -60,6 +72,8 @@ logger = logging.getLogger(__name__)
 # Chat turns are short. The cap keeps one pasted text from eating the daily budget
 # or overflowing the model's context (which would make every retry fail).
 MAX_MESSAGE_LENGTH = 2000
+
+DAILY_LIMIT_REACHED = "You have used today's conversation limit."
 
 
 class ConversationError(Exception):
@@ -119,7 +133,7 @@ def start_conversation(user: User, topic_key: str, now: datetime) -> Conversatio
     if topic is None:
         raise ConversationError("Unknown topic. Please choose one from the list.")
     if is_exhausted(user, now):
-        raise ConversationError("You have used today's conversation limit.")
+        raise ConversationError(DAILY_LIMIT_REACHED)
     memory_prompt = format_memory(
         select_memory(user, topic.key, user.practice_language)
     )
@@ -150,6 +164,8 @@ def send_message(conversation: Conversation, text: str, now: datetime) -> None:
     Only for an active conversation that does not wait for the agent; the check, the
     save and the turn marker happen under one row lock, so a double submit cannot
     save two messages and a parallel retry cannot start a second model call.
+    Once today's sum reached the limit, the message is not saved and the
+    conversation ends by the daily limit.
     """
     text = text.strip()
     if not text:
@@ -164,16 +180,26 @@ def send_message(conversation: Conversation, text: str, now: datetime) -> None:
             raise ConversationError("This conversation has ended.")
         if locked.awaiting_agent_reply:
             raise ConversationError("Please wait for the agent's reply.")
-        Message.objects.create(conversation=locked, role=Message.Role.USER, text=text)
-        _mark_turn_started(locked, now)
+        at_ceiling = limit_reached(locked.user, now)
+        if at_ceiling:
+            end_conversation(locked, Conversation.EndReason.DAILY_LIMIT, now)
+        else:
+            Message.objects.create(
+                conversation=locked, role=Message.Role.USER, text=text
+            )
+            _mark_turn_started(locked, now)
+    # Refused only after the commit: raising inside the block would undo the end.
+    if at_ceiling:
+        raise ConversationError(DAILY_LIMIT_REACHED)
     _generate_and_save(locked, now)
 
 
 def run_agent_turn(conversation: Conversation, now: datetime) -> None:
     """Retry the agent's turn of a conversation that waits for it.
 
-    Refused while another request is still generating that turn. `LLMError`
-    propagates and nothing is saved.
+    Refused while another request is still generating that turn. Once today's sum
+    reached the limit, refused and the conversation ends by the daily limit.
+    `LLMError` propagates and nothing is saved.
     """
     with transaction.atomic():
         locked = _lock(conversation)
@@ -181,7 +207,15 @@ def run_agent_turn(conversation: Conversation, now: datetime) -> None:
             raise ConversationError("There is nothing to retry.")
         if agent_turn_in_progress(locked, now):
             raise ConversationError("The agent is still replying. Please wait.")
-        _mark_turn_started(locked, now)
+        at_ceiling = limit_reached(locked.user, now)
+        if at_ceiling:
+            end_conversation(locked, Conversation.EndReason.DAILY_LIMIT, now)
+        else:
+            _mark_turn_started(locked, now)
+    # Refused only after the commit: raising inside the block would undo the end.
+    if at_ceiling:
+        conversation.refresh_from_db()
+        raise ConversationError(DAILY_LIMIT_REACHED)
     _generate_and_save(locked, now)
     conversation.refresh_from_db()
 
@@ -357,8 +391,8 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
     """Find the learner's mistakes in an ended conversation and save the list.
 
     Runs at most once per conversation. Raises `ConversationError` for an active
-    conversation and `AnalysisNotNeeded` when the list is ready or still being
-    prepared. `LLMError` propagates; the conversation is then marked as failed and
+    conversation and for a retry once today's sum reached the limit, and
+    `AnalysisNotNeeded` when the list is ready or still being prepared. `LLMError` propagates; the conversation is then marked as failed and
     can be analysed again.
     """
     with transaction.atomic():
@@ -391,6 +425,12 @@ def analyze_conversation(conversation: Conversation, now: datetime) -> None:
             )
             conversation.refresh_from_db()
             return
+        if analysis_failed(locked, now) and limit_reached(locked.user, now):
+            # The first attempt runs whatever is left; a retry waits for the reset.
+            raise ConversationError(
+                "You have used today's limit. "
+                "You can get your list of mistakes after the reset."
+            )
         locked.analysis_started_at = now
         locked.save(update_fields=["analysis_started_at"])
 

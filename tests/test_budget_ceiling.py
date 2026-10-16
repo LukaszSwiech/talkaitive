@@ -13,15 +13,20 @@ counts: its real usage when known, otherwise an estimate of 0.03 for a turn with
 an earlier agent turn, the last agent turn's cost after one, and 0.07 for an
 analysis; a call the provider refused at once counts nothing).
 
-Two clocks: `Message.created_at` is the real clock (auto_now_add), so these tests
-use `now = timezone.now()`, taken after seeding.
+Two clocks: `Message.created_at` is the real clock (auto_now_add), so tests that go
+through turns use `now = timezone.now()`, taken after seeding. A test with fixed
+UTC moments (midnight, a daylight-saving day) controls only the ledger and the
+analysis, which are dated by the `now` passed in.
 """
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
 import pytest
 from django.db import DatabaseError
+from django.test import Client
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import PracticeLanguage, User
@@ -29,6 +34,7 @@ from conversations import services
 from conversations.budget import spent_today
 from conversations.llm import AnalysisResult, LLMError, TurnResult
 from conversations.models import Conversation, LLMCharge, Message
+from conversations.services import ConversationError
 from tests.fake_provider import FakeProvider
 from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn
 
@@ -85,6 +91,17 @@ def ended_conversation(user: User) -> Conversation:
     add_turn(conversation, Message.Role.ASSISTANT)
     add_turn(conversation, Message.Role.USER)
     return conversation
+
+
+def spent_earlier_today(user: User, cost: str) -> None:
+    """An earlier conversation, ended today by the user, whose agent turn cost `cost`."""
+    conversation = make_conversation(
+        user,
+        status=Conversation.Status.ENDED,
+        end_reason=Conversation.EndReason.USER,
+        ended_at=timezone.now(),
+    )
+    add_turn(conversation, Message.Role.ASSISTANT, cost)
 
 
 def charges(user: User) -> list[tuple[str, str, Decimal]]:
@@ -265,3 +282,200 @@ def test_analysis_whose_save_fails_still_counts_its_cost(
     assert spent_today(anna, now) - before == Decimal("0.0065")
     assert charges(anna) == [("analysis", "save_failed", Decimal("0.0065"))]
     assert len(fake_provider.requests) == 1
+
+
+# --- the hard ceiling: once the day's sum reaches the limit, no new paid call ------
+#
+# The day may go over the limit only by calls that started below it (at most one
+# turn in flight) and by first analysis attempts. After the ceiling, no request
+# reaches the provider; every refusal says why.
+
+
+def test_one_expensive_call_crosses_the_limit_and_the_next_message_is_refused(
+    anna: User, client: Client, fake_provider: FakeProvider
+) -> None:
+    """Guards M31 (no ceiling in send_message) and M33 (refused, but not ended)."""
+    spent_earlier_today(anna, "0.85")
+    conversation = make_conversation(anna)
+    add_turn(conversation, Message.Role.ASSISTANT, "0.05")
+    # Spent 0.85 + 0.05 = 0.90; 0.90 + the last turn's 0.05 < 1.00, so not final.
+    # 20 000 output tokens: 20000 * 15.00 = 300 000 per 1M = 0.30.
+    fake_provider.reply("Gern!", usage=(0, 0, 20000))
+    client.force_login(anna)
+    send_url = reverse("conversation_send", kwargs={"pk": conversation.pk})
+
+    client.post(send_url, {"text": "Zwei Brötchen, bitte."})
+
+    conversation.refresh_from_db()
+    # 0.90 + 0.30 = 1.20: one call went over the limit, the conversation goes on.
+    assert spent_today(anna, timezone.now()) == Decimal("1.20")
+    assert conversation.status == Conversation.Status.ACTIVE
+
+    page = client.post(send_url, {"text": "Noch ein Brot."}, follow=True)
+
+    conversation.refresh_from_db()
+    assert conversation.end_reason == Conversation.EndReason.DAILY_LIMIT
+    assert not conversation.messages.filter(text="Noch ein Brot.").exists()
+    assert len(fake_provider.requests) == 1
+    assert "used today&#x27;s conversation limit" in page.content.decode()
+    assert "You can talk again after" in page.content.decode()
+
+
+def test_turn_retries_stop_once_the_limit_is_reached(
+    anna: User, fake_provider: FakeProvider
+) -> None:
+    """Guards M32 (no ceiling in run_agent_turn)."""
+    spent_earlier_today(anna, "0.94")
+    conversation = make_conversation(anna)
+    add_turn(conversation, Message.Role.ASSISTANT, "0.02")
+    # Spent 0.94 + 0.02 = 0.96. Every attempt times out twice (the SDK retries once)
+    # and is charged the last agent turn's 0.02.
+    fake_provider.hang(times=4)
+
+    with pytest.raises(LLMError):
+        services.send_message(conversation, "Zwei Brötchen, bitte.", timezone.now())
+    # 0.96 + 0.02 = 0.98, below the limit: "Try again" (now the farewell turn) runs.
+    with pytest.raises(LLMError):
+        services.run_agent_turn(conversation, timezone.now())
+    # 0.98 + 0.02 = 1.00: the ceiling.
+    with pytest.raises(ConversationError):
+        services.run_agent_turn(conversation, timezone.now())
+
+    conversation.refresh_from_db()
+    assert spent_today(anna, timezone.now()) == Decimal("1.00")
+    assert conversation.end_reason == Conversation.EndReason.DAILY_LIMIT
+    assert len(fake_provider.requests) == 4
+
+
+def test_message_just_below_the_limit_still_gets_the_farewell_turn(
+    anna: User, fake_provider: FakeProvider
+) -> None:
+    spent_earlier_today(anna, "0.979999")
+    conversation = make_conversation(anna)
+    add_turn(conversation, Message.Role.ASSISTANT, "0.02")
+    # Spent 0.979999 + 0.02 = 0.999999 < 1.00: the call starts, as the farewell turn
+    # (0.999999 + the last turn's 0.02 >= 1.00).
+    fake_provider.reply("Tschüss!")
+
+    services.send_message(conversation, "Zwei Brötchen, bitte.", timezone.now())
+
+    conversation.refresh_from_db()
+    assert conversation.messages.filter(text="Tschüss!").exists()
+    assert conversation.end_reason == Conversation.EndReason.DAILY_LIMIT
+    assert len(fake_provider.requests) == 1
+
+
+def test_message_at_exactly_the_limit_is_refused_without_a_call(
+    anna: User, fake_provider: FakeProvider
+) -> None:
+    spent_earlier_today(anna, "0.98")
+    conversation = make_conversation(anna)
+    add_turn(conversation, Message.Role.ASSISTANT, "0.02")
+    # Spent 0.98 + 0.02 = 1.00, the budget itself.
+
+    with pytest.raises(ConversationError):
+        services.send_message(conversation, "Zwei Brötchen, bitte.", timezone.now())
+
+    conversation.refresh_from_db()
+    assert not conversation.messages.filter(text="Zwei Brötchen, bitte.").exists()
+    assert conversation.end_reason == Conversation.EndReason.DAILY_LIMIT
+    assert len(fake_provider.requests) == 0
+
+
+def test_start_at_the_limit_is_still_refused_without_a_call(
+    anna: User, fake_provider: FakeProvider
+) -> None:
+    spent_earlier_today(anna, "1.00")
+
+    with pytest.raises(ConversationError):
+        services.start_conversation(anna, "bakery", timezone.now())
+
+    assert len(fake_provider.requests) == 0
+
+
+def add_charge(conversation: Conversation, cost: str, at: datetime) -> None:
+    """A ledger entry at a chosen moment (the ledger is dated by `now`, not the clock)."""
+    LLMCharge.objects.create(
+        user=conversation.user,
+        conversation=conversation,
+        kind=LLMCharge.Kind.TURN,
+        reason=LLMCharge.Reason.ESTIMATE,
+        cost_usd=Decimal(cost),
+        charged_at=at,
+    )
+
+
+def test_analysis_retry_waits_for_the_reset_across_the_autumn_midnight(
+    anna: User, fake_provider: FakeProvider
+) -> None:
+    """The first attempt runs whatever is left (S-02); a retry waits for the reset.
+
+    Guards M34 (no ceiling on the analysis retry). 25 October 2026 is 25 hours long
+    in Berlin: the day starts at 24 October 22:00 UTC (CEST) and the next midnight
+    is 25 October 23:00 UTC (CET).
+    """
+    conversation = ended_conversation(anna)
+    add_charge(conversation, "1.00", datetime(2026, 10, 25, 10, 0, tzinfo=UTC))
+    fake_provider.hang()
+
+    # 12:00 CET, the limit already reached: the first attempt still runs.
+    with pytest.raises(LLMError):
+        services.analyze_conversation(
+            conversation, datetime(2026, 10, 25, 11, 0, tzinfo=UTC)
+        )
+    assert len(fake_provider.requests) == 1
+
+    # 23:59 CET, still the same day: the retry is refused without a request.
+    with pytest.raises(ConversationError):
+        services.analyze_conversation(
+            conversation, datetime(2026, 10, 25, 22, 59, tzinfo=UTC)
+        )
+    assert len(fake_provider.requests) == 1
+
+    # 00:00 CET on 26 October: a new day, the retry runs and saves the list.
+    fake_provider.analysis()
+    services.analyze_conversation(
+        conversation, datetime(2026, 10, 25, 23, 0, tzinfo=UTC)
+    )
+
+    assert conversation.analyzed_at is not None
+    assert len(fake_provider.requests) == 2
+
+
+def failed_analysis(user: User) -> Conversation:
+    """An ended conversation whose analysis failed a moment ago."""
+    conversation = ended_conversation(user)
+    Conversation.objects.filter(pk=conversation.pk).update(
+        analysis_failed_at=timezone.now()
+    )
+    return conversation
+
+
+def test_failed_analysis_at_the_limit_shows_the_reset_time_instead_of_try_again(
+    anna: User, client: Client
+) -> None:
+    conversation = failed_analysis(anna)
+    add_charge(conversation, "1.00", timezone.now())
+    client.force_login(anna)
+
+    page = client.get(reverse("conversation_detail", kwargs={"pk": conversation.pk}))
+
+    content = page.content.decode()
+    assert "We could not prepare your list of mistakes." in content
+    assert "You can talk again after" in content
+    analyze_url = reverse("conversation_analyze", kwargs={"pk": conversation.pk})
+    assert analyze_url not in content
+
+
+def test_failed_analysis_below_the_limit_offers_try_again(
+    anna: User, client: Client
+) -> None:
+    conversation = failed_analysis(anna)
+    add_charge(conversation, "0.99", timezone.now())
+    client.force_login(anna)
+
+    page = client.get(reverse("conversation_detail", kwargs={"pk": conversation.pk}))
+
+    content = page.content.decode()
+    assert reverse("conversation_analyze", kwargs={"pk": conversation.pk}) in content
+    assert "You can talk again after" not in content

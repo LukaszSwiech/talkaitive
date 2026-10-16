@@ -3,7 +3,7 @@
 Removed `.for_user()` calls and query filters, deletion cleanup and signal wiring,
 cascade rules, guard registries (a new route or model), module constants, prompt
 labels, and the budget's cost paths (error branches in `llm.py`, which mutmut does
-not mutate, and ledger terms and writes).
+not mutate, ledger terms and writes, and the hard ceiling's checks).
 For each mutant the repo is copied to a temporary directory, exactly one fragment is
 replaced there and the test suite runs with the project's `.venv` interpreter. The
 working tree is never written, so interrupting the script is harmless.
@@ -373,6 +373,56 @@ MUTANTS: tuple[Mutant, ...] = (
             "            )\n"
         ),
         mutated="            pass\n",
+    ),
+    Mutant(
+        id="M31",
+        area="budżet: send_message bez sprawdzenia dachu",
+        path="conversations/services.py",
+        original=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+        ),
+        mutated=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = False\n"
+        ),
+    ),
+    Mutant(
+        id="M32",
+        area="budżet: run_agent_turn bez sprawdzenia dachu",
+        path="conversations/services.py",
+        original=(
+            'raise ConversationError("The agent is still replying. Please wait.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+        ),
+        mutated=(
+            'raise ConversationError("The agent is still replying. Please wait.")\n'
+            "        at_ceiling = False\n"
+        ),
+    ),
+    Mutant(
+        id="M33",
+        area="budżet: send_message odmawia na dachu, ale nie kończy rozmowy",
+        path="conversations/services.py",
+        original=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+            "        if at_ceiling:\n"
+            "            end_conversation(locked, Conversation.EndReason.DAILY_LIMIT, now)\n"
+        ),
+        mutated=(
+            'raise ConversationError("Please wait for the agent\'s reply.")\n'
+            "        at_ceiling = limit_reached(locked.user, now)\n"
+            "        if at_ceiling:\n"
+            "            pass\n"
+        ),
+    ),
+    Mutant(
+        id="M34",
+        area="budżet: analyze_conversation bez dachu na ponowienie",
+        path="conversations/services.py",
+        original="if analysis_failed(locked, now) and limit_reached(locked.user, now):",
+        mutated="if False:",
     ),
 )
 
