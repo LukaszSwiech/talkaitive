@@ -6,7 +6,9 @@ from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.models import Session
 from django.db import models
+from django.http import HttpResponse
 from django.test import Client
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
@@ -353,6 +355,89 @@ def test_deleting_account_removes_admin_log_entries_about_that_user(
     login_client(anna).post(DELETE_URL, {"password": PASSWORD})
 
     assert list(LogEntry.objects.all()) == [about_lukasz]
+
+
+def delete_on_admin_delete_page(client: Client, user: User) -> HttpResponse:
+    """The owner confirms on the user's "Delete" page in the admin."""
+    return client.post(
+        reverse("admin:accounts_user_delete", args=[user.pk]), {"post": "yes"}
+    )
+
+
+def delete_with_admin_bulk_action(client: Client, user: User) -> HttpResponse:
+    """The owner ticks the user in the admin user list and confirms "Delete selected"."""
+    return client.post(
+        reverse("admin:accounts_user_changelist"),
+        {"action": "delete_selected", "_selected_action": [user.pk], "post": "yes"},
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "delete_in_admin",
+    [delete_on_admin_delete_page, delete_with_admin_bulk_action],
+    ids=["delete-page", "bulk-delete-selected"],
+)
+def test_deleting_user_in_admin_removes_sessions_and_log_entries_about_them(
+    delete_in_admin: Callable[[Client, User], HttpResponse],
+    anna: User,
+    lukasz: User,
+    owner: User,
+) -> None:
+    """When the owner deletes Anna in `/admin/`, nothing about her is left: no
+    session, no admin log entry about her (not even the entry about this deletion,
+    whose text is her e-mail) and no row of her data. The sessions of Łukasz and the
+    owner, Łukasz's data and the log entry about Łukasz stay.
+
+    The admin never calls `delete_account`, so only cleanup that runs on every
+    deletion of a `User` covers this path. Source: PRD FR-013 and NFR "Usuwanie
+    danych" (all of the user's data is removed); test-plan.md §2 #6; the path was
+    found in the research of testing-privacy-and-deletion-boundaries, §6.3.
+    """
+    rows_of_anna = {model: make(anna) for model, make in FACTORIES.items()}
+    rows_of_lukasz = {model: make(lukasz) for model, make in FACTORIES.items()}
+    make_log_entry(owner, about=anna)
+    about_lukasz = make_log_entry(owner, about=lukasz)
+    login_client(anna)
+    login_client(lukasz)
+    owner_client = login_client(owner)
+    anna_id = str(anna.pk)
+
+    response = delete_in_admin(owner_client, anna)
+
+    assert response.status_code == 302
+    assert not User.objects.filter(pk=anna.pk).exists()
+    session_users = {
+        s.get_decoded().get("_auth_user_id") for s in Session.objects.all()
+    }
+    assert session_users == {str(lukasz.pk), str(owner.pk)}, (
+        "Sessions of the deleted user are left, or sessions of other users ended"
+    )
+    user_type = ContentType.objects.get_for_model(User)
+    about_anna = [
+        entry
+        for entry in LogEntry.objects.all()
+        if (entry.content_type_id == user_type.pk and entry.object_id == anna_id)
+        or anna.email in entry.object_repr
+    ]
+    assert about_anna == [], (
+        "Admin log entries about the deleted user are left (older ones or the "
+        "entry about this deletion)"
+    )
+    assert LogEntry.objects.filter(pk=about_lukasz.pk).exists(), (
+        "The admin log entry about another user was deleted"
+    )
+    for model in FACTORIES:
+        anna_pks = {row.pk for row in rows_of_anna[model]}
+        lukasz_pks = {row.pk for row in rows_of_lukasz[model]}
+        assert anna_pks and lukasz_pks, f"{model.__name__}: the factory built no rows"
+        remaining = set(model._default_manager.values_list("pk", flat=True))
+        assert remaining & anna_pks == set(), (
+            f"{model.__name__}: rows of the deleted user are left"
+        )
+        assert lukasz_pks <= remaining, (
+            f"{model.__name__}: rows of another user were deleted"
+        )
 
 
 @pytest.mark.django_db

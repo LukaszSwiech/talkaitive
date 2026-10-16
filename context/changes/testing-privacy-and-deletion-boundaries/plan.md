@@ -318,26 +318,26 @@ Brak migracji: sygnał i testy nie zmieniają schematu. Mutanty `M22`/`M23` zmie
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą: `uv run pytest`
-- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M22 M23`
+- [x] 2.1 Testy przechodzą: `uv run pytest` — df76370
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — df76370
+- [x] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M22 M23` — df76370
 
 #### Manual
 
-- [x] 2.4 Przegląd diffu: `MODEL_DECISIONS` i `FACTORIES` są literałami porównywanymi z rejestrem Django, nie z sobą nawzajem
+- [x] 2.4 Przegląd diffu: `MODEL_DECISIONS` i `FACTORIES` są literałami porównywanymi z rejestrem Django, nie z sobą nawzajem — df76370
 
 ### Phase 3: Usuwanie przez `/admin/` (#6)
 
 #### Automated
 
-- [ ] 3.1 Nowy test admina jest czerwony przed poprawką: `uv run pytest tests/test_account_deletion.py -k admin`
-- [ ] 3.2 Testy przechodzą po poprawce: `uv run pytest`
-- [ ] 3.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 3.4 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M19 M20 M21 M24`
+- [x] 3.1 Nowy test admina jest czerwony przed poprawką: `uv run pytest tests/test_account_deletion.py -k admin`
+- [x] 3.2 Testy przechodzą po poprawce: `uv run pytest`
+- [x] 3.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.4 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M19 M20 M21 M24`
 
 #### Manual
 
-- [ ] 3.5 Lokalnie (`uv run python manage.py runserver`): właściciel usuwa testowego użytkownika w `/admin/`, a w „Recent actions” nie zostaje wpis z jego e-mailem
+- [x] 3.5 Lokalnie (`uv run python manage.py runserver`): właściciel usuwa testowego użytkownika w `/admin/`, a w „Recent actions” nie zostaje wpis z jego e-mailem
 
 ### Phase 4: Domknięcie
 

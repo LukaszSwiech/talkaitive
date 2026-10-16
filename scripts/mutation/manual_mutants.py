@@ -235,6 +235,36 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     Mutant(
+        id="M19",
+        area="usuwanie: sprzątanie bez pętli po sesjach użytkownika",
+        path="accounts/services.py",
+        original=(
+            "    for session in Session.objects.iterator():\n"
+            '        if session.get_decoded().get("_auth_user_id") == user_id:\n'
+            "            session.delete()\n"
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M20",
+        area="usuwanie: sprzątanie bez kasowania LogEntry o użytkowniku",
+        path="accounts/services.py",
+        original=(
+            "    LogEntry.objects.filter(\n"
+            "        content_type=ContentType.objects.get_for_model(User),\n"
+            "        object_id=user_id,\n"
+            "    ).delete()\n"
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M21",
+        area="usuwanie: LogEntry o użytkowniku bez filtra object_id=",
+        path="accounts/services.py",
+        original="        object_id=user_id,\n",
+        mutated="",
+    ),
+    Mutant(
         id="M22",
         area="usuwanie: Message.conversation PROTECT zamiast CASCADE",
         path="conversations/models.py",
@@ -258,6 +288,19 @@ MUTANTS: tuple[Mutant, ...] = (
             "class NewsletterSignup(models.Model):\n"
             "    email = models.EmailField()\n"
         ),
+    ),
+    Mutant(
+        id="M24",
+        area="usuwanie: odbiornik pre_delete niepodłączony w AccountsConfig.ready",
+        path="accounts/apps.py",
+        original=(
+            "        pre_delete.connect(\n"
+            "            remove_sessions_and_log_entries_about_user,\n"
+            "            sender=User,\n"
+            '            dispatch_uid="accounts.remove_sessions_and_log_entries_about_user",\n'
+            "        )\n"
+        ),
+        mutated="        pass\n",
     ),
 )
 
