@@ -306,25 +306,25 @@ Brak migracji: sygnał i testy nie zmieniają schematu. Mutanty `M22`/`M23` zmie
 
 #### Automated
 
-- [x] 1.1 Testy przechodzą: `uv run pytest`
-- [x] 1.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 1.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C1 M16 M17 M18`
+- [x] 1.1 Testy przechodzą: `uv run pytest` — ae92858
+- [x] 1.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — ae92858
+- [x] 1.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C1 M16 M17 M18` — ae92858
 
 #### Manual
 
-- [x] 1.4 Przegląd diffu: `ID_ROUTES` jest literałem, a strażnik nie wylicza oczekiwanego zbioru z routera
+- [x] 1.4 Przegląd diffu: `ID_ROUTES` jest literałem, a strażnik nie wylicza oczekiwanego zbioru z routera — ae92858
 
 ### Phase 2: Rejestr modeli i test „żaden model nie zostawia wierszy” (#6)
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą: `uv run pytest`
-- [ ] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M22 M23`
+- [x] 2.1 Testy przechodzą: `uv run pytest`
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M22 M23`
 
 #### Manual
 
-- [ ] 2.4 Przegląd diffu: `MODEL_DECISIONS` i `FACTORIES` są literałami porównywanymi z rejestrem Django, nie z sobą nawzajem
+- [x] 2.4 Przegląd diffu: `MODEL_DECISIONS` i `FACTORIES` są literałami porównywanymi z rejestrem Django, nie z sobą nawzajem
 
 ### Phase 3: Usuwanie przez `/admin/` (#6)
 

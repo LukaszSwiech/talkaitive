@@ -234,6 +234,31 @@ MUTANTS: tuple[Mutant, ...] = (
             'name="conversation_copy"),\n'
         ),
     ),
+    Mutant(
+        id="M22",
+        area="usuwanie: Message.conversation PROTECT zamiast CASCADE",
+        path="conversations/models.py",
+        original='Conversation, on_delete=models.CASCADE, related_name="messages"',
+        mutated='Conversation, on_delete=models.PROTECT, related_name="messages"',
+    ),
+    # No migration on purpose: only the model registry guard (metadata, no table)
+    # must kill it.
+    Mutant(
+        id="M23",
+        area="usuwanie: nowy model z e-mailem bez decyzji w MODEL_DECISIONS",
+        path="conversations/models.py",
+        original=(
+            "    def __str__(self) -> str:\n"
+            '        return f"{self.category}: {self.wrong} -> {self.correct}"\n'
+        ),
+        mutated=(
+            "    def __str__(self) -> str:\n"
+            '        return f"{self.category}: {self.wrong} -> {self.correct}"\n'
+            "\n\n"
+            "class NewsletterSignup(models.Model):\n"
+            "    email = models.EmailField()\n"
+        ),
+    ),
 )
 
 
