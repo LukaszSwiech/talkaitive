@@ -1,6 +1,8 @@
 """Hand-written mutants that mutmut cannot generate.
 
-Removed `.for_user()` calls and query filters, module constants and prompt labels.
+Removed `.for_user()` calls and query filters, deletion cleanup and signal wiring,
+cascade rules, guard registries (a new route or model), module constants and prompt
+labels.
 For each mutant the repo is copied to a temporary directory, exactly one fragment is
 replaced there and the test suite runs with the project's `.venv` interpreter. The
 working tree is never written, so interrupting the script is harmless.

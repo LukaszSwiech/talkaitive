@@ -330,14 +330,14 @@ Brak migracji: sygnał i testy nie zmieniają schematu. Mutanty `M22`/`M23` zmie
 
 #### Automated
 
-- [x] 3.1 Nowy test admina jest czerwony przed poprawką: `uv run pytest tests/test_account_deletion.py -k admin`
-- [x] 3.2 Testy przechodzą po poprawce: `uv run pytest`
-- [x] 3.3 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 3.4 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M19 M20 M21 M24`
+- [x] 3.1 Nowy test admina jest czerwony przed poprawką: `uv run pytest tests/test_account_deletion.py -k admin` — 375e2e4
+- [x] 3.2 Testy przechodzą po poprawce: `uv run pytest` — 375e2e4
+- [x] 3.3 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 375e2e4
+- [x] 3.4 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py M19 M20 M21 M24` — 375e2e4
 
 #### Manual
 
-- [x] 3.5 Lokalnie (`uv run python manage.py runserver`): właściciel usuwa testowego użytkownika w `/admin/`, a w „Recent actions” nie zostaje wpis z jego e-mailem
+- [x] 3.5 Lokalnie (`uv run python manage.py runserver`): właściciel usuwa testowego użytkownika w `/admin/`, a w „Recent actions” nie zostaje wpis z jego e-mailem — 375e2e4
 
 ### Phase 4: Domknięcie
 

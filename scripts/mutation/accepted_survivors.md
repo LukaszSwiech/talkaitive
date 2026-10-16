@@ -2,7 +2,7 @@
 
 Jedno miejsce dla każdego mutanta, który przeżywa testy i którego **świadomie** nie zabijamy. Dotyczy obu źródeł:
 
-- ręcznej listy w `scripts/mutation/manual_mutants.py` (id `C1`, `C2`, `M1`–`M18`, `M22`, `M23`); wpis tutaj idzie w parze z `expected="accepted"` przy tym mutancie w skrypcie,
+- ręcznej listy w `scripts/mutation/manual_mutants.py` (id `C1`, `C2`, `M1`–`M24`); wpis tutaj idzie w parze z `expected="accepted"` przy tym mutancie w skrypcie,
 - przebiegów mutmut (nazwa mutanta z raportu, np. `conversations.budget.x_is_exhausted__mutmut_3`).
 
 Mutant, którego nie ma w tej tabeli, a przeżywa, to luka w testach do naprawienia, nie wynik do przyjęcia.

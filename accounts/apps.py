@@ -11,7 +11,7 @@ class AccountsConfig(AppConfig):
         from .models import User
         from .services import remove_sessions_and_log_entries_about_user
 
-        # Every way of deleting a user (the account page, the admin, the shell)
+        # Every ORM deletion of a user (the account page, the admin, the shell)
         # also removes their sessions and the admin log entries about them.
         pre_delete.connect(
             remove_sessions_and_log_entries_about_user,

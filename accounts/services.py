@@ -7,10 +7,12 @@ Two things are not reached by the cascade: the user's sessions (the session tabl
 stores the id inside an encoded blob, not as a foreign key) and the admin log
 entries ABOUT the user (`LogEntry.object_id` is text, not a foreign key).
 `remove_sessions_and_log_entries_about_user` removes them. It is a `pre_delete`
-receiver for `User`, connected in `AccountsConfig.ready`, so it runs on every way of
-deleting a user: this page, the admin's delete page and its "Delete selected" action
-(a queryset `delete()` sends `pre_delete` for every user) and `manage.py shell`. It
-runs inside the deletion's transaction, through the ORM, never raw SQL.
+receiver for `User`, connected in `AccountsConfig.ready`, so it runs on every ORM
+deletion of a user (`Model.delete()` / `QuerySet.delete()`): the account page, the
+admin's delete page and its "Delete selected" action (a queryset `delete()` sends
+`pre_delete` for every user) and `manage.py shell`. Raw SQL (e.g. a database console)
+and data migrations through a historical model skip it. It runs inside the
+deletion's transaction, through the ORM, never raw SQL.
 
 Not covered, because it is outside the application: copies held by OpenAI (up to 30
 days for abuse monitoring) and database backups. See the PRD, NFR "Usuwanie danych".
