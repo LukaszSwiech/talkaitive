@@ -94,7 +94,7 @@ Profil bazy testów (2026-10-13): `meaningful` (na granicy) — pytest skonfigur
 | granica LLM | atrapy w repo na granicy OpenAI SDK | openai 3.24.0 | testy klasyczne nigdy nie wołają prawdziwego API |
 | lint + format | ruff | 0.16.8 | lokalnie przez post-edit hook; CI (`.github/workflows/ci.yml`, PR i push do `main`) — wired |
 | mutation testing | mutmut — checked: 2026-10-15 | 3.8.0 | zainstalowany (dev), `[tool.mutmut]` w `pyproject.toml` na 4 modułach (`accounts/ownership.py`, `conversations/budget.py`, `conversations/memory.py`, `conversations/services.py`); obok niego ręczna lista `scripts/mutation/manual_mutants.py`; oba lokalnie i okresowo, nie w CI (Railway czeka na wszystkie workflow na commicie) |
-| e2e | none — see §7 | — | świadomie bez Playwright, dopóki research nie pokaże awarii widocznej tylko w JS |
+| e2e | Playwright Test (`@playwright/test`, Node) + `playwright-cli` do eksploracji — checked: 2026-10-16 | 1.64.1 / 0.1.22 | obowiązkowa warstwa od 2026-10-16 (§7); konfiguracja, seed i komendy: `context/foundation/test-stack.md` (`## E2E`); na razie tylko lokalnie, nie w CI |
 | AI-native eval | np. DeepEval albo wtyczka pytest z LLM-as-judge — checked: 2026-10-13 | n/a | §3 Phase 5. When NOT to use: logika deterministyczna (koszt, ranking pamięci, scalanie błędów, izolacja) — tam wystarczy zwykły test; nie w CI na każdy PR (koszt, niedeterminizm) |
 
 **Stack grounding tools (current session):**
@@ -210,7 +210,7 @@ Exclusions agreed during the rollout (Phase 2 interview, Q5). Future
 contributors should respect these unless the underlying assumption changes.
 
 - **Obciążenie i wydajność** — aplikacja jest dla max 10 użytkowników, a bez observability nie ma czym analizować wydajności. Re-evaluate, gdy pojawi się observability albo więcej użytkowników (priorytet wzrośnie — autor jest performance engineerem). (Source: Phase 2 interview Q5.)
-- **Pełne e2e w przeglądarce (Playwright)** — ryzyka jakości modelu pokrywają evale AI, a stany strony — testy integracyjne. Re-evaluate, jeśli research pokaże awarię widoczną tylko w JS (np. auto-wysyłka lub odświeżanie). (Source: Phase 2 interview Q3.)
+- ~~**Pełne e2e w przeglądarce (Playwright)**~~ — wykluczenie zniesione 2026-10-16: e2e w przeglądarce (Playwright) jest teraz obowiązkową warstwą testów. Świadoma decyzja zespołu, gdy poziom projektu na to pozwolił; konfiguracja i seed: `context/foundation/test-stack.md` (`## E2E`). Pierwotny powód wykluczenia: Phase 2 interview Q3.
 
 ## 8. Freshness Ledger
 
