@@ -1,10 +1,14 @@
+from collections.abc import Callable
+
 import pytest
 from django.apps import apps
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.models import Session
 from django.db import models
+from django.http import HttpResponse
 from django.test import Client
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
@@ -166,6 +170,163 @@ def test_every_relation_to_user_data_is_known_and_cascades() -> None:
         )
 
 
+# Decision for user data: deleted with the account by ON DELETE CASCADE.
+CASCADE = "CASCADE"
+
+# One deletion decision for every model of the project's own apps (not `django.*`).
+# Written out by hand, never computed from the registry: the guard below compares
+# the registry with this literal. The value is `CASCADE` (user data, deleted with
+# the account; `User` is the root) or the reason why the model holds no user data.
+MODEL_DECISIONS: dict[type[models.Model], str] = {
+    User: CASCADE,
+    Conversation: CASCADE,
+    Message: CASCADE,
+    Mistake: CASCADE,
+    OwnedNote: CASCADE,
+}
+
+
+def app_models() -> set[type[models.Model]]:
+    """Every installed model whose app is not part of Django itself."""
+    return {
+        model
+        for model in apps.get_models()
+        if not model._meta.app_config.name.startswith("django.")
+    }
+
+
+def test_every_app_model_has_a_deletion_decision() -> None:
+    """Every model of the project's apps has a decision in `MODEL_DECISIONS`.
+
+    A new model without a decision fails here, so nobody adds a data model without
+    deciding what deleting an account does with it. A model decided as `CASCADE`
+    must really be reached by the cascade from `User`.
+    Source: PRD FR-013 and NFR "Usuwanie danych" (deleting the account removes all
+    of the user's data); test-plan.md §2 #6 (a new data model without a conscious
+    decision fails the test).
+    """
+    found = app_models()
+
+    assert found == set(MODEL_DECISIONS), (
+        "Models of the project's apps without a deletion decision (or decisions "
+        f"for models that are gone): {sorted(m.__name__ for m in found ^ set(MODEL_DECISIONS))}. "
+        "If the model holds user data, give it a ForeignKey with on_delete=CASCADE "
+        "to User (or to a model deleted with it), add it to MODEL_DECISIONS as "
+        "CASCADE and add a factory to FACTORIES below. Otherwise add it to "
+        "MODEL_DECISIONS with the reason why it holds no user data."
+    )
+    not_reached = {
+        model.__name__
+        for model, decision in MODEL_DECISIONS.items()
+        if decision == CASCADE and model not in user_data_models()
+    }
+    assert not_reached == set(), (
+        f"Decided as CASCADE, but deleting a user does not cascade to them: "
+        f"{sorted(not_reached)}. Give each a ForeignKey with on_delete=CASCADE to "
+        "User or to a model deleted with it."
+    )
+    no_reason = {
+        model.__name__
+        for model, decision in MODEL_DECISIONS.items()
+        if decision != CASCADE and not decision.strip()
+    }
+    assert no_reason == set(), (
+        f"A model that holds no user data needs the reason written out: {no_reason}"
+    )
+
+
+def make_conversation_rows(user: User) -> list[models.Model]:
+    return [make_analysed_conversation(user)]
+
+
+def make_message_rows(user: User) -> list[models.Model]:
+    return list(make_analysed_conversation(user).messages.all())
+
+
+def make_mistake_rows(user: User) -> list[models.Model]:
+    return list(make_analysed_conversation(user).mistakes.all())
+
+
+def make_owned_note_rows(user: User) -> list[models.Model]:
+    return [OwnedNote.objects.create(user=user, text="A note.")]
+
+
+def make_log_entry_rows(user: User) -> list[models.Model]:
+    # Written BY the user about their own conversation, not about the user: the
+    # service removes entries about the user by hand, so only the CASCADE on
+    # `LogEntry.user` can remove this one.
+    conversation = make_analysed_conversation(user)
+    entry = LogEntry.objects.create(
+        user=user,
+        content_type=ContentType.objects.get_for_model(Conversation),
+        object_id=str(conversation.pk),
+        object_repr=str(conversation),
+        action_flag=CHANGE,
+        change_message="Changed.",
+    )
+    return [entry]
+
+
+# For every model of user data: builds at least one row of that model for the given
+# user and returns those rows. Written out by hand; the guard below compares its
+# keys with `user_data_models()`.
+FACTORIES: dict[type[models.Model], Callable[[User], list[models.Model]]] = {
+    User: lambda user: [user],
+    Conversation: make_conversation_rows,
+    Message: make_message_rows,
+    Mistake: make_mistake_rows,
+    OwnedNote: make_owned_note_rows,
+    LogEntry: make_log_entry_rows,
+}
+
+
+def test_every_user_data_model_has_a_factory() -> None:
+    """Every model deleted with a user (the CASCADE closure) is in `FACTORIES`.
+
+    A new model of user data without a factory fails here, so the "no row is left"
+    test below always covers every such model.
+    Source: PRD FR-013 and NFR "Usuwanie danych"; test-plan.md §2 #6.
+    """
+    found = user_data_models()
+
+    assert found == set(FACTORIES), (
+        "Models deleted with a user without a factory in FACTORIES (or factories "
+        f"for models no longer deleted with a user): "
+        f"{sorted(m.__name__ for m in found ^ set(FACTORIES))}. Add a factory that "
+        "builds at least one row of the model for the given user."
+    )
+
+
+@pytest.mark.django_db
+def test_deleting_account_leaves_no_row_of_that_user_in_any_model(
+    anna: User, lukasz: User
+) -> None:
+    """After Anna deletes her account no row of hers is left in any model of user
+    data, and every row of Łukasz is still there.
+
+    Source: PRD FR-013 and NFR "Usuwanie danych" (all of the user's data is removed
+    from the app's database right after confirmation); PRD Guardrails (another
+    user's data is not touched); test-plan.md §2 #6.
+    """
+    rows_of_anna = {model: make(anna) for model, make in FACTORIES.items()}
+    rows_of_lukasz = {model: make(lukasz) for model, make in FACTORIES.items()}
+
+    response = login_client(anna).post(DELETE_URL, {"password": PASSWORD})
+
+    assert response.status_code == 302
+    for model in FACTORIES:
+        anna_pks = {row.pk for row in rows_of_anna[model]}
+        lukasz_pks = {row.pk for row in rows_of_lukasz[model]}
+        assert anna_pks and lukasz_pks, f"{model.__name__}: the factory built no rows"
+        remaining = set(model._default_manager.values_list("pk", flat=True))
+        assert remaining & anna_pks == set(), (
+            f"{model.__name__}: rows of the deleted user are left"
+        )
+        assert lukasz_pks <= remaining, (
+            f"{model.__name__}: rows of another user were deleted"
+        )
+
+
 @pytest.mark.django_db
 def test_deleting_account_ends_all_sessions_of_that_user_only(
     anna: User, lukasz: User
@@ -194,6 +355,89 @@ def test_deleting_account_removes_admin_log_entries_about_that_user(
     login_client(anna).post(DELETE_URL, {"password": PASSWORD})
 
     assert list(LogEntry.objects.all()) == [about_lukasz]
+
+
+def delete_on_admin_delete_page(client: Client, user: User) -> HttpResponse:
+    """The owner confirms on the user's "Delete" page in the admin."""
+    return client.post(
+        reverse("admin:accounts_user_delete", args=[user.pk]), {"post": "yes"}
+    )
+
+
+def delete_with_admin_bulk_action(client: Client, user: User) -> HttpResponse:
+    """The owner ticks the user in the admin user list and confirms "Delete selected"."""
+    return client.post(
+        reverse("admin:accounts_user_changelist"),
+        {"action": "delete_selected", "_selected_action": [user.pk], "post": "yes"},
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "delete_in_admin",
+    [delete_on_admin_delete_page, delete_with_admin_bulk_action],
+    ids=["delete-page", "bulk-delete-selected"],
+)
+def test_deleting_user_in_admin_removes_sessions_and_log_entries_about_them(
+    delete_in_admin: Callable[[Client, User], HttpResponse],
+    anna: User,
+    lukasz: User,
+    owner: User,
+) -> None:
+    """When the owner deletes Anna in `/admin/`, nothing about her is left: no
+    session, no admin log entry about her (not even the entry about this deletion,
+    whose text is her e-mail) and no row of her data. The sessions of Łukasz and the
+    owner, Łukasz's data and the log entry about Łukasz stay.
+
+    The admin never calls `delete_account`, so only cleanup that runs on every
+    deletion of a `User` covers this path. Source: PRD FR-013 and NFR "Usuwanie
+    danych" (all of the user's data is removed); test-plan.md §2 #6; the path was
+    found in the research of testing-privacy-and-deletion-boundaries, §6.3.
+    """
+    rows_of_anna = {model: make(anna) for model, make in FACTORIES.items()}
+    rows_of_lukasz = {model: make(lukasz) for model, make in FACTORIES.items()}
+    make_log_entry(owner, about=anna)
+    about_lukasz = make_log_entry(owner, about=lukasz)
+    login_client(anna)
+    login_client(lukasz)
+    owner_client = login_client(owner)
+    anna_id = str(anna.pk)
+
+    response = delete_in_admin(owner_client, anna)
+
+    assert response.status_code == 302
+    assert not User.objects.filter(pk=anna.pk).exists()
+    session_users = {
+        s.get_decoded().get("_auth_user_id") for s in Session.objects.all()
+    }
+    assert session_users == {str(lukasz.pk), str(owner.pk)}, (
+        "Sessions of the deleted user are left, or sessions of other users ended"
+    )
+    user_type = ContentType.objects.get_for_model(User)
+    about_anna = [
+        entry
+        for entry in LogEntry.objects.all()
+        if (entry.content_type_id == user_type.pk and entry.object_id == anna_id)
+        or anna.email in entry.object_repr
+    ]
+    assert about_anna == [], (
+        "Admin log entries about the deleted user are left (older ones or the "
+        "entry about this deletion)"
+    )
+    assert LogEntry.objects.filter(pk=about_lukasz.pk).exists(), (
+        "The admin log entry about another user was deleted"
+    )
+    for model in FACTORIES:
+        anna_pks = {row.pk for row in rows_of_anna[model]}
+        lukasz_pks = {row.pk for row in rows_of_lukasz[model]}
+        assert anna_pks and lukasz_pks, f"{model.__name__}: the factory built no rows"
+        remaining = set(model._default_manager.values_list("pk", flat=True))
+        assert remaining & anna_pks == set(), (
+            f"{model.__name__}: rows of the deleted user are left"
+        )
+        assert lukasz_pks <= remaining, (
+            f"{model.__name__}: rows of another user were deleted"
+        )
 
 
 @pytest.mark.django_db

@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-10-15
+> Last updated: 2026-10-16
 
 ## 1. Strategy
 
@@ -71,7 +71,7 @@ orchestrator updates Status as artifacts appear on disk.
 |---|------------|-----------------|---------------|------------|--------|---------------|
 | 1 | Suite trust and CI floor | Udowodnić, że zepsucie krytycznej logiki wywraca testy, i że testy uruchamiają się same przed wdrożeniem z `main` | #2 (cross-cutting) | mutation testing + CI gate (pytest, ruff) | complete | testing-suite-trust-and-ci |
 | 2 | Waiting-path recovery | Udowodnić, że zawieszenie lub błąd dostawcy kończy się komunikatem i działającym „Try again”, nie wiecznym spinnerem | #1 | integration | complete | testing-waiting-path-recovery |
-| 3 | Privacy and deletion boundaries | Udowodnić, że żaden widok ani blok pamięci nie ujawnia cudzych danych, a usunięcie konta usuwa wszystko | #3, #6 | integration | not started | — |
+| 3 | Privacy and deletion boundaries | Udowodnić, że żaden widok ani blok pamięci nie ujawnia cudzych danych, a usunięcie konta usuwa wszystko | #3, #6 | integration | complete | testing-privacy-and-deletion-boundaries |
 | 4 | Budget ceiling | Udowodnić, że limit $1/dzień trzyma się także przy błędach, ponowieniach i drogich wywołaniach | #4 | unit + integration | not started | — |
 | 5 | AI eval layer | Dać mierzalny wynik jakości korekty i listy błędów przy każdej zmianie promptu lub modelu | #5 | AI-native eval (real model, golden dataset) | not started | — |
 
@@ -146,7 +146,18 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.2 Adding a test for a view with per-user data (cudzy obiekt → 404)
 
-- TBD — see §3 Phase 3 for the cross-user access denial pattern.
+- **When to use**: nowy widok z id w adresie, nowa trasa do danych podrzędnych, zmiana w budowaniu pamięci albo nowy model danych (także bez klucza obcego do `User`).
+- **Kroki**:
+  1. **Nowa trasa z id** → wpis w `ID_ROUTES` (`tests/test_conversation_views.py`): nazwa trasy → (metoda HTTP, model, którego pk jest w adresie). Wpis sam dostaje test „inny użytkownik → 404, bez zmiany stanu, bez wywołań modelu”. Strażnik routera wywraca test, gdy trasa z parametrem w adresie (poza `admin:`) nie ma wpisu; trasa po pk innego modelu niż `Conversation` wymaga dopisania budowania obiektu tego modelu dla innego użytkownika. Widok pobiera obiekt przez `get_object_or_404(Model.objects.for_user(request.user), pk=pk)` (`lessons.md`).
+  2. **Zmiana pamięci** → test metamorficzny: blok pamięci użytkownika A jest niepusty i identyczny z danymi B i bez nich. Dane B muszą pasować do każdego filtra poza `for_user` (status, `analyzed_at`, język, temat), inaczej test przejdzie ze złego powodu.
+  3. **Nowy model** → decyzja w `MODEL_DECISIONS` (`tests/test_account_deletion.py`): `CASCADE` (dane użytkownika, kasowane z kontem) albo tekst uzasadnienia, dlaczego to nie są dane użytkownika. Model kasowany z kontem dostaje fabrykę w `FACTORIES` — test usunięcia sprawdzi wtedy sam, że żaden jego wiersz nie zostaje. Dane spoza kaskady (sesje, `LogEntry`) sprząta odbiornik `pre_delete` na `User` (`accounts/services.py`), więc działa to także przy usuwaniu w `/admin/`.
+- **Zasada strażnika**: ręcznie wpisany literał (`ID_ROUTES`, `MODEL_DECISIONS`, `FACTORIES`) porównujemy z rejestrem Django (router URL, `apps.get_models()`, domknięcie kaskady), nigdy z listą wyliczoną z tego samego źródła co parametry testu.
+- **Reference tests**:
+  - `tests/test_conversation_views.py::test_every_url_with_an_id_is_covered_by_the_404_test` i `::test_other_user_gets_404_on_every_conversation_url` — strażnik routera i test 404 sterowany `ID_ROUTES`.
+  - `tests/test_conversation_views.py::test_memory_never_contains_another_users_data` — metamorficzny test izolacji pamięci.
+  - `tests/test_account_deletion.py::test_every_app_model_has_a_deletion_decision`, `::test_every_user_data_model_has_a_factory`, `::test_deleting_account_leaves_no_row_of_that_user_in_any_model` — rejestr modeli, fabryki, usunięcie przez stronę.
+  - `tests/test_account_deletion.py::test_deleting_user_in_admin_removes_sessions_and_log_entries_about_them` — usunięcie w `/admin/` (pojedyncze i akcja zbiorcza).
+- **Potwierdzenie mutacją**: jak w §6.1. `accounts/` nie jest w `[tool.mutmut]`, więc ręczne mutanty (przykłady: M16 pamięć bez `for_user`, M18 nowa trasa bez wpisu, M23 nowy model bez decyzji, M24 niepodłączony odbiornik `pre_delete`).
 
 ### 6.3 Adding a test for provider failure or hang (granica LLM)
 
@@ -189,6 +200,9 @@ here capturing anything surprising the rollout phase taught.)
   - §2 ryzyko #1, Source: incydent Q2 naprawiony ustawieniami 2026-10-07 (`dfe3e7d`); likelihood „High” opiera się częściowo na naprawionym zdarzeniu.
   - §2 Risk Response Guidance #1, Context: dopisać `retry-after` SDK (do 120 s) do ścieżki timeoutów; „pusty wynik” rozbić na `output_parsed is None` (obsłużone wcześniej) i `reply=""` (obsłużone w tej fazie).
   - §4 Stack, „granica LLM”: atrapa jest teraz na transporcie SDK (`httpx2.MockTransport`, `tests/fake_provider.py`), nie tylko na kliencie `OpenAI` / nad SDK.
+- **Phase 3 — Privacy and deletion boundaries (2026-10-16):** dzisiejsze testy izolacji i usuwania były poprawne, ale opierały się na ręcznych listach bez porównania z rejestrem Django; teraz pilnują ich strażniki (`ID_ROUTES` vs router, `MODEL_DECISIONS` / `FACTORIES` vs `apps.get_models()` i domknięcie kaskady), a stary test pamięci przechodził też przy pustej pamięci (teraz metamorficzny). Research znalazł lukę w kodzie: usunięcie użytkownika w `/admin/` zostawiało jego sesje i `LogEntry` z e-mailem — sprzątanie przeniesione do odbiornika `pre_delete` na `User` (`375e2e4`). Ręczne mutanty 26/26 zgodne (nowe M16–M24, M17 równoważny); mutmut: 683 mutanty, 46 przeżyć, każde w rejestrze. Do przeniesienia przez `/10x-test-plan --refresh` (tu bez zmian w §2):
+  - §2 ryzyko #6, Source: dopisać ścieżkę `/admin/` (naprawiona w tej fazie) i to, że strażnik nie widzi nowego pola tekstowego z e-mailem w **istniejącym** modelu (świadome ograniczenie).
+  - §2 Risk Response Guidance #3/#6: wskazać strażniki z §6.2 jako miejsce decyzji dla nowej trasy i nowego modelu.
 
 ## 7. What We Deliberately Don't Test
 

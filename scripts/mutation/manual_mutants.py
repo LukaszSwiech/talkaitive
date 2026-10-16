@@ -1,6 +1,8 @@
 """Hand-written mutants that mutmut cannot generate.
 
-Removed `.for_user()` calls and query filters, module constants and prompt labels.
+Removed `.for_user()` calls and query filters, deletion cleanup and signal wiring,
+cascade rules, guard registries (a new route or model), module constants and prompt
+labels.
 For each mutant the repo is copied to a temporary directory, exactly one fragment is
 replaced there and the test suite runs with the project's `.venv` interpreter. The
 working tree is never written, so interrupting the script is harmless.
@@ -205,6 +207,102 @@ MUTANTS: tuple[Mutant, ...] = (
         path="conversations/llm.py",
         original='if parsed.reply.strip() == "":',
         mutated='if parsed.reply == "":',
+    ),
+    Mutant(
+        id="M16",
+        area="izolacja: pamięć, select_memory bez for_user (rozmowy)",
+        path="conversations/memory.py",
+        original="Conversation.objects.for_user(user)",
+        mutated="Conversation.objects.all()",
+    ),
+    Mutant(
+        id="M17",
+        area="izolacja: pamięć, _mistakes bez for_user (błędy)",
+        path="conversations/memory.py",
+        original=(
+            "Mistake.objects.for_user(user).filter(conversation_id__in=conversation_ids)"
+        ),
+        mutated="Mistake.objects.filter(conversation_id__in=conversation_ids)",
+        expected="accepted",
+    ),
+    Mutant(
+        id="M18",
+        area="izolacja: nowa trasa z id bez decyzji w ID_ROUTES (strażnik tras)",
+        path="conversations/urls.py",
+        original="urlpatterns = [\n",
+        mutated=(
+            "urlpatterns = [\n"
+            '    path("conversations/<int:pk>/copy/", views.conversation_detail, '
+            'name="conversation_copy"),\n'
+        ),
+    ),
+    Mutant(
+        id="M19",
+        area="usuwanie: sprzątanie bez pętli po sesjach użytkownika",
+        path="accounts/services.py",
+        original=(
+            "    for session in Session.objects.iterator():\n"
+            '        if session.get_decoded().get("_auth_user_id") == user_id:\n'
+            "            session.delete()\n"
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M20",
+        area="usuwanie: sprzątanie bez kasowania LogEntry o użytkowniku",
+        path="accounts/services.py",
+        original=(
+            "    LogEntry.objects.filter(\n"
+            "        content_type=ContentType.objects.get_for_model(User),\n"
+            "        object_id=user_id,\n"
+            "    ).delete()\n"
+        ),
+        mutated="",
+    ),
+    Mutant(
+        id="M21",
+        area="usuwanie: LogEntry o użytkowniku bez filtra object_id=",
+        path="accounts/services.py",
+        original="        object_id=user_id,\n",
+        mutated="",
+    ),
+    Mutant(
+        id="M22",
+        area="usuwanie: Message.conversation PROTECT zamiast CASCADE",
+        path="conversations/models.py",
+        original='Conversation, on_delete=models.CASCADE, related_name="messages"',
+        mutated='Conversation, on_delete=models.PROTECT, related_name="messages"',
+    ),
+    # No migration on purpose: only the model registry guard (metadata, no table)
+    # must kill it.
+    Mutant(
+        id="M23",
+        area="usuwanie: nowy model z e-mailem bez decyzji w MODEL_DECISIONS",
+        path="conversations/models.py",
+        original=(
+            "    def __str__(self) -> str:\n"
+            '        return f"{self.category}: {self.wrong} -> {self.correct}"\n'
+        ),
+        mutated=(
+            "    def __str__(self) -> str:\n"
+            '        return f"{self.category}: {self.wrong} -> {self.correct}"\n'
+            "\n\n"
+            "class NewsletterSignup(models.Model):\n"
+            "    email = models.EmailField()\n"
+        ),
+    ),
+    Mutant(
+        id="M24",
+        area="usuwanie: odbiornik pre_delete niepodłączony w AccountsConfig.ready",
+        path="accounts/apps.py",
+        original=(
+            "        pre_delete.connect(\n"
+            "            remove_sessions_and_log_entries_about_user,\n"
+            "            sender=User,\n"
+            '            dispatch_uid="accounts.remove_sessions_and_log_entries_about_user",\n'
+            "        )\n"
+        ),
+        mutated="        pass\n",
     ),
 )
 

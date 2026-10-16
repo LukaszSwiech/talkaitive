@@ -1,16 +1,25 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
 import pytest
+from django.db.models import Model
 from django.test import Client
+from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from django.utils import timezone
 from django.utils.html import escape
 
 from accounts.models import PracticeLanguage, User
 from conversations import services
-from conversations.llm import AnalysisResult, FoundMistake, LLMError, TurnResult
+from conversations.llm import (
+    AnalysisResult,
+    FoundMistake,
+    LLMError,
+    TurnResult,
+    format_memory,
+)
+from conversations.memory import select_memory
 from conversations.models import Conversation, Message, Mistake
 from conversations.topics import get_topic
 
@@ -844,16 +853,23 @@ def test_ending_an_old_ended_conversation_leaves_the_current_one_active(
     assert detail_url(current) in anna_client.get("/").content.decode()
 
 
+# Every route with an id in its URL: route name -> (HTTP method, model whose pk is
+# in the URL). Written out by hand, never computed from the router: the guard below
+# compares the router with this literal, and the 404 test runs once per entry.
+ID_ROUTES: dict[str, tuple[str, type[Model]]] = {
+    "conversation_detail": ("get", Conversation),
+    "conversation_send": ("post", Conversation),
+    "conversation_retry": ("post", Conversation),
+    "conversation_end": ("post", Conversation),
+    "conversation_analyze": ("post", Conversation),
+}
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    ("method", "suffix"),
-    [
-        ("get", ""),
-        ("post", "messages/"),
-        ("post", "retry/"),
-        ("post", "end/"),
-        ("post", "analysis/"),
-    ],
+    ("route", "method", "model"),
+    [(route, method, model) for route, (method, model) in ID_ROUTES.items()],
+    ids=list(ID_ROUTES),
 )
 def test_other_user_gets_404_on_every_conversation_url(
     client: Client,
@@ -861,13 +877,20 @@ def test_other_user_gets_404_on_every_conversation_url(
     lukasz: User,
     fake_llm: FakeGenerateTurn,
     fake_analysis: FakeAnalyzeMistakes,
+    route: str,
     method: str,
-    suffix: str,
+    model: type[Model],
 ) -> None:
+    # Only a conversation is built for another user here. A route keyed by another
+    # model's pk (e.g. a Message) would get a 404 for the wrong reason: a
+    # conversation id where that model's id belongs.
+    assert model is Conversation, (
+        f"{route}: add building an object of {model.__name__} for another user"
+    )
     client.force_login(anna)
     conversation = start(client)
     client.force_login(lukasz)
-    url = f"{detail_url(conversation)}{suffix}"
+    url = reverse(route, kwargs={"pk": conversation.pk})
 
     response = getattr(client, method)(
         url, {"text": "Hallo"} if method == "post" else {}
@@ -879,6 +902,54 @@ def test_other_user_gets_404_on_every_conversation_url(
     assert roles(conversation) == ["assistant"]
     assert len(fake_llm.calls) == 1
     assert fake_analysis.calls == []
+
+
+Route = tuple[str | None, frozenset[str]]
+
+
+def routes_with_params(
+    patterns: Sequence[URLPattern | URLResolver],
+    prefix_params: frozenset[str] = frozenset(),
+) -> list[Route]:
+    """(name, URL parameters) of every route with at least one parameter.
+
+    Parameters are the named groups of each pattern's regex (`path` and `re_path`
+    alike), summed along the whole `include()` chain, since a parent prefix may
+    hold one. The admin is skipped: per-user data is never registered there
+    (tests/test_ownership.py::test_admin_registry_has_only_allowed_models).
+    """
+    found: list[Route] = []
+    for entry in patterns:
+        params = prefix_params | frozenset(entry.pattern.regex.groupindex)
+        if isinstance(entry, URLResolver):
+            if entry.namespace != "admin":
+                found.extend(routes_with_params(entry.url_patterns, params))
+        elif params:
+            found.append((entry.name, params))
+    return found
+
+
+def test_every_url_with_an_id_is_covered_by_the_404_test() -> None:
+    """Every route with a parameter in its URL is in `ID_ROUTES`, keyed by `pk`.
+
+    A new route with an id that is not in `ID_ROUTES` gets no "another user gets
+    404" test, so it fails here. An unnamed one fails too (its name is `None`).
+    Source: PRD Guardrails (no user sees another user's data); lessons.md (a view
+    with `pk` in the URL fetches it through `for_user` and has a 404 test).
+    """
+    routes = routes_with_params(get_resolver().url_patterns)
+
+    names = {name for name, _ in routes}
+    assert names == set(ID_ROUTES), (
+        f"Routes with an id in the URL: {sorted(map(str, names))}. Add each new "
+        "one (with a name) to ID_ROUTES, which gives it the 404 test, and let its "
+        "view fetch the object through `Model.objects.for_user(request.user)`."
+    )
+    other_params = {name: sorted(params) for name, params in routes if params != {"pk"}}
+    assert other_params == {}, (
+        "The 404 test builds URLs with reverse(..., kwargs={'pk': ...}); "
+        f"these routes have other parameters: {other_params}"
+    )
 
 
 @pytest.mark.django_db
@@ -1308,19 +1379,49 @@ def test_every_turn_and_retry_get_the_memory_from_the_start(
 
 @pytest.mark.django_db
 def test_memory_never_contains_another_users_data(
-    anna_client: Client, lukasz: User, fake_llm: FakeGenerateTurn
+    anna_client: Client, anna: User, lukasz: User, fake_llm: FakeGenerateTurn
 ) -> None:
-    past = past_conversation(
-        lukasz,
-        facts=("The learner is called Lukasz.",),
-        notes=("Lukasz ordered a cake.",),
+    """Anna's memory is the same with and without Lukasz's newer conversations.
+
+    Lukasz's conversations pass every filter of `select_memory` except the owner
+    (ended, analysed, same language and topic, newer than Anna's), so only
+    `for_user` keeps them out. Source: PRD Guardrails (no user sees another user's
+    data); test-plan.md §2 risk #3. Pattern: §6.1 (metamorphic). Guards M16.
+    """
+    annas = past_conversation(
+        anna,
+        facts=("The learner has a dog called Bello.",),
+        notes=("The baker asked about rye bread.",),
     )
-    add_mistake(past, 1, wrong="lukasz wrong", correct="lukasz correct")
+    add_mistake(annas, 1, wrong="habe gegangen", correct="bin gegangen")
+    three_days_ago = timezone.now() - timedelta(days=3)
+    Conversation.objects.filter(pk=annas.pk).update(
+        ended_at=three_days_ago, analyzed_at=three_days_ago
+    )
+    # The same path as `services.start_conversation`, before Lukasz has any data.
+    without_lukasz = format_memory(
+        select_memory(anna, "bakery", anna.practice_language)
+    )
+    assert without_lukasz != ""
+    assert "Bello" in without_lukasz
+
+    for number in (1, 2):
+        lukaszs = past_conversation(
+            lukasz,
+            language=anna.practice_language,
+            facts=(f"The learner is called Lukasz {number}.",),
+            notes=(f"Lukasz ordered cake {number}.",),
+        )
+        add_mistake(
+            lukaszs, 1, wrong=f"lukasz wrong {number}", correct="lukasz correct"
+        )
 
     conversation = start(anna_client)
 
-    assert conversation.memory_prompt == ""
-    assert "Lukasz" not in fake_llm.calls[0]["memory"]
+    assert conversation.memory_prompt == without_lukasz
+    assert "Lukasz" not in conversation.memory_prompt
+    assert "lukasz" not in conversation.memory_prompt
+    assert fake_llm.calls[0]["memory"] == without_lukasz
 
 
 @pytest.mark.django_db
