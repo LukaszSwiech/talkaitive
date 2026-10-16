@@ -389,23 +389,23 @@ Migracja `0006` tylko dodaje tabelę — bezpieczna dla Railway (pre-deploy `mig
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą: `uv run pytest`
-- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C2 M31 M32 M33 M34`
+- [x] 2.1 Testy przechodzą: `uv run pytest` — 51e5d3a
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 51e5d3a
+- [x] 2.3 Mutanty fazy zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py C2 M31 M32 M33 M34` — 51e5d3a
 
 #### Manual
 
-- [x] 2.4 Lokalnie z prawdziwym modelem (`uv run --env-file .env python manage.py runserver`): po dopisaniu w trakcie aktywnej rozmowy wpisu `LLMCharge` na dziś z kwotą równą `DAILY_BUDGET_USD` (kroki w Manual Testing Steps) kolejna wiadomość kończy rozmowę z komunikatem o limicie i godziną resetu, a w logach serwera nie ma nowego wywołania modelu
+- [x] 2.4 Lokalnie z prawdziwym modelem (`uv run --env-file .env python manage.py runserver`): po dopisaniu w trakcie aktywnej rozmowy wpisu `LLMCharge` na dziś z kwotą równą `DAILY_BUDGET_USD` (kroki w Manual Testing Steps) kolejna wiadomość kończy rozmowę z komunikatem o limicie i godziną resetu, a w logach serwera nie ma nowego wywołania modelu — 51e5d3a
 
 ### Phase 3: Domknięcie
 
 #### Automated
 
-- [ ] 3.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py`
-- [ ] 3.2 Każde przeżycie mutmut ma wiersz w rejestrze: `rm -rf mutants && uv run mutmut run && uv run mutmut results`
-- [ ] 3.3 Testy przechodzą: `uv run pytest`
-- [ ] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py`
+- [x] 3.2 Każde przeżycie mutmut ma wiersz w rejestrze: `rm -rf mutants && uv run mutmut run && uv run mutmut results`
+- [x] 3.3 Testy przechodzą: `uv run pytest`
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 3.5 Przegląd §6.4 i §6.6 test-planu oraz dopisku Q-07: zgodne z decyzjami tego planu
+- [x] 3.5 Przegląd §6.4 i §6.6 test-planu oraz dopisku Q-07: zgodne z decyzjami tego planu

@@ -20,7 +20,7 @@ from conversations.llm import (
     format_memory,
 )
 from conversations.memory import select_memory
-from conversations.models import Conversation, Message, Mistake
+from conversations.models import Conversation, LLMCharge, Message, Mistake
 from conversations.topics import get_topic
 from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn
 
@@ -288,10 +288,29 @@ def test_second_active_conversation_is_impossible(
     assert detail_url(conversation) in page
 
 
+def spend_the_whole_day(conversation: Conversation) -> None:
+    """A ledger entry of today worth the whole daily budget (1.00)."""
+    LLMCharge.objects.create(
+        user=conversation.user,
+        conversation=conversation,
+        kind=LLMCharge.Kind.TURN,
+        reason=LLMCharge.Reason.ESTIMATE,
+        cost_usd=Decimal("1.00"),
+        charged_at=timezone.now(),
+    )
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "refusal",
-    ["daily limit", "second conversation", "waiting for reply", "nothing to retry"],
+    [
+        "daily limit",
+        "second conversation",
+        "waiting for reply",
+        "nothing to retry",
+        "turn retry at the daily limit",
+        "analysis retry at the daily limit",
+    ],
 )
 def test_refused_action_shows_a_reason(
     anna_client: Client, fake_llm: FakeGenerateTurn, settings, refusal: str
@@ -300,9 +319,11 @@ def test_refused_action_shows_a_reason(
 
     Source: PRD "Odmowa akcji" (prd.md:97, decision 2026-10-15). The wording is not
     a requirement, so only a meaningful reason on the page is asserted, not its text.
-    Edge: the refusals reached by a stale page or a double submit. Guards mutmut
-    `x_start_conversation__mutmut_12`, `_39`, `x_send_message__mutmut_16` and
-    `x_run_agent_turn__mutmut_4`.
+    Edge: the refusals reached by a stale page or a double submit, and the retries
+    refused once today's sum reached the limit (plan testing-budget-ceiling, phase 2).
+    Guards mutmut `x_start_conversation__mutmut_12`, `_39`,
+    `x_send_message__mutmut_16`, `x_run_agent_turn__mutmut_4`, `_31` and
+    `x_analyze_conversation__mutmut_60`.
     """
     if refusal == "daily limit":
         # One estimated turn (0.03) does not fit into the budget.
@@ -317,6 +338,23 @@ def test_refused_action_shows_a_reason(
             fake_llm.outcomes.append(LLMError("down"))
             send(anna_client, conversation, "Hallo")
             response = send(anna_client, conversation, "Hallo?", follow=True)
+        elif refusal == "turn retry at the daily limit":
+            fake_llm.outcomes.append(LLMError("down"))
+            send(anna_client, conversation, "Hallo")
+            spend_the_whole_day(conversation)
+            response = anna_client.post(
+                f"/conversations/{conversation.pk}/retry/", follow=True
+            )
+        elif refusal == "analysis retry at the daily limit":
+            send(anna_client, conversation, "Ich habe gegangen.")
+            anna_client.post(f"/conversations/{conversation.pk}/end/")
+            Conversation.objects.filter(pk=conversation.pk).update(
+                analysis_failed_at=timezone.now()
+            )
+            spend_the_whole_day(conversation)
+            response = anna_client.post(
+                f"/conversations/{conversation.pk}/analysis/", follow=True
+            )
         else:
             response = anna_client.post(
                 f"/conversations/{conversation.pk}/retry/", follow=True

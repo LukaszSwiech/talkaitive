@@ -324,7 +324,9 @@ def test_one_expensive_call_crosses_the_limit_and_the_next_message_is_refused(
 def test_turn_retries_stop_once_the_limit_is_reached(
     anna: User, fake_provider: FakeProvider
 ) -> None:
-    """Guards M32 (no ceiling in run_agent_turn)."""
+    """Guards M32 (no ceiling in run_agent_turn) and mutmut
+    `x_run_agent_turn__mutmut_23` (ended by the daily limit, but without `ended_at`).
+    """
     spent_earlier_today(anna, "0.94")
     conversation = make_conversation(anna)
     add_turn(conversation, Message.Role.ASSISTANT, "0.02")
@@ -338,12 +340,15 @@ def test_turn_retries_stop_once_the_limit_is_reached(
     with pytest.raises(LLMError):
         services.run_agent_turn(conversation, timezone.now())
     # 0.98 + 0.02 = 1.00: the ceiling.
+    refused_at = timezone.now()
     with pytest.raises(ConversationError):
-        services.run_agent_turn(conversation, timezone.now())
+        services.run_agent_turn(conversation, refused_at)
 
     conversation.refresh_from_db()
     assert spent_today(anna, timezone.now()) == Decimal("1.00")
     assert conversation.end_reason == Conversation.EndReason.DAILY_LIMIT
+    # The refusal ends the conversation at that moment.
+    assert conversation.ended_at == refused_at
     assert len(fake_provider.requests) == 4
 
 

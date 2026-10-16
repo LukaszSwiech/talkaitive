@@ -198,7 +198,7 @@ MUTANTS: tuple[Mutant, ...] = (
             "        # A blank reply is no answer either. "
             "Log only the fact, never the text.\n"
             '        logger.error("LLM returned a blank agent reply.")\n'
-            '        raise LLMError("The model returned no usable answer.")\n'
+            "        raise _no_usable_answer(response)\n"
         ),
         mutated="",
     ),
