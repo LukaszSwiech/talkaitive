@@ -1,0 +1,13 @@
+{
+  "name": "talkaitive-e2e",
+  "private": true,
+  "description": "Playwright E2E tests for TalkAItive. The app itself is Django (uv); this file only holds the Node test tooling.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5"
+  }
+}
