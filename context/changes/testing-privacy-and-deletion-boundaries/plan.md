@@ -343,11 +343,11 @@ Brak migracji: sygnał i testy nie zmieniają schematu. Mutanty `M22`/`M23` zmie
 
 #### Automated
 
-- [x] 4.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py`
-- [x] 4.2 mutmut bez niewyjaśnionych przeżyć: `rm -rf mutants && uv run mutmut run && uv run mutmut results`
-- [x] 4.3 Testy przechodzą: `uv run pytest`
-- [x] 4.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 4.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py` — 818a553
+- [x] 4.2 mutmut bez niewyjaśnionych przeżyć: `rm -rf mutants && uv run mutmut run && uv run mutmut results` — 818a553
+- [x] 4.3 Testy przechodzą: `uv run pytest` — 818a553
+- [x] 4.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 818a553
 
 #### Manual
 
-- [x] 4.5 Przegląd §6.2 i nowego wpisu w `lessons.md` przez człowieka
+- [x] 4.5 Przegląd §6.2 i nowego wpisu w `lessons.md` przez człowieka — 818a553
