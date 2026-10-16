@@ -4,12 +4,17 @@ Nothing that uses them touches the network. Each call takes the next queued
 outcome: a result, an exception to raise, or a function called with the same kwargs
 (for a scenario that changes the database while the "model" is working). With an
 empty queue the fake returns `default()`.
+
+Also `add_charge`, the one way tests seed the cost ledger (`LLMCharge`).
 """
 
 from collections.abc import Callable
+from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from conversations.llm import AnalysisResult, TurnResult
+from conversations.models import Conversation, LLMCharge
 
 TurnOutcome = TurnResult | Exception | Callable[..., TurnResult]
 AnalysisOutcome = AnalysisResult | Exception | Callable[..., AnalysisResult]
@@ -49,3 +54,18 @@ class FakeAnalyzeMistakes:
         if isinstance(outcome, AnalysisResult):
             return outcome
         return outcome(**kwargs)
+
+
+def add_charge(conversation: Conversation, cost: str, at: datetime) -> LLMCharge:
+    """A ledger entry: a paid call that left no message and no analysis result.
+
+    Dated by `at`, like the service's `now`, not by the real clock.
+    """
+    return LLMCharge.objects.create(
+        user=conversation.user,
+        conversation=conversation,
+        kind=LLMCharge.Kind.TURN,
+        reason=LLMCharge.Reason.ESTIMATE,
+        cost_usd=Decimal(cost),
+        charged_at=at,
+    )

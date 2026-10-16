@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from accounts.models import User
 from conversations.models import Conversation, LLMCharge, Message, Mistake
+from tests.fakes import add_charge
 from tests.ownership_testapp.models import OwnedNote
 
 PASSWORD = "pass-12345-xyz"
@@ -251,15 +252,7 @@ def make_mistake_rows(user: User) -> list[models.Model]:
 
 
 def make_llm_charge_rows(user: User) -> list[models.Model]:
-    charge = LLMCharge.objects.create(
-        user=user,
-        conversation=make_analysed_conversation(user),
-        kind=LLMCharge.Kind.TURN,
-        reason=LLMCharge.Reason.ESTIMATE,
-        cost_usd="0.03",
-        charged_at=timezone.now(),
-    )
-    return [charge]
+    return [add_charge(make_analysed_conversation(user), "0.03", timezone.now())]
 
 
 def make_owned_note_rows(user: User) -> list[models.Model]:

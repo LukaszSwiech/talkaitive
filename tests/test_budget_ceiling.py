@@ -36,7 +36,7 @@ from conversations.llm import AnalysisResult, LLMError, TurnResult
 from conversations.models import Conversation, LLMCharge, Message
 from conversations.services import ConversationError
 from tests.fake_provider import FakeProvider
-from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn
+from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn, add_charge
 
 # 1000 input tokens of which 400 cached, 200 output tokens:
 # 600 * 2.50 + 400 * 0.25 + 200 * 15.00 = 4600 per 1M = 0.0046 USD.
@@ -398,18 +398,6 @@ def test_start_at_the_limit_is_still_refused_without_a_call(
     assert len(fake_provider.requests) == 0
 
 
-def add_charge(conversation: Conversation, cost: str, at: datetime) -> None:
-    """A ledger entry at a chosen moment (the ledger is dated by `now`, not the clock)."""
-    LLMCharge.objects.create(
-        user=conversation.user,
-        conversation=conversation,
-        kind=LLMCharge.Kind.TURN,
-        reason=LLMCharge.Reason.ESTIMATE,
-        cost_usd=Decimal(cost),
-        charged_at=at,
-    )
-
-
 def test_analysis_retry_waits_for_the_reset_across_the_autumn_midnight(
     anna: User, fake_provider: FakeProvider
 ) -> None:
@@ -467,7 +455,8 @@ def test_failed_analysis_at_the_limit_shows_the_reset_time_instead_of_try_again(
 
     content = page.content.decode()
     assert "We could not prepare your list of mistakes." in content
-    assert "You can talk again after" in content
+    # The reset notice names the budget time zone; the wording is not a requirement.
+    assert "(Europe/Berlin)" in content
     analyze_url = reverse("conversation_analyze", kwargs={"pk": conversation.pk})
     assert analyze_url not in content
 
@@ -483,4 +472,4 @@ def test_failed_analysis_below_the_limit_offers_try_again(
 
     content = page.content.decode()
     assert reverse("conversation_analyze", kwargs={"pk": conversation.pk}) in content
-    assert "You can talk again after" not in content
+    assert "(Europe/Berlin)" not in content

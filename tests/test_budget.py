@@ -15,7 +15,8 @@ from conversations.budget import (
     spent_today,
     turn_cost,
 )
-from conversations.models import Conversation, LLMCharge, Message
+from conversations.models import Conversation, Message
+from tests.fakes import add_charge
 
 # Wednesday 10 June 2026, 12:00 Berlin time (CEST, UTC+2).
 NOON = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)
@@ -69,18 +70,6 @@ def add_message(
 def add_analysis(conversation: Conversation, cost: str, at: datetime) -> None:
     Conversation.objects.filter(pk=conversation.pk).update(
         analyzed_at=at, analysis_cost_usd=Decimal(cost)
-    )
-
-
-def add_charge(conversation: Conversation, cost: str, at: datetime) -> LLMCharge:
-    """A ledger entry: a paid call that left no message and no analysis result."""
-    return LLMCharge.objects.create(
-        user=conversation.user,
-        conversation=conversation,
-        kind=LLMCharge.Kind.TURN,
-        reason=LLMCharge.Reason.ESTIMATE,
-        cost_usd=Decimal(cost),
-        charged_at=at,
     )
 
 

@@ -1,1 +1,1 @@
-{% load tz %}{% timezone budget_time_zone %}You can talk again after {{ reset_at|date:"H:i" }} ({{ budget_time_zone }}) on {{ reset_at|date:"l, j F Y" }}.{% endtimezone %}
+{% load tz %}{% timezone budget_time_zone %}You can {{ action|default:"talk again" }} after {{ reset_at|date:"H:i" }} ({{ budget_time_zone }}) on {{ reset_at|date:"l, j F Y" }}.{% endtimezone %}

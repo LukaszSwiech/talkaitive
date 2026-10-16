@@ -172,7 +172,7 @@ def send_message(conversation: Conversation, text: str, now: datetime) -> None:
         raise ConversationError("Please write a message first.")
     if len(text) > MAX_MESSAGE_LENGTH:
         raise ConversationError(
-            f"Please keep your message under {MAX_MESSAGE_LENGTH} characters."
+            f"Please keep your message to {MAX_MESSAGE_LENGTH} characters or fewer."
         )
     with transaction.atomic():
         locked = _lock(conversation)

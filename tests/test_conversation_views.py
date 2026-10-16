@@ -1,3 +1,4 @@
+import re
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -20,9 +21,9 @@ from conversations.llm import (
     format_memory,
 )
 from conversations.memory import select_memory
-from conversations.models import Conversation, LLMCharge, Message, Mistake
+from conversations.models import Conversation, Message, Mistake
 from conversations.topics import get_topic
-from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn
+from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn, add_charge
 
 START_URL = "/conversations/start/"
 
@@ -288,18 +289,6 @@ def test_second_active_conversation_is_impossible(
     assert detail_url(conversation) in page
 
 
-def spend_the_whole_day(conversation: Conversation) -> None:
-    """A ledger entry of today worth the whole daily budget (1.00)."""
-    LLMCharge.objects.create(
-        user=conversation.user,
-        conversation=conversation,
-        kind=LLMCharge.Kind.TURN,
-        reason=LLMCharge.Reason.ESTIMATE,
-        cost_usd=Decimal("1.00"),
-        charged_at=timezone.now(),
-    )
-
-
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "refusal",
@@ -341,7 +330,8 @@ def test_refused_action_shows_a_reason(
         elif refusal == "turn retry at the daily limit":
             fake_llm.outcomes.append(LLMError("down"))
             send(anna_client, conversation, "Hallo")
-            spend_the_whole_day(conversation)
+            # A ledger entry of today worth the whole daily budget.
+            add_charge(conversation, "1.00", timezone.now())
             response = anna_client.post(
                 f"/conversations/{conversation.pk}/retry/", follow=True
             )
@@ -351,7 +341,7 @@ def test_refused_action_shows_a_reason(
             Conversation.objects.filter(pk=conversation.pk).update(
                 analysis_failed_at=timezone.now()
             )
-            spend_the_whole_day(conversation)
+            add_charge(conversation, "1.00", timezone.now())
             response = anna_client.post(
                 f"/conversations/{conversation.pk}/analysis/", follow=True
             )
@@ -527,9 +517,30 @@ def test_too_long_message_does_not_call_the_model_and_shows_a_notice(
     )
 
     assert response.redirect_chain == [(detail_url(conversation), 302)]
-    assert "Please keep your message under" in response.content.decode()
+    assert "Please keep your message to" in response.content.decode()
     assert len(fake_llm.calls) == 1
     assert roles(conversation) == ["assistant"]
+
+
+@pytest.mark.django_db
+def test_message_as_long_as_the_field_allows_is_accepted(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    """The server accepts every message the form lets the user type.
+
+    Oracle: the field's own `maxlength`, not the server constant. Guards mutmut
+    `x_send_message__mutmut_7` (`>` → `>=`: the longest allowed message refused).
+    """
+    conversation = start(anna_client)
+    page = anna_client.get(detail_url(conversation)).content.decode()
+    match = re.search(r'maxlength="(\d+)"', page)
+    assert match is not None
+    allowed = int(match.group(1))
+
+    send(anna_client, conversation, "a" * allowed)
+
+    assert len(fake_llm.calls) == 2
+    assert roles(conversation) == ["assistant", "user", "assistant"]
 
 
 @pytest.mark.django_db
