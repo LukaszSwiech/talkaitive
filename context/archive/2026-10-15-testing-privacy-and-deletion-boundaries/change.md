@@ -1,10 +1,10 @@
 ---
 change_id: testing-privacy-and-deletion-boundaries
 title: Test rollout Phase 3 — privacy isolation and account-deletion boundaries
-status: implemented
+status: archived
 created: 2026-10-15
 updated: 2026-10-16
-archived_at: null
+archived_at: 2026-10-16T08:03:07Z
 ---
 
 ## Notes
