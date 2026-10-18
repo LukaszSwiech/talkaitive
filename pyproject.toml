@@ -42,7 +42,9 @@ testpaths = ["tests"]
 source_paths = ["accounts", "conversations", "talkaitive"]
 # pytest-django puts the directory of the nearest manage.py on sys.path. Without a copy
 # in mutants/ it finds the repo's own manage.py and the tests import the unmutated code.
-also_copy = ["manage.py"]
+# scripts/: tests import scripts.eval (the AI eval's scorer and cost meter); without a
+# copy, collecting the tests in mutants/ fails on that import. Not mutated.
+also_copy = ["manage.py", "scripts"]
 only_mutate = [
     "accounts/ownership.py",
     "conversations/budget.py",

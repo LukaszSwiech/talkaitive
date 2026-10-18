@@ -3,7 +3,8 @@
 Removed `.for_user()` calls and query filters, deletion cleanup and signal wiring,
 cascade rules, guard registries (a new route or model), module constants, prompt
 labels, and the budget's cost paths (error branches in `llm.py`, which mutmut does
-not mutate, ledger terms and writes, and the hard ceiling's checks).
+not mutate, ledger terms and writes, and the hard ceiling's checks), and the AI
+eval's scorer and cost meter (`scripts/eval/`, outside mutmut's `only_mutate`).
 For each mutant the repo is copied to a temporary directory, exactly one fragment is
 replaced there and the test suite runs with the project's `.venv` interpreter. The
 working tree is never written, so interrupting the script is harmless.
@@ -423,6 +424,113 @@ MUTANTS: tuple[Mutant, ...] = (
         path="conversations/services.py",
         original="if analysis_failed(locked, now) and limit_reached(locked.user, now):",
         mutated="if False:",
+    ),
+    Mutant(
+        id="M35",
+        area="eval: dopasowanie do wzorca bez sprawdzania numeru wiadomości",
+        path="scripts/eval/scoring.py",
+        original="        gold.message == item.message_number\n",
+        mutated="        True\n",
+    ),
+    Mutant(
+        id="M36",
+        area="eval: wyłączone A3 (literówka liczona jako zwykła pozycja)",
+        path="scripts/eval/scoring.py",
+        original="if any(contains_phrase(item.wrong, typo.token) for typo in typos):",
+        mutated="if False:",
+    ),
+    Mutant(
+        id="M37",
+        area="eval: wyłączone A2 (zmienione sentence)",
+        path="scripts/eval/scoring.py",
+        original="if _fragment(item.sentence) not in normalize(message):",
+        mutated="if False:",
+    ),
+    Mutant(
+        id="M38",
+        area='eval: compare z werdyktem "różnica" bez względu na SE',
+        path="scripts/eval/scoring.py",
+        original=(
+            "difference = low is not None and high is not None and (low > 0 or high < 0)"
+        ),
+        mutated="difference = mean_delta != 0",
+    ),
+    Mutant(
+        id="M39",
+        area="eval: licznik kosztu bez szacunku dla billed_without_usage",
+        path="scripts/eval/cost.py",
+        original="        elif error.billed_without_usage:\n",
+        mutated="        elif False:\n",
+    ),
+    Mutant(
+        id="M40",
+        area="eval: can_start bez szacunku następnego wywołania",
+        path="scripts/eval/cost.py",
+        original="return self.spent + estimate(kind) <= self.cap_usd",
+        mutated="return self.spent <= self.cap_usd",
+    ),
+    Mutant(
+        id="M41",
+        area="eval: dopasowanie nie jeden-do-jednego (wzorzec dopasowany wielokrotnie)",
+        path="scripts/eval/scoring.py",
+        original="if gold_index not in taken and _matches(gold, item):",
+        mutated="if _matches(gold, item):",
+    ),
+    Mutant(
+        id="M42",
+        area="eval: wyłączone A1 dla słów spoza wiadomości ucznia",
+        path="scripts/eval/scoring.py",
+        original="if not _words(item.wrong) <= _words(message):",
+        mutated="if False:",
+    ),
+    Mutant(
+        id="M43",
+        area="eval: znaczniki wykładu bez granicy słowa",
+        path="scripts/eval/scoring.py",
+        original='pattern = rf"(?<!\\w){re.escape(needle)}(?!\\w)"',
+        mutated="pattern = re.escape(needle)",
+    ),
+    Mutant(
+        id="M44",
+        area="eval: klucz wzorca dopasowany jako podnapis (bez granicy słowa)",
+        path="scripts/eval/scoring.py",
+        original="and contains_phrase(item.wrong, gold.wrong_key)",
+        mutated="and normalize(gold.wrong_key) in normalize(item.wrong)",
+    ),
+    Mutant(
+        id="M45",
+        area="eval: token neutralny dopasowany jako podnapis (bez granicy słowa)",
+        path="scripts/eval/scoring.py",
+        original="contains_phrase(item.wrong, token.token) for token in neutrals",
+        mutated="normalize(token.token) in normalize(item.wrong) for token in neutrals",
+    ),
+    Mutant(
+        id="M46",
+        area="eval: przedrostek znacznika wykładu tylko jako całe słowo (bez złożeń)",
+        path="scripts/eval/scoring.py",
+        original='rf"(?<!\\w){re.escape(normalize(prefix))}"',
+        mutated='rf"(?<!\\w){re.escape(normalize(prefix))}(?!\\w)"',
+    ),
+    Mutant(
+        id="M47",
+        area="eval: końcówka znacznika wykładu bez prawej granicy słowa",
+        path="scripts/eval/scoring.py",
+        original='rf"{re.escape(normalize(suffix))}(?!\\w)"',
+        mutated="re.escape(normalize(suffix))",
+    ),
+    Mutant(
+        id="M48",
+        area="eval: końcówka znacznika wykładu tylko jako całe słowo (bez złożeń)",
+        path="scripts/eval/scoring.py",
+        original='rf"{re.escape(normalize(suffix))}(?!\\w)"',
+        mutated='rf"(?<!\\w){re.escape(normalize(suffix))}(?!\\w)"',
+    ),
+    Mutant(
+        id="M49",
+        area="eval: A2 liczy kropkę dodaną przez model na końcu sentence",
+        path="scripts/eval/scoring.py",
+        original='return normalize(sentence).rstrip(".!?")',
+        mutated="return normalize(sentence)",
     ),
 )
 
