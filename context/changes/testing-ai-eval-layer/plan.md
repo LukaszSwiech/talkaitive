@@ -379,10 +379,10 @@ Brak zmian w bazie i w kodzie produkcyjnym. Wycofanie: revert commitów fazy —
 
 #### Automated
 
-- [ ] 2.1 Testy zestawu i skryptu przechodzą: `uv run pytest tests/test_eval_golden.py tests/test_eval_runner.py`
-- [ ] 2.2 Cały zestaw przechodzi bez klucza i sieci: `uv run pytest`
-- [ ] 2.3 pytest nie zbiera niczego z `scripts/`: `uv run pytest --collect-only -q | grep -c '^scripts/'` zwraca 0
-- [ ] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy zestawu i skryptu przechodzą: `uv run pytest tests/test_eval_golden.py tests/test_eval_runner.py`
+- [x] 2.2 Cały zestaw przechodzi bez klucza i sieci: `uv run pytest`
+- [x] 2.3 pytest nie zbiera niczego z `scripts/`: `uv run pytest --collect-only -q | grep -c '^scripts/'` zwraca 0
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 

@@ -15,8 +15,8 @@ case.
   a message without mistakes, A5 more than 5 learner facts or more than 8 scene
   notes. Other unmatched items are neutral (they contain a `Neutral` token) or
   extras (listed for review).
-- Turn (`score_turn`): the correct form is woven into the reply and the wrong one is
-  not repeated (recast), no lecture markers, at most one question; T1 the turn ends
+- Turn (`score_turn`): a correct form is woven into the reply and no wrong form
+  (the learner's own or its echo) is repeated (recast), no lecture markers, at most one question; T1 the turn ends
   the conversation. Lecture markers are metalinguistic terms and phrases of explicit
   correction (the feedback types of Lyster and Ranta 1997: recast vs explicit
   correction vs metalinguistic feedback): phrases as whole words, grammar terms also
@@ -326,7 +326,7 @@ def score_turn(case: TurnCase, result: TurnResult) -> Score:
     reply = result.reply
     recast = any(
         contains_phrase(reply, form) for form in case.correct_forms
-    ) and not contains_phrase(reply, case.wrong_form)
+    ) and not any(contains_phrase(reply, form) for form in case.wrong_forms)
     markers = lecture_markers(reply)
     metrics: Metrics = {
         "recast": 1.0 if recast else 0.0,
