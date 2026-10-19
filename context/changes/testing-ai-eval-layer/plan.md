@@ -379,17 +379,17 @@ Brak zmian w bazie i w kodzie produkcyjnym. Wycofanie: revert commitów fazy —
 
 #### Automated
 
-- [x] 2.1 Testy zestawu i skryptu przechodzą: `uv run pytest tests/test_eval_golden.py tests/test_eval_runner.py`
-- [x] 2.2 Cały zestaw przechodzi bez klucza i sieci: `uv run pytest`
-- [x] 2.3 pytest nie zbiera niczego z `scripts/`: `uv run pytest --collect-only -q | grep -c '^scripts/'` zwraca 0
-- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.1 Testy zestawu i skryptu przechodzą: `uv run pytest tests/test_eval_golden.py tests/test_eval_runner.py` — 56e6109
+- [x] 2.2 Cały zestaw przechodzi bez klucza i sieci: `uv run pytest` — 56e6109
+- [x] 2.3 pytest nie zbiera niczego z `scripts/`: `uv run pytest --collect-only -q | grep -c '^scripts/'` zwraca 0 — 56e6109
+- [x] 2.4 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 56e6109
 
 #### Manual
 
-- [ ] 2.5 Pobranie MERLIN za zgodą użytkownika, MD5 zgodne, archiwum poza repo
-- [ ] 2.6 Przegląd próbki zestawu (3 rozmowy analizy, 5 przypadków tury, 2 pamięci): zdania ucznia dosłownie z MERLIN, poprawne formy z wersji poprawionej, kategorie z nazwaną regułą, atrybucja w pliku
-- [ ] 2.7 Przebieg bazowy kończy się kodem 0 albo 1, wydatek ≤ 5 USD, plik wyników zapisany; naruszenia (jeśli są) i czas długiej analizy zapisane do notatki fazy
-- [ ] 2.8 Przebieg na zepsutym prompcie i `compare` pokazują spadek `typo_free` albo `lecture_free` z werdyktem „różnica”; prompt przywrócony (`git status` czysty dla `conversations/llm.py`)
+- [x] 2.5 Pobranie MERLIN za zgodą użytkownika, MD5 zgodne, archiwum poza repo
+- [x] 2.6 Przegląd próbki zestawu (3 rozmowy analizy, 5 przypadków tury, 2 pamięci): zdania ucznia dosłownie z MERLIN, poprawne formy z wersji poprawionej, kategorie z nazwaną regułą, atrybucja w pliku
+- [x] 2.7 Przebieg bazowy kończy się kodem 0 albo 1, wydatek ≤ 5 USD, plik wyników zapisany; naruszenia (jeśli są) i czas długiej analizy zapisane do notatki fazy
+- [x] 2.8 Przebieg na zepsutym prompcie i `compare` pokazują spadek `typo_free` albo `lecture_free` z werdyktem „różnica”; prompt przywrócony (`git status` czysty dla `conversations/llm.py`)
 
 ### Phase 3: Domknięcie
 

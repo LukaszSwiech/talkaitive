@@ -1,0 +1,4714 @@
+{
+  "date": "2026-10-19",
+  "commit": "56e6109",
+  "dirty": false,
+  "model": "gpt-5.4",
+  "reasoning_effort": {
+    "turn": "none",
+    "analysis": "medium"
+  },
+  "prompt_sha256": {
+    "turn_instructions": "4205c7f391e3147dcac146b488468d120dbf0f688cb9294b0b2239d5b510d9b4",
+    "analysis_instructions": "0c01bd3ebae6787fb6dc1547eed6d639c5e32478aa7f41d86390125d1109c576",
+    "memory_block": "22f50e0cc480ae2d7c9d7a455b107635ce172bb51aef20726d38770774cda5ab"
+  },
+  "suites": [
+    "analysis",
+    "turn",
+    "memory",
+    "latency"
+  ],
+  "repeats": 3,
+  "max_usd": "5",
+  "spent_usd": "0.8322500",
+  "complete": true,
+  "data_licence": "Learner messages: MERLIN Written Learner Corpus for Czech, German, Italian 1.1 (Wisniewski et al., Eurac Research), http://hdl.handle.net/20.500.12124/6, CC BY-SA 4.0; adapted in scripts/eval/golden.py (CC BY-SA 4.0).",
+  "seconds": {
+    "analysis": 555.471,
+    "turn": 112.116,
+    "memory": 28.355,
+    "latency": 46.474
+  },
+  "calls": {
+    "analysis": {
+      "silvester-familie": [
+        {
+          "repetition": 1,
+          "seconds": 13.643,
+          "cost_usd": "0.01462",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "meine Familie",
+                "correct": "meiner Familie",
+                "sentence": "Die Silvesternacht habe ich mit meinem Mann und meine Familie verbracht.",
+                "explanation": "The preposition \"mit\" requires the dative case."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Wir auch haben",
+                "correct": "Wir haben auch",
+                "sentence": "Wir auch haben gemeinsam gekocht und gegessen.",
+                "explanation": "In a main clause, the conjugated verb should come before \"auch\" here."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "sehr gut auch",
+                "correct": "auch sehr gut",
+                "sentence": "Meine Silvesternacht war sehr gut auch.",
+                "explanation": "\"Auch\" is placed more naturally before \"sehr gut\" in this sentence."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a husband."
+            ],
+            "scene_notes": [
+              "The conversation was about New Year's Eve celebrations.",
+              "The partner asked how the learner celebrated Silvester.",
+              "The learner said they spent New Year's Eve with their husband and family.",
+              "The learner said they cooked and ate together.",
+              "The learner said they invited many friends and had a nice party.",
+              "The learner wished the partner a happy new year."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 700,
+            "cached_input_tokens": 0,
+            "output_tokens": 858
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 10.333,
+          "cost_usd": "0.012655",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "meine Familie",
+                "correct": "meiner Familie",
+                "sentence": "Die Silvesternacht habe ich mit meinem Mann und meine Familie verbracht.",
+                "explanation": "After the preposition 'mit', the noun phrase must be in the dative case."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Wir auch haben",
+                "correct": "Wir haben auch",
+                "sentence": "Wir auch haben gemeinsam gekocht und gegessen.",
+                "explanation": "In a main clause, the conjugated verb should usually be in second position."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "sehr gut auch",
+                "correct": "auch sehr gut",
+                "sentence": "Meine Silvesternacht war sehr gut auch.",
+                "explanation": "The adverb 'auch' is placed more naturally before the adjective phrase here."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a husband."
+            ],
+            "scene_notes": [
+              "The conversation was about how New Year's Eve was celebrated.",
+              "The partner asked how the learner spent New Year's Eve.",
+              "The learner said they spent the evening with their husband and family.",
+              "The learner said they cooked and ate together.",
+              "The partner asked whether they had invited guests.",
+              "The learner said they invited many friends and had a nice party.",
+              "The learner said their New Year's Eve was very good.",
+              "The learner wished the partner a happy new year."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 700,
+            "cached_input_tokens": 0,
+            "output_tokens": 727
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 10.075,
+          "cost_usd": "0.012565",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "meine Familie",
+                "correct": "meiner Familie",
+                "sentence": "Die Silvesternacht habe ich mit meinem Mann und meine Familie verbracht.",
+                "explanation": "After the preposition \"mit,\" nouns and pronouns must be in the dative case."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Wir auch haben",
+                "correct": "Wir haben auch",
+                "sentence": "Wir auch haben gemeinsam gekocht und gegessen.",
+                "explanation": "In a main clause, the conjugated verb usually comes in second position."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "war sehr gut auch",
+                "correct": "war auch sehr gut",
+                "sentence": "Meine Silvesternacht war sehr gut auch.",
+                "explanation": "The adverb \"auch\" is normally placed before the part it modifies in this sentence."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a husband."
+            ],
+            "scene_notes": [
+              "The conversation was about how New Year's Eve was celebrated.",
+              "The partner asked how the learner spent Silvester.",
+              "The partner said their own celebration was very quiet.",
+              "The learner said they cooked and ate together.",
+              "The partner asked whether the learner had invited guests.",
+              "The learner said they invited many friends and had a nice party.",
+              "The learner wished the partner a happy new year."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 700,
+            "cached_input_tokens": 0,
+            "output_tokens": 721
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "arbeit-pflegerin": [
+        {
+          "repetition": 1,
+          "seconds": 22.693,
+          "cost_usd": "0.0309125",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "Zurzeit ich arbeite",
+                "correct": "Zurzeit arbeite ich",
+                "sentence": "Zurzeit ich arbeite, leider, als Pflegerin.",
+                "explanation": "In a main clause, the conjugated verb should come before the subject after a fronted time expression."
+              },
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "sehr viele",
+                "correct": "sehr viel",
+                "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+                "explanation": "Viel is the correct quantity word here, not viele."
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "arbeite ... nicht das, was ich will",
+                "correct": "mache nicht das, was ich will",
+                "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+                "explanation": "Arbeiten is not normally used with a direct object like das, was ich will; machen fits here."
+              },
+              {
+                "message_number": 4,
+                "category": "vocabulary",
+                "wrong": "Mobilität",
+                "correct": "mobil",
+                "sentence": "Ich bin sehr Flexibel und Mobilität.",
+                "explanation": "After bin, you need an adjective here, not the noun Mobilität."
+              }
+            ],
+            "learner_facts": [
+              "The learner currently works as a caregiver.",
+              "The learner says their colleagues are very nice.",
+              "The learner says they are very flexible and mobile.",
+              "The learner says they have a new female colleague."
+            ],
+            "scene_notes": [
+              "They talked about the learner's current job.",
+              "The partner asked what the learner is doing professionally at the moment.",
+              "The partner asked why the learner does not like the job.",
+              "The learner said their colleagues are very nice.",
+              "The partner said they have worked in a hospital for three years.",
+              "The partner said their work is also exhausting.",
+              "The partner said their boss always says that one must be flexible.",
+              "The learner mentioned a new colleague."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 713,
+            "cached_input_tokens": 0,
+            "output_tokens": 1942
+          },
+          "extras": [
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "arbeite ... nicht das, was ich will",
+              "correct": "mache nicht das, was ich will",
+              "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+              "explanation": "Arbeiten is not normally used with a direct object like das, was ich will; machen fits here."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 15.291,
+          "cost_usd": "0.0191675",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "Zurzeit ich arbeite",
+                "correct": "Zurzeit arbeite ich",
+                "sentence": "Zurzeit ich arbeite, leider, als Pflegerin.",
+                "explanation": "In a main clause, the conjugated verb must come in second position."
+              },
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "sehr viele",
+                "correct": "sehr viel",
+                "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+                "explanation": "With the verb \"arbeiten,\" German uses \"viel,\" not \"viele.\""
+              },
+              {
+                "message_number": 4,
+                "category": "vocabulary",
+                "wrong": "Mobilität",
+                "correct": "mobil",
+                "sentence": "Ich bin sehr Flexibel und Mobilität.",
+                "explanation": "After \"ich bin,\" you need the adjective \"mobil,\" not the noun \"Mobilität.\""
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "Arbeit ist immer schwer",
+                "correct": "Die Arbeit ist immer schwer",
+                "sentence": "Arbeit ist immer schwer und wir haben eine neue kolleagin.",
+                "explanation": "Here German normally needs the article \"die\" before \"Arbeit.\""
+              }
+            ],
+            "learner_facts": [
+              "The learner currently works as a caregiver.",
+              "The learner says their colleagues are very nice.",
+              "The learner says they are very flexible and mobile.",
+              "The learner says they have a new female colleague."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner's job.",
+              "The partner asked what the learner currently does for work.",
+              "The learner said they work as a caregiver.",
+              "The partner asked why the learner said unfortunately.",
+              "The learner said they work a lot and not in the job they want.",
+              "The learner said their colleagues are very nice.",
+              "The partner said they have worked in a hospital for three years.",
+              "The partner said their boss always says people must be flexible."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 713,
+            "cached_input_tokens": 0,
+            "output_tokens": 1159
+          },
+          "extras": [
+            {
+              "message_number": 5,
+              "category": "grammar",
+              "wrong": "Arbeit ist immer schwer",
+              "correct": "Die Arbeit ist immer schwer",
+              "sentence": "Arbeit ist immer schwer und wir haben eine neue kolleagin.",
+              "explanation": "Here German normally needs the article \"die\" before \"Arbeit.\""
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 19.48,
+          "cost_usd": "0.0227975",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "Zurzeit ich arbeite",
+                "correct": "Zurzeit arbeite ich",
+                "sentence": "Zurzeit ich arbeite, leider, als Pflegerin.",
+                "explanation": "In a main clause, the conjugated verb must be in second position."
+              },
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "sehr viele",
+                "correct": "sehr viel",
+                "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+                "explanation": "With the verb \"arbeiten\", German uses the adverb \"viel\", not \"viele\"."
+              },
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "und nicht das",
+                "correct": "und mache nicht das",
+                "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+                "explanation": "The second part of the sentence needs its own verb."
+              },
+              {
+                "message_number": 4,
+                "category": "vocabulary",
+                "wrong": "Mobilität",
+                "correct": "mobil",
+                "sentence": "Ich bin sehr Flexibel und Mobilität.",
+                "explanation": "After \"ich bin\", you need the adjective \"mobil\", not the noun \"Mobilität\"."
+              }
+            ],
+            "learner_facts": [
+              "The learner currently works as a caregiver.",
+              "The learner says their colleagues are very nice.",
+              "The learner describes themself as flexible and mobile."
+            ],
+            "scene_notes": [
+              "The partner asked what the learner is currently doing professionally.",
+              "The learner said they unfortunately work as a caregiver at the moment.",
+              "The partner asked why the learner said unfortunately.",
+              "The learner said their colleagues are very nice.",
+              "The partner said they have worked in a hospital for three years.",
+              "The partner said their boss always says you have to be flexible.",
+              "The learner said work is always hard.",
+              "The learner mentioned there is a new female colleague."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 713,
+            "cached_input_tokens": 0,
+            "output_tokens": 1401
+          },
+          "extras": [
+            {
+              "message_number": 2,
+              "category": "grammar",
+              "wrong": "und nicht das",
+              "correct": "und mache nicht das",
+              "sentence": "Ich arbeite sehr viele und nicht das, was ich will.",
+              "explanation": "The second part of the sentence needs its own verb."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        }
+      ],
+      "hund-koeln": [
+        {
+          "repetition": 1,
+          "seconds": 17.922,
+          "cost_usd": "0.02255",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht mein Haustier",
+                "correct": "mein Haustier nicht",
+                "sentence": "Morgen muss ich nach Köln hinfahren und ich kann nicht mein Haustier mitnehmen.",
+                "explanation": "In this meaning, 'nicht' normally comes after the object: 'mein Haustier nicht mitnehmen'."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "wie lange muss ich in Köln bleiben",
+                "correct": "wie lange ich in Köln bleiben muss",
+                "sentence": "Ich weiß nicht genau, wie lange muss ich in Köln bleiben.",
+                "explanation": "In an indirect question, the conjugated verb goes to the end."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "ihn",
+                "correct": "ihm",
+                "sentence": "Du sollst ihn nur sein Abendessen geben.",
+                "explanation": "The verb 'geben' takes an indirect object in the dative here."
+              },
+              {
+                "message_number": 6,
+                "category": "grammar",
+                "wrong": "meinen Hund bei dir bleiben möchtest",
+                "correct": "möchtest, dass mein Hund bei dir bleibt",
+                "sentence": "Wenn du meinen Hund bei dir bleiben möchtest, ruf mich bitte sofort  auf meinem Handy an.",
+                "explanation": "After 'möchtest', you need a clause with 'dass' here, not an accusative object plus 'bleiben'."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a dog named Waldi.",
+              "The learner is going to Cologne tomorrow."
+            ],
+            "scene_notes": [
+              "The partner said the learner looked a bit stressed.",
+              "The learner said they could not take their pet to Cologne.",
+              "The partner asked how long the learner would stay in Cologne.",
+              "The partner offered to look after the dog.",
+              "The partner said Waldi was very cute.",
+              "The partner asked what Waldi likes to eat most.",
+              "The learner said Waldi should only be given his dinner.",
+              "The learner said the dog's food was already prepared."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 746,
+            "cached_input_tokens": 0,
+            "output_tokens": 1379
+          },
+          "extras": [
+            {
+              "message_number": 6,
+              "category": "grammar",
+              "wrong": "meinen Hund bei dir bleiben möchtest",
+              "correct": "möchtest, dass mein Hund bei dir bleibt",
+              "sentence": "Wenn du meinen Hund bei dir bleiben möchtest, ruf mich bitte sofort  auf meinem Handy an.",
+              "explanation": "After 'möchtest', you need a clause with 'dass' here, not an accusative object plus 'bleiben'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.75,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 21.659,
+          "cost_usd": "0.026195",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht mein Haustier mitnehmen",
+                "correct": "mein Haustier nicht mitnehmen",
+                "sentence": "Morgen muss ich nach Köln hinfahren und ich kann nicht mein Haustier mitnehmen.",
+                "explanation": "In this sentence, nicht should come after the object; otherwise it sounds like 'not my pet'."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "wie lange muss ich in Köln bleiben",
+                "correct": "wie lange ich in Köln bleiben muss",
+                "sentence": "Ich weiß nicht genau, wie lange muss ich in Köln bleiben.",
+                "explanation": "In an indirect question, the conjugated verb goes to the end."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "ihn",
+                "correct": "ihm",
+                "sentence": "Du sollst ihn nur sein Abendessen geben.",
+                "explanation": "Geben takes a dative indirect object here, so the pronoun must be ihm."
+              },
+              {
+                "message_number": 6,
+                "category": "grammar",
+                "wrong": "Wenn du meinen Hund bei dir bleiben möchtest",
+                "correct": "Wenn du möchtest, dass mein Hund bei dir bleibt",
+                "sentence": "Wenn du meinen Hund bei dir bleiben möchtest, ruf mich bitte sofort  auf meinem Handy an.",
+                "explanation": "With möchten, this idea needs a dass-clause because the dog is the subject of bleibt."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a dog named Waldi."
+            ],
+            "scene_notes": [
+              "The learner said they were stressed because they have to go to Cologne tomorrow.",
+              "The learner said they cannot take their pet with them.",
+              "The partner asked how long the learner would stay in Cologne.",
+              "The partner offered to look after the pet.",
+              "The learner said the pet is a dog named Waldi.",
+              "The partner asked what Waldi likes to eat.",
+              "The learner said only the dog's evening meal needs to be given.",
+              "The learner said the dog's food was already prepared."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 746,
+            "cached_input_tokens": 0,
+            "output_tokens": 1622
+          },
+          "extras": [
+            {
+              "message_number": 6,
+              "category": "grammar",
+              "wrong": "Wenn du meinen Hund bei dir bleiben möchtest",
+              "correct": "Wenn du möchtest, dass mein Hund bei dir bleibt",
+              "sentence": "Wenn du meinen Hund bei dir bleiben möchtest, ruf mich bitte sofort  auf meinem Handy an.",
+              "explanation": "With möchten, this idea needs a dass-clause because the dog is the subject of bleibt."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.75,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 21.064,
+          "cost_usd": "0.02438",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht mein Haustier mitnehmen",
+                "correct": "mein Haustier nicht mitnehmen",
+                "sentence": "Morgen muss ich nach Köln hinfahren und ich kann nicht mein Haustier mitnehmen.",
+                "explanation": "In this sentence, the negation with 'nicht' is placed after the object."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "wie lange muss ich in Köln bleiben",
+                "correct": "wie lange ich in Köln bleiben muss",
+                "sentence": "Ich weiß nicht genau, wie lange muss ich in Köln bleiben.",
+                "explanation": "In an indirect question, the conjugated verb goes to the end."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "ihn",
+                "correct": "ihm",
+                "sentence": "Du sollst ihn nur sein Abendessen geben.",
+                "explanation": "The verb 'geben' takes the person receiving something in the dative case."
+              },
+              {
+                "message_number": 6,
+                "category": "grammar",
+                "wrong": "wenn du meinen Hund bei dir bleiben möchtest",
+                "correct": "wenn du möchtest, dass mein Hund bei dir bleibt",
+                "sentence": "Wenn du meinen Hund bei dir bleiben möchtest, ruf mich bitte sofort  auf meinem Handy an.",
+                "explanation": "This idea needs a 'dass'-clause because the dog is the subject of 'bleibt'."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a dog named Waldi."
+            ],
+            "scene_notes": [
+              "The partner said the learner looked a bit stressed.",
+              "The learner said they have to go to Cologne tomorrow.",
+              "The learner said they cannot take their pet with them.",
+              "The partner asked how long the learner would stay in Cologne.",
+              "The partner offered to look after the learner's dog.",
+              "The partner said Waldi is very cute and asked what he likes to eat.",
+              "The learner said the dog should only be given his evening meal.",
+              "The learner said the dog's food was already prepared."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 746,
+            "cached_input_tokens": 0,
+            "output_tokens": 1501
+          },
+          "extras": [
+            {
+              "message_number": 6,
+              "category": "grammar",
+              "wrong": "wenn du meinen Hund bei dir bleiben möchtest",
+              "correct": "wenn du möchtest, dass mein Hund bei dir bleibt",
+              "sentence": "Wenn du meinen Hund bei dir bleiben möchtest, ruf mich bitte sofort  auf meinem Handy an.",
+              "explanation": "This idea needs a 'dass'-clause because the dog is the subject of 'bleibt'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.75,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "katze-reise": [
+        {
+          "repetition": 1,
+          "seconds": 19.45,
+          "cost_usd": "0.022275",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht zu Hause für zwei Wochen",
+                "correct": "für zwei Wochen nicht zu Hause",
+                "sentence": "Ich bin nicht zu Hause für zwei Wochen.",
+                "explanation": "In German, the duration phrase is more natural before the predicate here."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Wie du schon weist, ich habe",
+                "correct": "Wie du schon weißt, habe ich",
+                "sentence": "Wie du schon weist, ich habe eine Katze.",
+                "explanation": "After a clause at the beginning, the verb must come before the subject in the main clause."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "mit meine Katze",
+                "correct": "mit meiner Katze",
+                "sentence": "Kannst du bitte mit meine Katze spielen.",
+                "explanation": "The preposition \"mit\" takes the dative case, so \"meine\" changes to \"meiner\"."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "bin sehr bedanken",
+                "correct": "bin sehr dankbar",
+                "sentence": "Ich bin sehr bedanken für dein Mithilfe.",
+                "explanation": "After \"sein\", German uses the adjective \"dankbar\", not \"bedanken\"."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "dein Mithilfe",
+                "correct": "deine Mithilfe",
+                "sentence": "Ich bin sehr bedanken für dein Mithilfe.",
+                "explanation": "\"Mithilfe\" is feminine, so the possessive must be \"deine\"."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a cat."
+            ],
+            "scene_notes": [
+              "The partner asked where the learner is going.",
+              "The learner said they will not be home for two weeks.",
+              "The partner asked again what the learner's cat is called.",
+              "The learner asked the partner to play with their cat.",
+              "The partner said they like playing with cats.",
+              "The learner said pets are not allowed in the hotel.",
+              "The partner agreed to look after the cat."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 696,
+            "cached_input_tokens": 0,
+            "output_tokens": 1369
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 16.697,
+          "cost_usd": "0.0213",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht zu Hause für zwei Wochen",
+                "correct": "für zwei Wochen nicht zu Hause",
+                "sentence": "Ich bin nicht zu Hause für zwei Wochen.",
+                "explanation": "The time expression sounds more natural before the phrase \"nicht zu Hause\" here."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Wie du schon weist, ich habe",
+                "correct": "Wie du schon weißt, habe ich",
+                "sentence": "Wie du schon weist, ich habe eine Katze.",
+                "explanation": "After an introductory clause, the conjugated verb must come before the subject in the main clause."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "mit meine Katze",
+                "correct": "mit meiner Katze",
+                "sentence": "Kannst du bitte mit meine Katze spielen.",
+                "explanation": "The preposition \"mit\" always takes the dative case."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "bin sehr bedanken",
+                "correct": "bin sehr dankbar",
+                "sentence": "Ich bin sehr bedanken für dein Mithilfe.",
+                "explanation": "After \"ich bin\" you need the adjective \"dankbar,\" not the verb \"bedanken\"."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "dein Mithilfe",
+                "correct": "deine Mithilfe",
+                "sentence": "Ich bin sehr bedanken für dein Mithilfe.",
+                "explanation": "After \"für,\" the feminine noun \"Mithilfe\" takes the accusative form \"deine\"."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a cat."
+            ],
+            "scene_notes": [
+              "The partner asked where the learner is going.",
+              "The learner said they would be away from home for two weeks.",
+              "The learner reminded the partner that they have a cat.",
+              "The partner asked what the cat is called.",
+              "The learner asked the partner to play with the cat.",
+              "The learner said pets are not allowed in the hotel.",
+              "The partner agreed to look after the cat.",
+              "The learner thanked the partner for the help."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 696,
+            "cached_input_tokens": 0,
+            "output_tokens": 1304
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.8,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 13.253,
+          "cost_usd": "0.01587",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht zu Hause für zwei Wochen",
+                "correct": "für zwei Wochen nicht zu Hause",
+                "sentence": "Ich bin nicht zu Hause für zwei Wochen.",
+                "explanation": "In German, the time expression is normally placed before the predicate here."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Wie du schon weist, ich habe eine Katze",
+                "correct": "Wie du schon weißt, habe ich eine Katze",
+                "sentence": "Wie du schon weist, ich habe eine Katze.",
+                "explanation": "After an introductory subordinate clause, the main clause must begin with the verb."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "mit meine Katze",
+                "correct": "mit meiner Katze",
+                "sentence": "Kannst du bitte mit meine Katze spielen.",
+                "explanation": "The preposition 'mit' requires the dative case."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "bin sehr bedanken",
+                "correct": "bin sehr dankbar",
+                "sentence": "Ich bin sehr bedanken für dein Mithilfe.",
+                "explanation": "'Bedanken' is a verb, but this sentence needs the adjective 'dankbar'."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "dein Mithilfe",
+                "correct": "deine Mithilfe",
+                "sentence": "Ich bin sehr bedanken für dein Mithilfe.",
+                "explanation": "The preposition 'für' requires the accusative case, so the feminine possessive form is 'deine'."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a cat.",
+              "The learner is away from home for two weeks.",
+              "Pets are not allowed in the learner's hotel."
+            ],
+            "scene_notes": [
+              "The partner asked where the learner was going.",
+              "The conversation was about the learner being away for two weeks.",
+              "The learner reminded the partner that they have a cat.",
+              "The partner asked for the cat's name.",
+              "The learner asked the partner to play with the cat.",
+              "The learner said pets are not allowed in the hotel.",
+              "The partner agreed to look after the cat.",
+              "The learner thanked the partner for the help."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 696,
+            "cached_input_tokens": 0,
+            "output_tokens": 942
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "wohnung-neuburg": [
+        {
+          "repetition": 1,
+          "seconds": 15.935,
+          "cost_usd": "0.0189575",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "vocabulary",
+                "wrong": "eine neue Arbeit",
+                "correct": "einen neuen Job",
+                "sentence": "Ich habe endlich eine neue Arbeit in Neuburg gefunden.",
+                "explanation": "In this context, German usually says Job or Stelle for employment, not Arbeit."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Deshalb ich muss",
+                "correct": "Deshalb muss ich",
+                "sentence": "Deshalb ich muss eine Wohnung suchen.",
+                "explanation": "After deshalb, the conjugated verb must come in second position."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "bitte hilfe",
+                "correct": "bitte helfen",
+                "sentence": "Ich suche eine Wohnung in Neuburg, kannst du mir bitte hilfe?",
+                "explanation": "After kannst du mir, you need the infinitive helfen, not the noun Hilfe."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "die Wohnung Erdgeschoss ist",
+                "correct": "die Wohnung im Erdgeschoss ist",
+                "sentence": "Wenn die Wohnung Erdgeschoss ist, ich bin sehr zufrieden.",
+                "explanation": "The phrase needs the preposition im: im Erdgeschoss."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "ich bin",
+                "correct": "bin ich",
+                "sentence": "Wenn die Wohnung Erdgeschoss ist, ich bin sehr zufrieden.",
+                "explanation": "After a subordinate clause with wenn, the main clause starts with the verb."
+              }
+            ],
+            "learner_facts": [
+              "The learner found a new job in Neuburg.",
+              "The learner is looking for an apartment in Neuburg.",
+              "The learner would be very satisfied with an apartment on the ground floor."
+            ],
+            "scene_notes": [
+              "The conversation was about moving because of a new job.",
+              "The partner asked when the new job starts.",
+              "The partner said apartments in Neuburg are quite expensive.",
+              "The learner asked for help finding an apartment.",
+              "The partner asked how many rooms the learner needs.",
+              "The partner said they know a real estate agent in Neuburg."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 707,
+            "cached_input_tokens": 0,
+            "output_tokens": 1146
+          },
+          "extras": [
+            {
+              "message_number": 1,
+              "category": "vocabulary",
+              "wrong": "eine neue Arbeit",
+              "correct": "einen neuen Job",
+              "sentence": "Ich habe endlich eine neue Arbeit in Neuburg gefunden.",
+              "explanation": "In this context, German usually says Job or Stelle for employment, not Arbeit."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.75,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": [
+            {
+              "kind": "A4",
+              "detail": "item 1 (message 1, wrong 'eine neue Arbeit'): the message has no mistakes"
+            }
+          ]
+        },
+        {
+          "repetition": 2,
+          "seconds": 14.883,
+          "cost_usd": "0.0171275",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Deshalb ich muss",
+                "correct": "Deshalb muss ich",
+                "sentence": "Deshalb ich muss eine Wohnung suchen.",
+                "explanation": "After \"deshalb\", the finite verb must come in second position."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "kannst du mir bitte hilfe",
+                "correct": "kannst du mir bitte helfen",
+                "sentence": "Ich suche eine Wohnung in Neuburg, kannst du mir bitte hilfe?",
+                "explanation": "After \"kannst du\", you need the infinitive verb \"helfen\"."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "die Wohnung Erdgeschoss ist",
+                "correct": "die Wohnung im Erdgeschoss ist",
+                "sentence": "Wenn die Wohnung Erdgeschoss ist, ich bin sehr zufrieden.",
+                "explanation": "In German, location here needs the preposition \"im\"."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "ich bin sehr zufrieden",
+                "correct": "bin ich sehr zufrieden",
+                "sentence": "Wenn die Wohnung Erdgeschoss ist, ich bin sehr zufrieden.",
+                "explanation": "After a subordinate clause with \"wenn\", the main clause starts with the verb."
+              }
+            ],
+            "learner_facts": [
+              "The learner found a new job in Neuburg.",
+              "The learner is looking for an apartment in Neuburg.",
+              "The learner would be very satisfied with a ground-floor apartment."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner moving and finding housing.",
+              "The partner congratulated the learner on the new job.",
+              "The partner asked when the new job starts.",
+              "The partner said apartments in Neuburg are quite expensive.",
+              "The partner offered help with the apartment search.",
+              "The partner asked how many rooms the learner needs.",
+              "The partner said they know a real estate agent in Neuburg."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 707,
+            "cached_input_tokens": 0,
+            "output_tokens": 1024
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.75,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 15.354,
+          "cost_usd": "0.0194825",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "vocabulary",
+                "wrong": "eine neue Arbeit",
+                "correct": "einen neuen Job",
+                "sentence": "Ich habe endlich eine neue Arbeit in Neuburg gefunden.",
+                "explanation": "For employment, German usually says „einen neuen Job“ or „eine neue Stelle“, not „eine neue Arbeit“."
+              },
+              {
+                "message_number": 2,
+                "category": "word_order",
+                "wrong": "Deshalb ich muss",
+                "correct": "Deshalb muss ich",
+                "sentence": "Deshalb ich muss eine Wohnung suchen.",
+                "explanation": "After „deshalb“, the finite verb must come before the subject in a main clause."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "kannst du mir bitte hilfe",
+                "correct": "kannst du mir bitte helfen",
+                "sentence": "Ich suche eine Wohnung in Neuburg, kannst du mir bitte hilfe?",
+                "explanation": "After „kannst du“, you need the infinitive verb „helfen“."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "Wohnung Erdgeschoss ist",
+                "correct": "Wohnung im Erdgeschoss ist",
+                "sentence": "Wenn die Wohnung Erdgeschoss ist, ich bin sehr zufrieden.",
+                "explanation": "German needs the preposition „im“ with „Erdgeschoss“ here."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "ich bin sehr zufrieden",
+                "correct": "bin ich sehr zufrieden",
+                "sentence": "Wenn die Wohnung Erdgeschoss ist, ich bin sehr zufrieden.",
+                "explanation": "After a subordinate clause with „wenn“, the main clause starts with the verb."
+              }
+            ],
+            "learner_facts": [
+              "The learner found a new job in Neuburg.",
+              "The learner is looking for an apartment in Neuburg.",
+              "The learner would be very happy with a ground-floor apartment."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner moving and finding housing.",
+              "The learner said they found a new job in Neuburg.",
+              "The partner said apartments in Neuburg are expensive.",
+              "The partner asked when the new job starts.",
+              "The learner asked for help finding an apartment.",
+              "The partner asked how many rooms the learner needs.",
+              "The learner said a ground-floor apartment would make them very happy.",
+              "The partner said they know a realtor in Neuburg."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 707,
+            "cached_input_tokens": 0,
+            "output_tokens": 1181
+          },
+          "extras": [
+            {
+              "message_number": 1,
+              "category": "vocabulary",
+              "wrong": "eine neue Arbeit",
+              "correct": "einen neuen Job",
+              "sentence": "Ich habe endlich eine neue Arbeit in Neuburg gefunden.",
+              "explanation": "For employment, German usually says „einen neuen Job“ or „eine neue Stelle“, not „eine neue Arbeit“."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.75,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": [
+            {
+              "kind": "A4",
+              "detail": "item 1 (message 1, wrong 'eine neue Arbeit'): the message has no mistakes"
+            }
+          ]
+        }
+      ],
+      "baby-glueckwunsch": [
+        {
+          "repetition": 1,
+          "seconds": 12.254,
+          "cost_usd": "0.015565",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "frohe mich",
+                "correct": "freue mich",
+                "sentence": "ich frohe mich für euch.",
+                "explanation": "The verb 'sich freuen' is conjugated here as 'ich freue mich'."
+              },
+              {
+                "message_number": 3,
+                "category": "word_order",
+                "wrong": "Wie es der Mutter des Babys geht?",
+                "correct": "Wie geht es der Mutter des Babys?",
+                "sentence": "Wie es der Mutter des Babys geht?",
+                "explanation": "In a direct question, the verb must come before the subject."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "dass ich nächste Woche es kennenlernen kann",
+                "correct": "dass ich es nächste Woche kennenlernen kann",
+                "sentence": "Ich hoffe, dass ich nächste Woche es kennenlernen kann.",
+                "explanation": "The pronoun 'es' normally comes before the time expression in this clause."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "Gesund",
+                "correct": "Gesundheit",
+                "sentence": "Ich gratuliere und wünsche viel Glük, Gesund und alles Gute.",
+                "explanation": "After 'wünsche', you need the noun 'Gesundheit', not the adjective 'gesund'."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The partner said they had a baby daughter.",
+              "The learner reacted happily to the news.",
+              "The partner said the baby often cries at night.",
+              "The learner asked how the baby's mother was doing.",
+              "The partner said the mother was feeling much better.",
+              "The partner invited the learner to visit soon.",
+              "The learner hoped to meet the baby next week.",
+              "The partner asked whether the learner had children."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 712,
+            "cached_input_tokens": 0,
+            "output_tokens": 919
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.75,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 12.567,
+          "cost_usd": "0.014575",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "frohe mich",
+                "correct": "freue mich",
+                "sentence": "ich frohe mich für euch.",
+                "explanation": "The verb \"sich freuen\" is conjugated here as \"freue,\" not \"frohe.\""
+              },
+              {
+                "message_number": 3,
+                "category": "word_order",
+                "wrong": "Wie es der Mutter des Babys geht",
+                "correct": "Wie geht es der Mutter des Babys",
+                "sentence": "Wie es der Mutter des Babys geht?",
+                "explanation": "In a direct question, the verb must come right after the question word."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "nächste Woche es kennenlernen",
+                "correct": "es nächste Woche kennenlernen",
+                "sentence": "Ich hoffe, dass ich nächste Woche es kennenlernen kann.",
+                "explanation": "In the middle field, the pronoun object \"es\" normally comes before the time expression."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "Gesund",
+                "correct": "Gesundheit",
+                "sentence": "Ich gratuliere und wünsche viel Glük, Gesund und alles Gute.",
+                "explanation": "The correct noun in this expression is \"Gesundheit,\" not the adjective \"gesund.\""
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The partner announced that they had a daughter.",
+              "The partner said they are happy but tired because the baby often cries at night.",
+              "The learner asked how the baby's mother is doing.",
+              "The partner said the mother is already feeling much better.",
+              "The partner invited the learner to visit soon.",
+              "The partner asked whether the learner has children.",
+              "The learner offered congratulations and good wishes."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 712,
+            "cached_input_tokens": 0,
+            "output_tokens": 853
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.75,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 11.553,
+          "cost_usd": "0.01477",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "frohe mich",
+                "correct": "freue mich",
+                "sentence": "ich frohe mich für euch.",
+                "explanation": "The verb 'sich freuen' is conjugated as 'ich freue', not 'ich frohe'."
+              },
+              {
+                "message_number": 3,
+                "category": "word_order",
+                "wrong": "Wie es der Mutter des Babys geht?",
+                "correct": "Wie geht es der Mutter des Babys?",
+                "sentence": "Wie es der Mutter des Babys geht?",
+                "explanation": "In a direct question, the conjugated verb comes before the subject."
+              },
+              {
+                "message_number": 4,
+                "category": "word_order",
+                "wrong": "nächste Woche es kennenlernen",
+                "correct": "es nächste Woche kennenlernen",
+                "sentence": "Ich hoffe, dass ich nächste Woche es kennenlernen kann.",
+                "explanation": "The pronoun 'es' normally comes before the time expression in this clause."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "Gesund",
+                "correct": "Gesundheit",
+                "sentence": "Ich gratuliere und wünsche viel Glük, Gesund und alles Gute.",
+                "explanation": "After 'wünsche', you need the noun 'Gesundheit', not the adjective 'gesund'."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The partner announced that they had a daughter.",
+              "The learner congratulated the partner.",
+              "The partner said they were happy but tired because the baby often cries at night.",
+              "The learner asked how the baby's mother was doing.",
+              "The partner said the mother was already feeling much better.",
+              "The partner invited the learner to visit soon.",
+              "The learner said they hoped to meet the baby next week.",
+              "The partner asked whether the learner has children."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 712,
+            "cached_input_tokens": 0,
+            "output_tokens": 866
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.75,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "fahrkarte-ausflug": [
+        {
+          "repetition": 1,
+          "seconds": 12.535,
+          "cost_usd": "0.0146025",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "aber kann",
+                "correct": "aber ich kann",
+                "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+                "explanation": "After 'aber', the clause still needs the subject 'ich'."
+              },
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht leider fahren",
+                "correct": "leider nicht fahren",
+                "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+                "explanation": "In this sentence, 'leider' normally comes before 'nicht'."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "du die Fahrkarte haben möchte",
+                "correct": "du die Fahrkarte haben möchtest",
+                "sentence": "Ich möchte wissen, ob du die Fahrkarte haben möchte.",
+                "explanation": "The verb must agree with 'du', so it should be 'möchtest'."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "du kann",
+                "correct": "du kannst",
+                "sentence": "Die ganze Reise ist kostenlos und du kann am Abend zurückkommen.",
+                "explanation": "The verb must agree with 'du', so it should be 'kannst'."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The learner called about a bus trip ticket to Stadt X.",
+              "The learner cannot go because their grandfather is in the hospital.",
+              "The learner offered the ticket to the partner.",
+              "The partner asked when the bus leaves.",
+              "The learner said the trip is free and the partner can return in the evening.",
+              "The learner thought the partner was free on the weekend."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 717,
+            "cached_input_tokens": 0,
+            "output_tokens": 854
+          },
+          "extras": [
+            {
+              "message_number": 1,
+              "category": "grammar",
+              "wrong": "aber kann",
+              "correct": "aber ich kann",
+              "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+              "explanation": "After 'aber', the clause still needs the subject 'ich'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 18.756,
+          "cost_usd": "0.0210525",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht leider",
+                "correct": "leider nicht",
+                "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+                "explanation": "In German, \"leider\" normally comes before \"nicht\" here."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "haben möchte",
+                "correct": "haben möchtest",
+                "sentence": "Ich möchte wissen, ob du die Fahrkarte haben möchte.",
+                "explanation": "The modal verb must agree with \"du\", so it takes the ending \"-st\"."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "du kann",
+                "correct": "du kannst",
+                "sentence": "Die ganze Reise ist kostenlos und du kann am Abend zurückkommen.",
+                "explanation": "The verb must agree with \"du\", so \"kann\" becomes \"kannst\"."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The learner bought a ticket for a bus trip to City X but cannot go.",
+              "The learner said their grandfather is sick and in the hospital.",
+              "The learner offered the ticket to the partner.",
+              "The partner asked when the bus leaves.",
+              "The learner said the whole trip is free and the partner can come back in the evening.",
+              "The learner thought the partner was free at the weekend."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 717,
+            "cached_input_tokens": 0,
+            "output_tokens": 1284
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 16.977,
+          "cost_usd": "0.0185625",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "aber kann",
+                "correct": "aber ich kann",
+                "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+                "explanation": "After the conjunction \"aber\", the new main clause needs its own subject."
+              },
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "nicht leider fahren",
+                "correct": "leider nicht fahren",
+                "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+                "explanation": "In German, \"leider\" normally comes before \"nicht\" here."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "möchte",
+                "correct": "möchtest",
+                "sentence": "Ich möchte wissen, ob du die Fahrkarte haben möchte.",
+                "explanation": "The verb must agree with the subject \"du\"."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "du kann",
+                "correct": "du kannst",
+                "sentence": "Die ganze Reise ist kostenlos und du kann am Abend zurückkommen.",
+                "explanation": "The verb must be conjugated for the subject \"du\"."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The learner had bought a ticket for a bus trip to City X.",
+              "The learner could not go because their grandfather was sick and in the hospital.",
+              "The learner offered the ticket to the partner.",
+              "The partner asked when the bus would leave.",
+              "The learner said the whole trip was free.",
+              "The learner said the partner could return in the evening.",
+              "The learner thought the partner was free at the weekend."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 717,
+            "cached_input_tokens": 0,
+            "output_tokens": 1118
+          },
+          "extras": [
+            {
+              "message_number": 1,
+              "category": "grammar",
+              "wrong": "aber kann",
+              "correct": "aber ich kann",
+              "sentence": "Ich habe eine Fahrkarte für einen Busausflug nach Stadt X gekauft, aber kann nicht leider fahren.",
+              "explanation": "After the conjunction \"aber\", the new main clause needs its own subject."
+            },
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "möchte",
+              "correct": "möchtest",
+              "sentence": "Ich möchte wissen, ob du die Fahrkarte haben möchte.",
+              "explanation": "The verb must agree with the subject \"du\"."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 1.0,
+            "extras": 2.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        }
+      ],
+      "besuch-sommer": [
+        {
+          "repetition": 1,
+          "seconds": 12.431,
+          "cost_usd": "0.016235",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "schon dich lange",
+                "correct": "dich schon lange",
+                "sentence": "Ich habe schon dich lange nicht gesehen.",
+                "explanation": "In German, the object pronoun normally comes before adverbs like \"schon lange\" here."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "mich sehr frohen",
+                "correct": "mich sehr freuen",
+                "sentence": "Ich würde mich sehr frohen, wenn du mich besuchst!",
+                "explanation": "After \"würde\", the verb must be in the infinitive form."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "ein leere Zimmer",
+                "correct": "ein leeres Zimmer",
+                "sentence": "Hier haben wir ein leere Zimmer und du kannst hier schlafen.",
+                "explanation": "The adjective ending must agree with the neuter noun \"Zimmer\" after \"ein\"."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a spare room at home."
+            ],
+            "scene_notes": [
+              "They talked about not having seen each other for a long time.",
+              "The partner asked when the learner has vacation.",
+              "The learner said they will come visit when they get vacation.",
+              "The partner said they are free in May and could visit first.",
+              "The partner asked where they could sleep at the learner's place.",
+              "The learner said there is a spare room for the partner.",
+              "The partner said they would also like to go to the sea.",
+              "The learner suggested they might travel together if the partner visits."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 716,
+            "cached_input_tokens": 0,
+            "output_tokens": 963
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.6666666666666666,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 11.487,
+          "cost_usd": "0.01406",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "schon dich lange",
+                "correct": "dich schon lange",
+                "sentence": "Ich habe schon dich lange nicht gesehen.",
+                "explanation": "In German, the object pronoun usually comes before time expressions like 'schon lange'."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "würde mich sehr frohen",
+                "correct": "würde mich sehr freuen",
+                "sentence": "Ich würde mich sehr frohen, wenn du mich besuchst!",
+                "explanation": "The infinitive after 'würde' must be 'freuen'."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "ein leere Zimmer",
+                "correct": "ein leeres Zimmer",
+                "sentence": "Hier haben wir ein leere Zimmer und du kannst hier schlafen.",
+                "explanation": "The adjective after 'ein' with the neuter noun 'Zimmer' needs the ending '-es'."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The speakers talked about meeting again after a long time.",
+              "The partner asked when the learner has vacation.",
+              "The learner said they will come once they get vacation.",
+              "The partner said they are free in May and might visit first.",
+              "The partner asked where they could sleep at the learner's place.",
+              "The learner said there is an empty room.",
+              "The partner said they would like to go to the sea once.",
+              "The learner suggested they could maybe go together if the partner visits."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 716,
+            "cached_input_tokens": 0,
+            "output_tokens": 818
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 0.6666666666666666,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 12.98,
+          "cost_usd": "0.016445",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "word_order",
+                "wrong": "schon dich lange",
+                "correct": "dich schon lange",
+                "sentence": "Ich habe schon dich lange nicht gesehen.",
+                "explanation": "In German, the object pronoun usually comes before time expressions like 'schon lange' here."
+              },
+              {
+                "message_number": 3,
+                "category": "vocabulary",
+                "wrong": "mich sehr frohen",
+                "correct": "mich sehr freuen",
+                "sentence": "Ich würde mich sehr frohen, wenn du mich besuchst!",
+                "explanation": "The correct verb is 'sich freuen', not 'frohen'."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "ein leere Zimmer",
+                "correct": "ein leeres Zimmer",
+                "sentence": "Hier haben wir ein leere Zimmer und du kannst hier schlafen.",
+                "explanation": "The adjective must agree with the neuter noun 'Zimmer' after 'ein'."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a spare room at home.",
+              "The learner can host the partner overnight."
+            ],
+            "scene_notes": [
+              "They talked about not having seen each other for a long time.",
+              "The partner asked when the learner has vacation.",
+              "The learner said they will come when they get vacation.",
+              "The partner said they are free in May and could visit first.",
+              "They discussed where the partner could sleep.",
+              "The learner offered a spare room.",
+              "The partner said they would like to go to the sea once.",
+              "The learner suggested they might go together if the partner visits."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 716,
+            "cached_input_tokens": 0,
+            "output_tokens": 977
+          },
+          "extras": [],
+          "neutral": [],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "geburtstag-party": [
+        {
+          "repetition": 1,
+          "seconds": 11.338,
+          "cost_usd": "0.0151375",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "eine klein Geburtstag Party",
+                "correct": "eine kleine Geburtstagsparty",
+                "sentence": "Am Wochenende habe ich eine klein Geburtstag Party.",
+                "explanation": "The adjective needs the ending -e after 'eine' in the accusative singular feminine noun phrase."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "zu meine Party",
+                "correct": "zu meiner Party",
+                "sentence": "Wir treffen uns zu meine Party.",
+                "explanation": "The preposition 'zu' takes the dative case, so 'meine' must become 'meiner'."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "warte für",
+                "correct": "warte auf",
+                "sentence": "Ich warte für deine Antwort.",
+                "explanation": "In German, the verb 'warten' is used with the preposition 'auf', not 'für'."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a birthday soon.",
+              "The learner would like a dog or a cat."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner's upcoming birthday.",
+              "The partner asked how the learner wanted to celebrate.",
+              "The learner said the celebration would be on the weekend.",
+              "The partner offered to bring a cake.",
+              "The partner asked what the learner wanted for their birthday.",
+              "The learner said they wanted a dog or a cat.",
+              "The partner said a pet is a big gift.",
+              "The partner said they needed to speak with Lena first."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 691,
+            "cached_input_tokens": 0,
+            "output_tokens": 894
+          },
+          "extras": [
+            {
+              "message_number": 5,
+              "category": "vocabulary",
+              "wrong": "warte für",
+              "correct": "warte auf",
+              "sentence": "Ich warte für deine Antwort.",
+              "explanation": "In German, the verb 'warten' is used with the preposition 'auf', not 'für'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 8.095,
+          "cost_usd": "0.0111325",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "eine klein Geburtstag Party",
+                "correct": "eine kleine Geburtstagsparty",
+                "sentence": "Am Wochenende habe ich eine klein Geburtstag Party.",
+                "explanation": "The adjective needs the ending -e after 'eine', and the noun is normally written as one compound word in German."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "zu meine Party",
+                "correct": "zu meiner Party",
+                "sentence": "Wir treffen uns zu meine Party.",
+                "explanation": "The preposition 'zu' takes the dative case, so 'meine' must change to 'meiner'."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "warte für",
+                "correct": "warte auf",
+                "sentence": "Ich warte für deine Antwort.",
+                "explanation": "In German, the verb 'warten' is used with the preposition 'auf', not 'für'."
+              }
+            ],
+            "learner_facts": [
+              "The learner would like a dog or a cat."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner's upcoming birthday.",
+              "The partner asked how the learner wanted to celebrate.",
+              "The learner said there would be a party on the weekend.",
+              "The partner offered to bring a cake.",
+              "The partner asked what the learner wanted for their birthday.",
+              "The partner said a pet is a big gift and they needed to speak with Lena first.",
+              "The learner said they were waiting for the partner's answer."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 691,
+            "cached_input_tokens": 0,
+            "output_tokens": 627
+          },
+          "extras": [
+            {
+              "message_number": 5,
+              "category": "vocabulary",
+              "wrong": "warte für",
+              "correct": "warte auf",
+              "sentence": "Ich warte für deine Antwort.",
+              "explanation": "In German, the verb 'warten' is used with the preposition 'auf', not 'für'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 11.144,
+          "cost_usd": "0.0141775",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "eine klein Geburtstag Party",
+                "correct": "eine kleine Geburtstagsparty",
+                "sentence": "Am Wochenende habe ich eine klein Geburtstag Party.",
+                "explanation": "The adjective needs the ending -e after 'eine', and the noun is normally one compound word in German."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "zu meine Party",
+                "correct": "zu meiner Party",
+                "sentence": "Wir treffen uns zu meine Party.",
+                "explanation": "After 'zu', the noun phrase takes the dative case, so 'meine' becomes 'meiner'."
+              },
+              {
+                "message_number": 5,
+                "category": "vocabulary",
+                "wrong": "warte für",
+                "correct": "warte auf",
+                "sentence": "Ich warte für deine Antwort.",
+                "explanation": "The verb 'warten' is used with the preposition 'auf', not 'für'."
+              }
+            ],
+            "learner_facts": [
+              "The learner has a birthday soon.",
+              "The learner plans to have a birthday party on the weekend.",
+              "The learner would like a dog or a cat as a birthday gift."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner's upcoming birthday.",
+              "The partner asked how the learner wants to celebrate.",
+              "The learner said there will be a party on the weekend.",
+              "The partner offered to bring a cake.",
+              "The partner asked what the learner wants for their birthday.",
+              "The learner said they would like a dog or a cat.",
+              "The partner said a pet is a big gift and they need to speak with Lena first."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 691,
+            "cached_input_tokens": 0,
+            "output_tokens": 830
+          },
+          "extras": [
+            {
+              "message_number": 5,
+              "category": "vocabulary",
+              "wrong": "warte für",
+              "correct": "warte auf",
+              "sentence": "Ich warte für deine Antwort.",
+              "explanation": "The verb 'warten' is used with the preposition 'auf', not 'für'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 1.0,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "schwimmbad": [
+        {
+          "repetition": 1,
+          "seconds": 11.769,
+          "cost_usd": "0.01456",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "Mochtest",
+                "correct": "Möchtest",
+                "sentence": "Mochtest du mit mir Schwimmen gehen?",
+                "explanation": "You need the polite present form 'möchtest' to make an invitation."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "Konntest",
+                "correct": "Könntest",
+                "sentence": "Konntest du Getränken mitbringen?",
+                "explanation": "For a polite request in German, use 'könntest' instead of the past form 'konntest'."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "Getränken",
+                "correct": "Getränke",
+                "sentence": "Konntest du Getränken mitbringen?",
+                "explanation": "After 'mitbringen', the direct object should be in the accusative plural: 'Getränke'."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "warte deine Antwort",
+                "correct": "warte auf deine Antwort",
+                "sentence": "Ich warte deine Antwort.",
+                "explanation": "The verb 'warten' is used with the preposition 'auf' in German."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The conversation was about weekend plans.",
+              "The learner said they want to go to the swimming pool on Saturday at 6 p.m.",
+              "The learner invited the partner to go swimming.",
+              "The partner agreed and asked what to bring.",
+              "The learner asked the partner to bring drinks.",
+              "The learner said they will bring pizza and fruit.",
+              "The partner said they would ask their brother to come too.",
+              "The learner said they are waiting for the partner's answer."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 676,
+            "cached_input_tokens": 0,
+            "output_tokens": 858
+          },
+          "extras": [],
+          "neutral": [
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "Konntest",
+              "correct": "Könntest",
+              "sentence": "Konntest du Getränken mitbringen?",
+              "explanation": "For a polite request in German, use 'könntest' instead of the past form 'konntest'."
+            }
+          ],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 0.0,
+            "notes_questions": 1.0
+          },
+          "violations": [
+            {
+              "kind": "A3",
+              "detail": "item 1 (message 2, wrong 'Mochtest'): reports a typo"
+            }
+          ]
+        },
+        {
+          "repetition": 2,
+          "seconds": 11.91,
+          "cost_usd": "0.01447",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "Mochtest du",
+                "correct": "Möchtest du",
+                "sentence": "Mochtest du mit mir Schwimmen gehen?",
+                "explanation": "You need the present tense form of the modal verb here to make an invitation."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "Konntest du",
+                "correct": "Könntest du",
+                "sentence": "Konntest du Getränken mitbringen?",
+                "explanation": "For a polite request in German, you use the subjunctive form 'könntest'."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "Getränken",
+                "correct": "Getränke",
+                "sentence": "Konntest du Getränken mitbringen?",
+                "explanation": "After 'mitbringen', the plural direct object should be 'Getränke', not the dative form 'Getränken'."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "warte deine Antwort",
+                "correct": "warte auf deine Antwort",
+                "sentence": "Ich warte deine Antwort.",
+                "explanation": "The verb 'warten' normally needs the preposition 'auf' in this meaning."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The conversation was about weekend plans.",
+              "The learner said they want to go to the swimming pool on Saturday at 18:00.",
+              "The learner invited the partner to go swimming with them.",
+              "The partner agreed to come.",
+              "The partner asked what they should bring.",
+              "The learner said they would bring pizza and fruit.",
+              "The partner said they would ask their brother if he could come too."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 676,
+            "cached_input_tokens": 0,
+            "output_tokens": 852
+          },
+          "extras": [],
+          "neutral": [
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "Konntest du",
+              "correct": "Könntest du",
+              "sentence": "Konntest du Getränken mitbringen?",
+              "explanation": "For a polite request in German, you use the subjunctive form 'könntest'."
+            }
+          ],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 0.0,
+            "notes_questions": 1.0
+          },
+          "violations": [
+            {
+              "kind": "A3",
+              "detail": "item 1 (message 2, wrong 'Mochtest du'): reports a typo"
+            }
+          ]
+        },
+        {
+          "repetition": 3,
+          "seconds": 12.016,
+          "cost_usd": "0.01444",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 2,
+                "category": "grammar",
+                "wrong": "Mochtest",
+                "correct": "Möchtest",
+                "sentence": "Mochtest du mit mir Schwimmen gehen?",
+                "explanation": "You need the subjunctive form 'möchtest' here to make a polite invitation."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "Konntest",
+                "correct": "Könntest",
+                "sentence": "Konntest du Getränken mitbringen?",
+                "explanation": "You need the subjunctive form 'könntest' here to make a polite request."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "Getränken",
+                "correct": "Getränke",
+                "sentence": "Konntest du Getränken mitbringen?",
+                "explanation": "After 'mitbringen', the plural noun should be in the accusative form 'Getränke'."
+              },
+              {
+                "message_number": 5,
+                "category": "grammar",
+                "wrong": "warte deine Antwort",
+                "correct": "warte auf deine Antwort",
+                "sentence": "Ich warte deine Antwort.",
+                "explanation": "The verb 'warten' normally takes the preposition 'auf' in this meaning."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The conversation was about weekend plans.",
+              "The learner said they want to go to the swimming pool on Saturday at 6 p.m.",
+              "The learner invited the partner to go swimming.",
+              "The partner agreed to come.",
+              "The partner asked what they should bring.",
+              "The learner asked the partner to bring drinks.",
+              "The learner said they would bring pizza and fruit.",
+              "The partner said they would ask their brother if he could come too."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 676,
+            "cached_input_tokens": 0,
+            "output_tokens": 850
+          },
+          "extras": [],
+          "neutral": [
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "Konntest",
+              "correct": "Könntest",
+              "sentence": "Konntest du Getränken mitbringen?",
+              "explanation": "You need the subjunctive form 'könntest' here to make a polite request."
+            }
+          ],
+          "metrics": {
+            "recall": 1.0,
+            "category_accuracy": 1.0,
+            "extras": 0.0,
+            "typo_free": 0.0,
+            "notes_questions": 1.0
+          },
+          "violations": [
+            {
+              "kind": "A3",
+              "detail": "item 1 (message 2, wrong 'Mochtest'): reports a typo"
+            }
+          ]
+        }
+      ],
+      "au-pair": [
+        {
+          "repetition": 1,
+          "seconds": 25.152,
+          "cost_usd": "0.0279375",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "habe",
+                "correct": "war",
+                "sentence": "Ich habe etwa ein Vierteljahr bei meiner Gastfamilie.",
+                "explanation": "To state how long you stayed somewhere in the past, use \"sein\" here: \"ich war\"."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "soll",
+                "correct": "sollte",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "To describe what was supposed to happen in the past, use \"sollte\"."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "in einen Garage",
+                "correct": "in einer Garage",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "After \"in\" with a location, German uses the dative case, so it is \"in einer Garage\"."
+              }
+            ],
+            "learner_facts": [
+              "The learner was an au-pair in Germany.",
+              "The learner stayed with their host family for about a quarter of a year.",
+              "The learner lived in a garage during the au-pair stay.",
+              "The learner could not learn German well there.",
+              "The learner worked too much and received little pay."
+            ],
+            "scene_notes": [
+              "The partner asked how long the learner stayed with the host family.",
+              "The partner asked how the learner liked the experience there.",
+              "The learner described being very disappointed with the au-pair situation.",
+              "The learner said they were supposed to live with the host family.",
+              "The learner said they lived in a garage instead.",
+              "The learner said they could not learn German there.",
+              "The learner said they worked too much.",
+              "The learner said they received only little pay."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 711,
+            "cached_input_tokens": 0,
+            "output_tokens": 1744
+          },
+          "extras": [
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "soll",
+              "correct": "sollte",
+              "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+              "explanation": "To describe what was supposed to happen in the past, use \"sollte\"."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 0.5,
+            "extras": 1.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 19.914,
+          "cost_usd": "0.0237675",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "habe",
+                "correct": "war",
+                "sentence": "Ich habe etwa ein Vierteljahr bei meiner Gastfamilie.",
+                "explanation": "To state how long you stayed somewhere here, German needs 'war' or a full verb phrase like 'habe ... gewohnt'."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "soll",
+                "correct": "sollte",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "You are talking about a past expectation, so the past form 'sollte' is needed."
+              },
+              {
+                "message_number": 3,
+                "category": "vocabulary",
+                "wrong": "mit der Gastfamilie wohnen",
+                "correct": "bei der Gastfamilie wohnen",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "In this context, German normally says 'bei der Gastfamilie wohnen' for living at the host family's place."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "in einen Garage",
+                "correct": "in einer Garage",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "After 'in' with location, German uses the dative case, so 'einer Garage' is correct."
+              }
+            ],
+            "learner_facts": [
+              "The learner stayed with a host family for about a quarter of a year.",
+              "The learner lived in a garage during that time.",
+              "The learner could not learn German there.",
+              "The learner worked too much.",
+              "The learner received little pay."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner's bad experience with a host family in Germany.",
+              "The partner asked how long the learner stayed with the family.",
+              "The partner asked how the learner liked it there.",
+              "The learner said they were very disappointed.",
+              "The partner asked the learner to tell more.",
+              "The partner reacted with shock when the learner mentioned living in a garage."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 711,
+            "cached_input_tokens": 0,
+            "output_tokens": 1466
+          },
+          "extras": [
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "soll",
+              "correct": "sollte",
+              "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+              "explanation": "You are talking about a past expectation, so the past form 'sollte' is needed."
+            },
+            {
+              "message_number": 3,
+              "category": "vocabulary",
+              "wrong": "mit der Gastfamilie wohnen",
+              "correct": "bei der Gastfamilie wohnen",
+              "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+              "explanation": "In this context, German normally says 'bei der Gastfamilie wohnen' for living at the host family's place."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 0.5,
+            "extras": 2.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 17.732,
+          "cost_usd": "0.0212325",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "habe etwa ein Vierteljahr bei meiner Gastfamilie",
+                "correct": "war etwa ein Vierteljahr bei meiner Gastfamilie",
+                "sentence": "Ich habe etwa ein Vierteljahr bei meiner Gastfamilie.",
+                "explanation": "The sentence needs a complete past-tense verb phrase such as \"war\" here."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "soll",
+                "correct": "sollte",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "This refers to a past expectation, so the past form \"sollte\" is needed."
+              },
+              {
+                "message_number": 3,
+                "category": "vocabulary",
+                "wrong": "mit der Gastfamilie wohnen",
+                "correct": "bei der Gastfamilie wohnen",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "In German, living at someone's home is usually expressed with \"bei\", not \"mit\"."
+              },
+              {
+                "message_number": 3,
+                "category": "grammar",
+                "wrong": "in einen Garage",
+                "correct": "in einer Garage",
+                "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+                "explanation": "A fixed location takes the dative case, so it must be \"in einer Garage\"."
+              }
+            ],
+            "learner_facts": [
+              "The learner was an au-pair in Germany."
+            ],
+            "scene_notes": [
+              "The conversation was about the learner's au-pair experience in Germany.",
+              "The partner asked how long the learner stayed with the host family.",
+              "The learner said they stayed about a quarter of a year.",
+              "The partner asked how the learner liked it there.",
+              "The learner said they were very disappointed.",
+              "The learner said they were supposed to live with the host family but lived in a garage.",
+              "The learner said they could not learn German there.",
+              "The learner said they worked too much and received little pay."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 711,
+            "cached_input_tokens": 0,
+            "output_tokens": 1297
+          },
+          "extras": [
+            {
+              "message_number": 3,
+              "category": "grammar",
+              "wrong": "soll",
+              "correct": "sollte",
+              "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+              "explanation": "This refers to a past expectation, so the past form \"sollte\" is needed."
+            },
+            {
+              "message_number": 3,
+              "category": "vocabulary",
+              "wrong": "mit der Gastfamilie wohnen",
+              "correct": "bei der Gastfamilie wohnen",
+              "sentence": "Ich soll mit der Gastfamilie wohnen, leider habe ich in einen Garage gewohnt.",
+              "explanation": "In German, living at someone's home is usually expressed with \"bei\", not \"mit\"."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 0.5,
+            "extras": 2.0,
+            "typo_free": 1.0,
+            "notes_questions": 0.5
+          },
+          "violations": []
+        }
+      ],
+      "wohnen-miete": [
+        {
+          "repetition": 1,
+          "seconds": 18.492,
+          "cost_usd": "0.0196075",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "Desto näher zum Bahnhof",
+                "correct": "Je näher am Bahnhof",
+                "sentence": "Desto näher zum Bahnhof, desto höher der Mietzins.",
+                "explanation": "German uses the correlative pattern \"je ..., desto ...\" here, and \"am Bahnhof\" fits the location better."
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "kostet teuer",
+                "correct": "ist teuer",
+                "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+                "explanation": "In German, something is usually \"teuer\" or \"kostet viel,\" not \"kostet teuer.\""
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "liegen auf dem Besitzer",
+                "correct": "liegen beim Besitzer",
+                "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+                "explanation": "The usual expression is that costs \"liegen bei\" someone, not \"auf\" someone."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "die Miete sind",
+                "correct": "die Miete ist",
+                "sentence": "Ich möchte gern wissen wie hoch die Miete sind.",
+                "explanation": "\"Die Miete\" is singular, so the verb must also be singular."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The conversation was about where it is best to live in the city.",
+              "The learner said rents are higher closer to the train station.",
+              "The learner compared the costs of a house and an apartment.",
+              "The partner said they pay 800 euros warm rent for two rooms.",
+              "The partner asked whether there is a public transport stop near the learner.",
+              "The learner said many people there live alone."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 709,
+            "cached_input_tokens": 0,
+            "output_tokens": 1189
+          },
+          "extras": [
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "kostet teuer",
+              "correct": "ist teuer",
+              "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+              "explanation": "In German, something is usually \"teuer\" or \"kostet viel,\" not \"kostet teuer.\""
+            },
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "liegen auf dem Besitzer",
+              "correct": "liegen beim Besitzer",
+              "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+              "explanation": "The usual expression is that costs \"liegen bei\" someone, not \"auf\" someone."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 0.5,
+            "extras": 2.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 26.054,
+          "cost_usd": "0.0274675",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "Desto näher",
+                "correct": "Je näher",
+                "sentence": "Desto näher zum Bahnhof, desto höher der Mietzins.",
+                "explanation": "German comparison clauses normally use the pattern 'Je ..., desto ...'."
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "kostet teuer",
+                "correct": "ist teuer",
+                "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+                "explanation": "In German, 'teuer' is not normally used with 'kosten' in this way."
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "liegen auf dem Besitzer",
+                "correct": "trägt der Besitzer",
+                "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+                "explanation": "This is not the usual German expression; costs are something a person 'trägt'."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "die Miete sind",
+                "correct": "die Miete ist",
+                "sentence": "Ich möchte gern wissen wie hoch die Miete sind.",
+                "explanation": "'Die Miete' is singular, so the verb must also be singular."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The conversation was about where it is best to live in the city.",
+              "The partner said that living near the train station is expensive.",
+              "The learner mentioned house costs, repair costs, and apartment prices.",
+              "The partner said they pay 800 euros warm rent for two rooms.",
+              "The partner asked whether there is a stop near the learner.",
+              "The learner said that many people there live alone."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 709,
+            "cached_input_tokens": 0,
+            "output_tokens": 1713
+          },
+          "extras": [
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "kostet teuer",
+              "correct": "ist teuer",
+              "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+              "explanation": "In German, 'teuer' is not normally used with 'kosten' in this way."
+            },
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "liegen auf dem Besitzer",
+              "correct": "trägt der Besitzer",
+              "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+              "explanation": "This is not the usual German expression; costs are something a person 'trägt'."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 0.5,
+            "extras": 2.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 12.585,
+          "cost_usd": "0.0146725",
+          "error": null,
+          "output": {
+            "mistakes": [
+              {
+                "message_number": 1,
+                "category": "grammar",
+                "wrong": "Desto näher",
+                "correct": "Je näher",
+                "sentence": "Desto näher zum Bahnhof, desto höher der Mietzins.",
+                "explanation": "In this comparative pattern, German uses the structure 'je ..., desto ...'."
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "kostet teuer",
+                "correct": "ist teuer",
+                "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+                "explanation": "In German, something is 'teuer' rather than 'kostet teuer'."
+              },
+              {
+                "message_number": 2,
+                "category": "vocabulary",
+                "wrong": "liegen auf dem Besitzer",
+                "correct": "liegen beim Besitzer",
+                "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+                "explanation": "The expression 'Kosten liegen bei jemandem' is the natural phrasing here."
+              },
+              {
+                "message_number": 4,
+                "category": "grammar",
+                "wrong": "die Miete sind",
+                "correct": "die Miete ist",
+                "sentence": "Ich möchte gern wissen wie hoch die Miete sind.",
+                "explanation": "'Die Miete' is singular, so the verb must also be singular."
+              }
+            ],
+            "learner_facts": [],
+            "scene_notes": [
+              "The conversation was about where it is best to live in the city.",
+              "The learner said that rent is higher closer to the train station.",
+              "The learner said houses are expensive and owners pay repair costs.",
+              "The learner said apartments in multi-family buildings are expensive.",
+              "The partner said they pay 800 euros warm for two rooms.",
+              "The partner asked whether there is a public transport stop nearby.",
+              "The learner mentioned that many people live alone there."
+            ],
+            "model": "gpt-5.4",
+            "input_tokens": 709,
+            "cached_input_tokens": 0,
+            "output_tokens": 860
+          },
+          "extras": [
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "kostet teuer",
+              "correct": "ist teuer",
+              "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+              "explanation": "In German, something is 'teuer' rather than 'kostet teuer'."
+            },
+            {
+              "message_number": 2,
+              "category": "vocabulary",
+              "wrong": "liegen auf dem Besitzer",
+              "correct": "liegen beim Besitzer",
+              "sentence": "Ein Haus kostet teuer und alle Reperaturenkosten liegen auf dem Besitzer.",
+              "explanation": "The expression 'Kosten liegen bei jemandem' is the natural phrasing here."
+            }
+          ],
+          "neutral": [],
+          "metrics": {
+            "recall": 0.6666666666666666,
+            "category_accuracy": 0.5,
+            "extras": 2.0,
+            "typo_free": 1.0,
+            "notes_questions": 1.0
+          },
+          "violations": []
+        }
+      ]
+    },
+    "turn": {
+      "bus-bank": [
+        {
+          "repetition": 1,
+          "seconds": 1.917,
+          "cost_usd": "0.0014575",
+          "error": null,
+          "output": {
+            "reply": "Ah, Sie arbeiten in einer Bank – und das ist Ihr Traumjob? Das klingt schön. Ist der Bus heute oft zu spät?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 313,
+            "cached_input_tokens": 0,
+            "output_tokens": 45
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.913,
+          "cost_usd": "0.0014125",
+          "error": null,
+          "output": {
+            "reply": "Ah, Sie arbeiten in einer Bank — und das ist Ihr Traum, schön! Ist der Bus heute oft zu spät?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 313,
+            "cached_input_tokens": 0,
+            "output_tokens": 42
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.741,
+          "cost_usd": "0.0014875",
+          "error": null,
+          "output": {
+            "reply": "Ah, Sie arbeiten in einer Bank? Das ist schön, wenn es Ihr Traum ist. Ist Ihr Weg zur Arbeit mit dem Bus normalerweise lang?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 313,
+            "cached_input_tokens": 0,
+            "output_tokens": 47
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 0.0
+          },
+          "violations": []
+        }
+      ],
+      "apotheke-silvester": [
+        {
+          "repetition": 1,
+          "seconds": 1.94,
+          "cost_usd": "0.001495",
+          "error": null,
+          "output": {
+            "reply": "Das tut mir leid. Die Silvesternacht hat Ihnen leider keinen Spaß gemacht, weil Sie krank waren. Welche Symptome haben Sie jetzt?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 322,
+            "cached_input_tokens": 0,
+            "output_tokens": 46
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.897,
+          "cost_usd": "0.00151",
+          "error": null,
+          "output": {
+            "reply": "Das tut mir leid. Die Silvesternacht hat Ihnen also leider keinen Spaß gemacht, weil Sie krank waren. Welche Symptome haben Sie jetzt?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 322,
+            "cached_input_tokens": 0,
+            "output_tokens": 47
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.399,
+          "cost_usd": "0.00151",
+          "error": null,
+          "output": {
+            "reply": "Das tut mir leid. Die Silvesternacht hat Ihnen leider keinen Spaß gemacht, weil Sie krank waren. Welche Symptome haben Sie jetzt genau?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 322,
+            "cached_input_tokens": 0,
+            "output_tokens": 47
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "verein-firma": [
+        {
+          "repetition": 1,
+          "seconds": 1.944,
+          "cost_usd": "0.0015375",
+          "error": null,
+          "output": {
+            "reply": "Ah, du bist seit drei Monaten bei der Firma XY. Dann wohnst oder arbeitest du wahrscheinlich in der Nähe. Welche Sportart interessiert dich bei uns?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 315,
+            "cached_input_tokens": 0,
+            "output_tokens": 50
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.907,
+          "cost_usd": "0.0015375",
+          "error": null,
+          "output": {
+            "reply": "Ah, du bist also seit drei Monaten bei der Firma XY. Dann wohnst du wahrscheinlich noch nicht so lange hier. Welche Sportart interessiert dich bei uns?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 315,
+            "cached_input_tokens": 0,
+            "output_tokens": 50
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.629,
+          "cost_usd": "0.0016875",
+          "error": null,
+          "output": {
+            "reply": "Ah, du bist also seit drei Monaten bei der Firma XY. Dann wohnst du wahrscheinlich noch nicht so lange hier. Für neue Mitglieder bieten wir zwei kostenlose Probetrainings an. Welche Sportart interessiert dich?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 315,
+            "cached_input_tokens": 0,
+            "output_tokens": 60
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "zug-hamburg": [
+        {
+          "repetition": 1,
+          "seconds": 2.002,
+          "cost_usd": "0.001455",
+          "error": null,
+          "output": {
+            "reply": "Ah, Sie müssen **für vier Tage** nach Hamburg fahren. Das ist ärgerlich. Reisen Sie wegen der Arbeit oder privat?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 312,
+            "cached_input_tokens": 0,
+            "output_tokens": 45
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.622,
+          "cost_usd": "0.001515",
+          "error": null,
+          "output": {
+            "reply": "Ah, Sie müssen für vier Tage nach Hamburg fahren. Das ist ärgerlich bei so einer Verspätung. Reisen Sie beruflich oder privat?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 312,
+            "cached_input_tokens": 0,
+            "output_tokens": 49
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.416,
+          "cost_usd": "0.001425",
+          "error": null,
+          "output": {
+            "reply": "Ah, Sie müssen für vier Tage nach Hamburg fahren. Das ist ärgerlich. Ist es eine Geschäftsreise oder Urlaub?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 312,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "hund-spielen": [
+        {
+          "repetition": 1,
+          "seconds": 1.676,
+          "cost_usd": "0.0012975",
+          "error": null,
+          "output": {
+            "reply": "Danke, das ist nett. Ich kann mit ihm spielen. Wie heißt dein Hund?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 309,
+            "cached_input_tokens": 0,
+            "output_tokens": 35
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.898,
+          "cost_usd": "0.0013275",
+          "error": null,
+          "output": {
+            "reply": "Danke, das ist nett. Ich kann gern mit ihm spielen. Wie alt ist dein Hund?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 309,
+            "cached_input_tokens": 0,
+            "output_tokens": 37
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.769,
+          "cost_usd": "0.0013125",
+          "error": null,
+          "output": {
+            "reply": "Danke, das ist nett. Ich kann mit ihm spielen. Wie alt ist dein Hund?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 309,
+            "cached_input_tokens": 0,
+            "output_tokens": 36
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "treppenhaus-arbeit": [
+        {
+          "repetition": 1,
+          "seconds": 1.987,
+          "cost_usd": "0.00138",
+          "error": null,
+          "output": {
+            "reply": "Oh, schön — ich habe eine neue Arbeit gefunden, das klingt toll! In welchem Bereich arbeitest du jetzt?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 306,
+            "cached_input_tokens": 0,
+            "output_tokens": 41
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.84,
+          "cost_usd": "0.001365",
+          "error": null,
+          "output": {
+            "reply": "Oh, schön — ich habe eine neue Arbeit gefunden, wie toll! Was machst du jetzt beruflich?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 306,
+            "cached_input_tokens": 0,
+            "output_tokens": 40
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.483,
+          "cost_usd": "0.00135",
+          "error": null,
+          "output": {
+            "reply": "Oh, schön — ich habe eine neue Arbeit gefunden, das klingt super. Wo arbeitest du jetzt?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 306,
+            "cached_input_tokens": 0,
+            "output_tokens": 39
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "kollege-leute": [
+        {
+          "repetition": 1,
+          "seconds": 1.768,
+          "cost_usd": "0.0014075",
+          "error": null,
+          "output": {
+            "reply": "Ja, das glaube ich. Es macht auch Spaß, mit Leuten zu arbeiten. Hast du schon Pläne für das Wochenende?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.841,
+          "cost_usd": "0.0014075",
+          "error": null,
+          "output": {
+            "reply": "Ja, das glaube ich. Es macht auch Spaß, mit Leuten zu arbeiten. Hast du schon Pläne für das Wochenende?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.562,
+          "cost_usd": "0.0013775",
+          "error": null,
+          "output": {
+            "reply": "Ja, das glaube ich dir — es macht Spaß, mit Leuten zu arbeiten. Was hast du dieses Wochenende vor?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 41
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "spielplatz-baby": [
+        {
+          "repetition": 1,
+          "seconds": 2.131,
+          "cost_usd": "0.001325",
+          "error": null,
+          "output": {
+            "reply": "Danke, das ist sehr lieb! Ich bin sehr glücklich darüber. Und wie alt ist Ihr Kind?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 302,
+            "cached_input_tokens": 0,
+            "output_tokens": 38
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.029,
+          "cost_usd": "0.001535",
+          "error": null,
+          "output": {
+            "reply": "Oh, danke, das ist sehr lieb — ich freue mich sehr für euch ist auch schön, aber bei uns kommt noch ein Baby dazu. Wie alt ist dein Kind?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 302,
+            "cached_input_tokens": 0,
+            "output_tokens": 52
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.566,
+          "cost_usd": "0.0014",
+          "error": null,
+          "output": {
+            "reply": "Oh, danke! Das ist sehr nett von dir. Mein Sohn freut sich auch schon sehr. Wie alt ist dein Kind?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 302,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "treppenhaus-besuch": [
+        {
+          "repetition": 1,
+          "seconds": 1.508,
+          "cost_usd": "0.001325",
+          "error": null,
+          "output": {
+            "reply": "Das ist nett, danke. Ich freue mich auch auf den Besuch. Wie geht es dir heute?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 302,
+            "cached_input_tokens": 0,
+            "output_tokens": 38
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.371,
+          "cost_usd": "0.001325",
+          "error": null,
+          "output": {
+            "reply": "Schön, ich freue mich auch auf deinen Besuch. Wohnst du schon lange hier im Haus?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 302,
+            "cached_input_tokens": 0,
+            "output_tokens": 38
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.409,
+          "cost_usd": "0.0014",
+          "error": null,
+          "output": {
+            "reply": "Das ist nett, danke! Ich freue mich auch auf meinen Besuch bei dir. Wohnst du schon lange hier im Haus?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 302,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "paket-hilfe": [
+        {
+          "repetition": 1,
+          "seconds": 2.2,
+          "cost_usd": "0.001525",
+          "error": null,
+          "output": {
+            "reply": "Gern, kein Problem. Vielen Dank **für deine Hilfe** sagt man, aber ich helfe dir natürlich gern. Warst du heute den ganzen Tag unterwegs?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 304,
+            "cached_input_tokens": 0,
+            "output_tokens": 51
+          },
+          "markers": [
+            "sagt man"
+          ],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 0.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.846,
+          "cost_usd": "0.00142",
+          "error": null,
+          "output": {
+            "reply": "Gern, kein Problem. Danke für deine Hilfe sagt man eher, aber alles gut. Möchtest du es gleich mitnehmen?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 304,
+            "cached_input_tokens": 0,
+            "output_tokens": 44
+          },
+          "markers": [
+            "sagt man"
+          ],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 0.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.8,
+          "cost_usd": "0.001375",
+          "error": null,
+          "output": {
+            "reply": "Gern, kein Problem. Vielen Dank für Ihre Hilfe sagt man eher. Möchten Sie es gleich mitnehmen?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 304,
+            "cached_input_tokens": 0,
+            "output_tokens": 41
+          },
+          "markers": [
+            "sagt man"
+          ],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 0.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "verein-alter": [
+        {
+          "repetition": 1,
+          "seconds": 1.983,
+          "cost_usd": "0.001645",
+          "error": null,
+          "output": {
+            "reply": "Kein Problem, du hast noch keine Erfahrung und du bist 17 Jahre alt. Bei uns können Anfänger auch mitmachen. Wir bieten zwei Probetrainings kostenlos an. Welche Sportart interessiert dich?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 310,
+            "cached_input_tokens": 0,
+            "output_tokens": 58
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.183,
+          "cost_usd": "0.001645",
+          "error": null,
+          "output": {
+            "reply": "Kein Problem, du hast noch keine Erfahrung und du bist 17 Jahre alt. Bei uns können Anfänger auch mitmachen. Es gibt zuerst zwei kostenlose Probetrainings. Welche Sportart interessiert dich?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 310,
+            "cached_input_tokens": 0,
+            "output_tokens": 58
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.18,
+          "cost_usd": "0.001675",
+          "error": null,
+          "output": {
+            "reply": "Kein Problem, du hast noch keine Erfahrung und du bist 17 Jahre alt. Bei uns können Anfänger auch mitmachen. Für neue Mitglieder gibt es zwei kostenlose Probetrainings. Welche Sportart interessiert dich?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 310,
+            "cached_input_tokens": 0,
+            "output_tokens": 60
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "paket-bitte": [
+        {
+          "repetition": 1,
+          "seconds": 2.957,
+          "cost_usd": "0.0012275",
+          "error": null,
+          "output": {
+            "reply": "Klar, sag einfach Bescheid. Worum geht es?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 31
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.222,
+          "cost_usd": "0.0011525",
+          "error": null,
+          "output": {
+            "reply": "Klar, was brauchst du denn?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 26
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.242,
+          "cost_usd": "0.0011825",
+          "error": null,
+          "output": {
+            "reply": "Klar, was für eine Bitte hast du?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 28
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "hund-nachricht": [
+        {
+          "repetition": 1,
+          "seconds": 1.751,
+          "cost_usd": "0.0014175",
+          "error": null,
+          "output": {
+            "reply": "Schön, ich freue mich auch, dass du geschrieben hast. Dein Hund spielt ja sehr freundlich. Wie alt ist er?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 309,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.68,
+          "cost_usd": "0.0014325",
+          "error": null,
+          "output": {
+            "reply": "Schön, dass du mir geschrieben hast — ich freue mich auch. Dein Hund spielt ja sehr freundlich. Wie alt ist er?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 309,
+            "cached_input_tokens": 0,
+            "output_tokens": 44
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.689,
+          "cost_usd": "0.0014325",
+          "error": null,
+          "output": {
+            "reply": "Schön, ich freue mich auch, dass du mir geschrieben hast. Dein Hund spielt ja sehr freundlich. Wie heißt er denn?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 309,
+            "cached_input_tokens": 0,
+            "output_tokens": 44
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "verein-pruefung": [
+        {
+          "repetition": 1,
+          "seconds": 1.985,
+          "cost_usd": "0.0015025",
+          "error": null,
+          "output": {
+            "reply": "Danke, das ist sehr nett! Im Verein freuen wir uns immer über engagierte Leute. Möchtest du Infos dazu, wie man bei uns Mitglied wird?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 307,
+            "cached_input_tokens": 0,
+            "output_tokens": 49
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.156,
+          "cost_usd": "0.0015625",
+          "error": null,
+          "output": {
+            "reply": "Danke, das ist sehr nett! Im Verein freuen wir uns immer über neue motivierte Leute. Möchtest du Informationen über eine Mitgliedschaft oder erst über ein Probetraining?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 307,
+            "cached_input_tokens": 0,
+            "output_tokens": 53
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.852,
+          "cost_usd": "0.0015025",
+          "error": null,
+          "output": {
+            "reply": "Das klingt super — ich freue mich sehr darüber. Danke! Im Verein suchen wir immer neue Trainerinnen und Trainer. Machst du selbst auch gern Sport?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 307,
+            "cached_input_tokens": 0,
+            "output_tokens": 49
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "treppenhaus-baby": [
+        {
+          "repetition": 1,
+          "seconds": 1.448,
+          "cost_usd": "0.001345",
+          "error": null,
+          "output": {
+            "reply": "Ja, klar, du kannst uns nächste Woche besuchen. Das wäre schön. Welcher Tag passt dir?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 304,
+            "cached_input_tokens": 0,
+            "output_tokens": 39
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.562,
+          "cost_usd": "0.001375",
+          "error": null,
+          "output": {
+            "reply": "Ja, klar, du kannst uns nächste Woche besuchen. Das ist sehr nett. Welcher Tag passt dir denn?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 304,
+            "cached_input_tokens": 0,
+            "output_tokens": 41
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.018,
+          "cost_usd": "0.00136",
+          "error": null,
+          "output": {
+            "reply": "Ja, klar, du kannst uns nächste Woche besuchen. Das ist sehr nett. Welcher Tag passt dir?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 304,
+            "cached_input_tokens": 0,
+            "output_tokens": 40
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "hund-urlaub": [
+        {
+          "repetition": 1,
+          "seconds": 1.831,
+          "cost_usd": "0.001515",
+          "error": null,
+          "output": {
+            "reply": "Ach so, du kannst dein Haustier leider nicht mitnehmen. Das ist schade. Wer passt dann auf deinen Hund auf, wenn du wegfährst?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 306,
+            "cached_input_tokens": 0,
+            "output_tokens": 50
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.696,
+          "cost_usd": "0.00141",
+          "error": null,
+          "output": {
+            "reply": "Ach so, du kannst dein Haustier leider nicht mitnehmen. Das ist schade. Wer passt dann auf deinen Hund auf?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 306,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.034,
+          "cost_usd": "0.00153",
+          "error": null,
+          "output": {
+            "reply": "Ach so, du kannst dein Haustier leider nicht mitnehmen. Das ist schade. Wer kümmert sich dann um deinen Hund, wenn du wegfährst?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 306,
+            "cached_input_tokens": 0,
+            "output_tokens": 51
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "kollege-silvester": [
+        {
+          "repetition": 1,
+          "seconds": 1.845,
+          "cost_usd": "0.0013625",
+          "error": null,
+          "output": {
+            "reply": "Schön! In der Silvesternacht habe ich für meine Familie gekocht. Was hast du denn gekocht?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 40
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.573,
+          "cost_usd": "0.0013775",
+          "error": null,
+          "output": {
+            "reply": "Schön! In der Silvesternacht habe ich auch für meine Familie gekocht. Was hast du denn gemacht?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 41
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.367,
+          "cost_usd": "0.0013625",
+          "error": null,
+          "output": {
+            "reply": "Schön! In der Silvesternacht habe ich für meine Familie gekocht. Was hast du denn gekocht?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 40
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "party-treffen": [
+        {
+          "repetition": 1,
+          "seconds": 2.216,
+          "cost_usd": "0.0014225",
+          "error": null,
+          "output": {
+            "reply": "Ich hoffe, dass wir uns bald treffen können. Das würde mich freuen! Kommst du öfter zu solchen Geburtstagsfeiern?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 44
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.789,
+          "cost_usd": "0.0013925",
+          "error": null,
+          "output": {
+            "reply": "Ich hoffe, dass wir uns bald treffen können. Das würde mich freuen! Möchtest du das Gespräch jetzt beenden?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 42
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.662,
+          "cost_usd": "0.0014225",
+          "error": null,
+          "output": {
+            "reply": "Ja, ich hoffe auch, dass wir uns bald treffen können. Das wäre schön! Möchtest du das Gespräch jetzt beenden?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 305,
+            "cached_input_tokens": 0,
+            "output_tokens": 44
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "kollege-kaffee": [
+        {
+          "repetition": 1,
+          "seconds": 2.099,
+          "cost_usd": "0.00161",
+          "error": null,
+          "output": {
+            "reply": "Verstehe, deshalb können wir uns jetzt nicht treffen. Ich hoffe, deinem Großvater geht es bald besser. Wirst du ihn am Wochenende im Krankenhaus besuchen?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 332,
+            "cached_input_tokens": 0,
+            "output_tokens": 52
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.693,
+          "cost_usd": "0.001415",
+          "error": null,
+          "output": {
+            "reply": "Verstehe, deshalb können wir uns jetzt nicht treffen. Wie geht es deinem Großvater heute?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 332,
+            "cached_input_tokens": 0,
+            "output_tokens": 39
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.665,
+          "cost_usd": "0.001415",
+          "error": null,
+          "output": {
+            "reply": "Verstehe, deshalb können wir uns jetzt nicht treffen. Musst du heute noch ins Krankenhaus fahren?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 332,
+            "cached_input_tokens": 0,
+            "output_tokens": 39
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "party-frau": [
+        {
+          "repetition": 1,
+          "seconds": 2.147,
+          "cost_usd": "0.0014125",
+          "error": null,
+          "output": {
+            "reply": "Ich freue mich auch, dich kennenzulernen. Meine Frau freut sich auch auf die Party. Wie heißt du eigentlich?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 307,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.942,
+          "cost_usd": "0.0014575",
+          "error": null,
+          "output": {
+            "reply": "Freut mich auch! Ich freue mich sehr, dich kennenzulernen, und meine Frau auch. Woher kennst du Lena?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 307,
+            "cached_input_tokens": 0,
+            "output_tokens": 46
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 1.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.638,
+          "cost_usd": "0.0013675",
+          "error": null,
+          "output": {
+            "reply": "Ich freue mich auch, dich kennenzulernen. Meine Frau kommt später. Wie kennst du Lena?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 307,
+            "cached_input_tokens": 0,
+            "output_tokens": 40
+          },
+          "markers": [],
+          "metrics": {
+            "recast": 0.0,
+            "lecture_free": 1.0,
+            "one_question": 1.0
+          },
+          "violations": []
+        }
+      ]
+    },
+    "memory": {
+      "memory-bakery": [
+        {
+          "repetition": 1,
+          "seconds": 1.677,
+          "cost_usd": "0.0014",
+          "error": null,
+          "output": {
+            "reply": "Guten Morgen! Was möchten Sie heute zum Frühstück?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 386,
+            "cached_input_tokens": 0,
+            "output_tokens": 29
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 1.407,
+          "cost_usd": "0.0014",
+          "error": null,
+          "output": {
+            "reply": "Guten Morgen! Was möchten Sie heute zum Frühstück?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 386,
+            "cached_input_tokens": 0,
+            "output_tokens": 29
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.362,
+          "cost_usd": "0.001385",
+          "error": null,
+          "output": {
+            "reply": "Guten Morgen! Was möchten Sie heute haben?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 386,
+            "cached_input_tokens": 0,
+            "output_tokens": 28
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "memory-dog-walk": [
+        {
+          "repetition": 1,
+          "seconds": 1.949,
+          "cost_usd": "0.0015725",
+          "error": null,
+          "output": {
+            "reply": "Hallo! Unsere Hunde verstehen sich ja super. Mein Bruno spielt heute wieder richtig wild. Wie heißt Ihr Hund?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 389,
+            "cached_input_tokens": 0,
+            "output_tokens": 40
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.243,
+          "cost_usd": "0.0016025",
+          "error": null,
+          "output": {
+            "reply": "Hallo! Unsere Hunde verstehen sich ja super. Mein Beagle Bruno spielt heute besonders gern. Wie heißt dein Hund nochmal?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 389,
+            "cached_input_tokens": 0,
+            "output_tokens": 42
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 2.043,
+          "cost_usd": "0.0016325",
+          "error": null,
+          "output": {
+            "reply": "Hallo! Die beiden verstehen sich ja super. Mein Bruno ist heute besonders verspielt. Was macht Ihr Hund am liebsten im Park?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 389,
+            "cached_input_tokens": 0,
+            "output_tokens": 44
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "memory-hairdresser": [
+        {
+          "repetition": 1,
+          "seconds": 1.73,
+          "cost_usd": "0.001865",
+          "error": null,
+          "output": {
+            "reply": "Guten Tag, schön, dass Sie wieder da sind. Letztes Mal haben wir die Seiten kürzer gemacht und das Deckhaar länger gelassen. Möchten Sie heute wieder etwas Ähnliches?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 392,
+            "cached_input_tokens": 0,
+            "output_tokens": 59
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.265,
+          "cost_usd": "0.00188",
+          "error": null,
+          "output": {
+            "reply": "Guten Tag, schön, dass Sie wieder da sind. Letztes Mal haben wir die Seiten kürzer geschnitten und das Deckhaar länger gelassen. Möchten Sie heute wieder etwas Ähnliches?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 392,
+            "cached_input_tokens": 0,
+            "output_tokens": 60
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.69,
+          "cost_usd": "0.001805",
+          "error": null,
+          "output": {
+            "reply": "Guten Tag, schön, dass Sie wieder da sind. Letztes Mal wollten Sie die Seiten kürzer und oben länger lassen. Möchten Sie heute wieder einen ähnlichen Schnitt?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 392,
+            "cached_input_tokens": 0,
+            "output_tokens": 55
+          },
+          "metrics": {
+            "no_repeat": 1.0
+          },
+          "violations": []
+        }
+      ],
+      "memory-restaurant": [
+        {
+          "repetition": 1,
+          "seconds": 1.939,
+          "cost_usd": "0.001605",
+          "error": null,
+          "output": {
+            "reply": "Guten Abend und willkommen zurück im Restaurant. Sie haben heute wieder einen Tisch bei uns. Möchten Sie zuerst etwas trinken?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 384,
+            "cached_input_tokens": 0,
+            "output_tokens": 43
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.104,
+          "cost_usd": "0.001665",
+          "error": null,
+          "output": {
+            "reply": "Guten Abend und willkommen zurück! Sie hatten ja schon ein Schnitzel mit Kartoffelsalat gewählt. Möchten Sie jetzt etwas dazu trinken?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 384,
+            "cached_input_tokens": 0,
+            "output_tokens": 47
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.889,
+          "cost_usd": "0.00168",
+          "error": null,
+          "output": {
+            "reply": "Guten Abend und willkommen zurück im Restaurant. Sie hatten letztes Mal ein Schnitzel mit Kartoffelsalat. Haben Sie heute eine Reservierung?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 384,
+            "cached_input_tokens": 0,
+            "output_tokens": 48
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        }
+      ],
+      "memory-train-delay": [
+        {
+          "repetition": 1,
+          "seconds": 2.175,
+          "cost_usd": "0.0017975",
+          "error": null,
+          "output": {
+            "reply": "Schon wieder Verspätung … das ist heute echt nervig. Ich fahre jede Woche beruflich nach München, aber heute scheint alles langsamer zu sein. Wohin fahren Sie?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 383,
+            "cached_input_tokens": 0,
+            "output_tokens": 56
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 2,
+          "seconds": 2.197,
+          "cost_usd": "0.0016625",
+          "error": null,
+          "output": {
+            "reply": "So ein Pech mit der Verspätung heute. Ich fahre übrigens jede Woche beruflich nach München. Wohin fahren Sie denn?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 383,
+            "cached_input_tokens": 0,
+            "output_tokens": 47
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        },
+        {
+          "repetition": 3,
+          "seconds": 1.686,
+          "cost_usd": "0.0016475",
+          "error": null,
+          "output": {
+            "reply": "Oh nein, schon wieder eine Verspätung. Ich fahre übrigens jede Woche beruflich nach München. Wohin reisen Sie heute?",
+            "end_conversation": false,
+            "model": "gpt-5.4",
+            "input_tokens": 383,
+            "cached_input_tokens": 0,
+            "output_tokens": 46
+          },
+          "metrics": {
+            "no_repeat": 0.0
+          },
+          "violations": []
+        }
+      ]
+    }
+  },
+  "aggregate": {
+    "analysis": {
+      "cases": {
+        "silvester-familie": {
+          "recall": 1.0,
+          "category_accuracy": 1.0,
+          "extras": 0.0,
+          "typo_free": 1.0,
+          "notes_questions": 0.8333333333333334
+        },
+        "arbeit-pflegerin": {
+          "recall": 1.0,
+          "category_accuracy": 1.0,
+          "extras": 1.0,
+          "typo_free": 1.0,
+          "notes_questions": 0.8333333333333334
+        },
+        "hund-koeln": {
+          "recall": 0.75,
+          "category_accuracy": 1.0,
+          "extras": 1.0,
+          "typo_free": 1.0,
+          "notes_questions": 1.0
+        },
+        "katze-reise": {
+          "recall": 1.0,
+          "category_accuracy": 0.9333333333333332,
+          "extras": 0.0,
+          "typo_free": 1.0,
+          "notes_questions": 0.6666666666666666
+        },
+        "wohnung-neuburg": {
+          "recall": 1.0,
+          "category_accuracy": 0.75,
+          "extras": 0.6666666666666666,
+          "typo_free": 1.0,
+          "notes_questions": 0.5
+        },
+        "baby-glueckwunsch": {
+          "recall": 1.0,
+          "category_accuracy": 0.75,
+          "extras": 0.0,
+          "typo_free": 1.0,
+          "notes_questions": 1.0
+        },
+        "fahrkarte-ausflug": {
+          "recall": 0.8888888888888888,
+          "category_accuracy": 1.0,
+          "extras": 1.0,
+          "typo_free": 1.0,
+          "notes_questions": 0.5
+        },
+        "besuch-sommer": {
+          "recall": 1.0,
+          "category_accuracy": 0.7777777777777777,
+          "extras": 0.0,
+          "typo_free": 1.0,
+          "notes_questions": 1.0
+        },
+        "geburtstag-party": {
+          "recall": 0.6666666666666666,
+          "category_accuracy": 1.0,
+          "extras": 1.0,
+          "typo_free": 1.0,
+          "notes_questions": 1.0
+        },
+        "schwimmbad": {
+          "recall": 1.0,
+          "category_accuracy": 1.0,
+          "extras": 0.0,
+          "typo_free": 0.0,
+          "notes_questions": 1.0
+        },
+        "au-pair": {
+          "recall": 0.6666666666666666,
+          "category_accuracy": 0.5,
+          "extras": 1.6666666666666667,
+          "typo_free": 1.0,
+          "notes_questions": 0.5
+        },
+        "wohnen-miete": {
+          "recall": 0.6666666666666666,
+          "category_accuracy": 0.5,
+          "extras": 2.0,
+          "typo_free": 1.0,
+          "notes_questions": 1.0
+        }
+      },
+      "run": {
+        "recall": 0.8865740740740741,
+        "category_accuracy": 0.8509259259259259,
+        "extras": 0.6944444444444445,
+        "typo_free": 0.9166666666666666,
+        "notes_questions": 0.8194444444444445
+      },
+      "violations": [
+        {
+          "kind": "A4",
+          "case": "wohnung-neuburg",
+          "repetition": 1,
+          "detail": "item 1 (message 1, wrong 'eine neue Arbeit'): the message has no mistakes"
+        },
+        {
+          "kind": "A4",
+          "case": "wohnung-neuburg",
+          "repetition": 3,
+          "detail": "item 1 (message 1, wrong 'eine neue Arbeit'): the message has no mistakes"
+        },
+        {
+          "kind": "A3",
+          "case": "schwimmbad",
+          "repetition": 1,
+          "detail": "item 1 (message 2, wrong 'Mochtest'): reports a typo"
+        },
+        {
+          "kind": "A3",
+          "case": "schwimmbad",
+          "repetition": 2,
+          "detail": "item 1 (message 2, wrong 'Mochtest du'): reports a typo"
+        },
+        {
+          "kind": "A3",
+          "case": "schwimmbad",
+          "repetition": 3,
+          "detail": "item 1 (message 2, wrong 'Mochtest'): reports a typo"
+        }
+      ]
+    },
+    "turn": {
+      "cases": {
+        "bus-bank": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 0.3333333333333333
+        },
+        "apotheke-silvester": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "verein-firma": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "zug-hamburg": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "hund-spielen": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "treppenhaus-arbeit": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "kollege-leute": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "spielplatz-baby": {
+          "recast": 0.3333333333333333,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "treppenhaus-besuch": {
+          "recast": 0.6666666666666666,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "paket-hilfe": {
+          "recast": 1.0,
+          "lecture_free": 0.0,
+          "one_question": 1.0
+        },
+        "verein-alter": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "paket-bitte": {
+          "recast": 0.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "hund-nachricht": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "verein-pruefung": {
+          "recast": 0.3333333333333333,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "treppenhaus-baby": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "hund-urlaub": {
+          "recast": 0.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "kollege-silvester": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "party-treffen": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "kollege-kaffee": {
+          "recast": 1.0,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        },
+        "party-frau": {
+          "recast": 0.3333333333333333,
+          "lecture_free": 1.0,
+          "one_question": 1.0
+        }
+      },
+      "run": {
+        "recast": 0.7833333333333333,
+        "lecture_free": 0.95,
+        "one_question": 0.9666666666666666
+      },
+      "violations": []
+    },
+    "memory": {
+      "cases": {
+        "memory-bakery": {
+          "no_repeat": 1.0
+        },
+        "memory-dog-walk": {
+          "no_repeat": 0.3333333333333333
+        },
+        "memory-hairdresser": {
+          "no_repeat": 1.0
+        },
+        "memory-restaurant": {
+          "no_repeat": 0.0
+        },
+        "memory-train-delay": {
+          "no_repeat": 0.0
+        }
+      },
+      "run": {
+        "no_repeat": 0.4666666666666667
+      },
+      "violations": []
+    }
+  },
+  "latency": {
+    "messages": 40,
+    "seconds": 46.474,
+    "cost_usd": "0.05651",
+    "error": null,
+    "mistakes": 10,
+    "analysis_timeout_s": 150,
+    "railway_proxy_limit_s": 300,
+    "output": {
+      "mistakes": [
+        {
+          "message_number": 2,
+          "category": "grammar",
+          "wrong": "diese Jahr",
+          "correct": "dieses Jahr",
+          "sentence": "Die Silvesternacht habe ich diese Jahr meiner Freundin gefeiert.",
+          "explanation": "The neuter noun phrase 'Jahr' needs 'dieses', not 'diese'."
+        },
+        {
+          "message_number": 2,
+          "category": "grammar",
+          "wrong": "meiner Freundin gefeiert",
+          "correct": "mit meiner Freundin gefeiert",
+          "sentence": "Die Silvesternacht habe ich diese Jahr meiner Freundin gefeiert.",
+          "explanation": "With 'feiern' here, German normally uses the preposition 'mit' for the person you celebrated with."
+        },
+        {
+          "message_number": 5,
+          "category": "word_order",
+          "wrong": "Wie du weißt, ich kann",
+          "correct": "Wie du weißt, kann ich",
+          "sentence": "Wie du weißt, ich kann nicht so gut kochen.",
+          "explanation": "After the introductory clause, the conjugated verb must come first in the main clause."
+        },
+        {
+          "message_number": 6,
+          "category": "grammar",
+          "wrong": "ein DVD",
+          "correct": "eine DVD",
+          "sentence": "Danach haben wir ein DVD geguckt \"INCEPTION\".",
+          "explanation": "'DVD' is feminine in German, so it takes 'eine'."
+        },
+        {
+          "message_number": 7,
+          "category": "grammar",
+          "wrong": "hat von ihrer Freundin ausgeliehen",
+          "correct": "hat die DVD von ihrer Freundin ausgeliehen",
+          "sentence": "Maria hat von ihrer Freundin ausgeliehen.",
+          "explanation": "The verb 'ausleihen' needs a direct object here."
+        },
+        {
+          "message_number": 10,
+          "category": "grammar",
+          "wrong": "auf dem Berg hoch gegangen",
+          "correct": "auf den Berg hoch gegangen",
+          "sentence": "Um 12 Uhr sind wir auf dem Berg hoch gegangen, wo wir uns das Feuerwerk richtig gut sehen konnten.",
+          "explanation": "With movement toward a destination, 'auf' takes the accusative case."
+        },
+        {
+          "message_number": 10,
+          "category": "grammar",
+          "wrong": "uns das Feuerwerk richtig gut sehen",
+          "correct": "das Feuerwerk richtig gut sehen",
+          "sentence": "Um 12 Uhr sind wir auf dem Berg hoch gegangen, wo wir uns das Feuerwerk richtig gut sehen konnten.",
+          "explanation": "The verb 'sehen' does not take 'uns' in this structure."
+        },
+        {
+          "message_number": 11,
+          "category": "grammar",
+          "wrong": "Meine Wünsche für das neue Jahr ist",
+          "correct": "Meine Wünsche für das neue Jahr sind",
+          "sentence": "Meine Wünsche für das neue Jahr ist dass ich mehr Freizeit habe.",
+          "explanation": "The plural subject 'Wünsche' needs the plural verb 'sind'."
+        },
+        {
+          "message_number": 13,
+          "category": "vocabulary",
+          "wrong": "vieles mal",
+          "correct": "viele Male",
+          "sentence": "Ich war noch nie in Belgien aber Maria war schon vieles mal da und sie hat viel von Belgien erzählt.",
+          "explanation": "German says 'viele Male' or more naturally 'oft', not 'vieles mal'."
+        },
+        {
+          "message_number": 19,
+          "category": "vocabulary",
+          "wrong": "Es geht immer wieder besser",
+          "correct": "Es geht mir wieder besser",
+          "sentence": "Es geht immer wieder besser.",
+          "explanation": "To say that you feel better again, German normally uses 'Es geht mir wieder besser'."
+        }
+      ],
+      "learner_facts": [
+        "The learner is not very good at cooking.",
+        "The learner has a friend or girlfriend named Maria.",
+        "The learner wants more free time in the new year.",
+        "The learner may go to Belgium in spring.",
+        "The learner says their work is boring now."
+      ],
+      "scene_notes": [
+        "The conversation began with the partner asking whether the learner got a New Year's letter.",
+        "They talked about the learner's New Year's Eve.",
+        "Maria cooked and the learner peeled potatoes.",
+        "They watched Inception on DVD after dinner.",
+        "At midnight they went up a hill to watch the fireworks.",
+        "The partner asked about the learner's wishes for the new year.",
+        "They discussed possible spring travel to Belgium, and the partner mentioned liking Brussels.",
+        "The partner asked about work, and the learner said it is boring now."
+      ],
+      "model": "gpt-5.4",
+      "input_tokens": 1196,
+      "cached_input_tokens": 0,
+      "output_tokens": 3568
+    }
+  },
+  "errors": []
+}
