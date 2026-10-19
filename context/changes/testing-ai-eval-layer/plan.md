@@ -395,11 +395,11 @@ Brak zmian w bazie i w kodzie produkcyjnym. Wycofanie: revert commitów fazy —
 
 #### Automated
 
-- [ ] 3.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py`
-- [ ] 3.2 Każde przeżycie mutmut ma wiersz w rejestrze: `rm -rf mutants && uv run mutmut run && uv run mutmut results`
-- [ ] 3.3 Testy przechodzą: `uv run pytest`
-- [ ] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.1 Wszystkie ręczne mutanty zgodne z oczekiwaniem (kod 0): `uv run python scripts/mutation/manual_mutants.py`
+- [x] 3.2 Każde przeżycie mutmut ma wiersz w rejestrze: `rm -rf mutants && uv run mutmut run && uv run mutmut results`
+- [x] 3.3 Testy przechodzą: `uv run pytest`
+- [x] 3.4 Lint i format: `uv run ruff check . && uv run ruff format --check .`
 
 #### Manual
 
-- [ ] 3.5 Przegląd §3, §4, §5, §6.5, §6.6 i §8 test-planu oraz punktu w CLAUDE.md: zgodne z decyzjami tego planu
+- [x] 3.5 Przegląd §3, §4, §5, §6.5, §6.6 i §8 test-planu oraz punktu w CLAUDE.md: zgodne z decyzjami tego planu

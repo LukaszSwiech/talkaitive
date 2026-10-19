@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-10-17
+> Last updated: 2026-10-19
 
 ## 1. Strategy
 
@@ -73,7 +73,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 2 | Waiting-path recovery | Udowodnić, że zawieszenie lub błąd dostawcy kończy się komunikatem i działającym „Try again”, nie wiecznym spinnerem | #1 | integration | complete | testing-waiting-path-recovery |
 | 3 | Privacy and deletion boundaries | Udowodnić, że żaden widok ani blok pamięci nie ujawnia cudzych danych, a usunięcie konta usuwa wszystko | #3, #6 | integration | complete | testing-privacy-and-deletion-boundaries |
 | 4 | Budget ceiling | Udowodnić, że limit $1/dzień trzyma się także przy błędach, ponowieniach i drogich wywołaniach | #4 | unit + integration | complete | testing-budget-ceiling |
-| 5 | AI eval layer | Dać mierzalny wynik jakości korekty i listy błędów przy każdej zmianie promptu lub modelu | #5 | AI-native eval (real model, golden dataset) | planned | testing-ai-eval-layer |
+| 5 | AI eval layer | Dać mierzalny wynik jakości korekty i listy błędów przy każdej zmianie promptu lub modelu | #5 | AI-native eval (real model, golden dataset) | complete | testing-ai-eval-layer |
 
 Kolejność: faza 1 jest najtańsza i wzmacnia wszystkie kolejne — wynik mutacji pokazuje fazom 2–4, gdzie obecne testy są puste, a CI od razu uruchamia nowe testy. Fazy 2–4 idą wg impact × likelihood. Faza 5 jest ostatnia, bo jest najdroższa w przebiegu i opłaca się dopiero przed pierwszą optymalizacją promptu lub modelu.
 
@@ -95,7 +95,7 @@ Profil bazy testów (2026-10-13): `meaningful` (na granicy) — pytest skonfigur
 | lint + format | ruff | 0.16.8 | lokalnie przez post-edit hook; CI (`.github/workflows/ci.yml`, PR i push do `main`) — wired |
 | mutation testing | mutmut — checked: 2026-10-15 | 3.8.0 | zainstalowany (dev), `[tool.mutmut]` w `pyproject.toml` na 4 modułach (`accounts/ownership.py`, `conversations/budget.py`, `conversations/memory.py`, `conversations/services.py`); obok niego ręczna lista `scripts/mutation/manual_mutants.py`; oba lokalnie i okresowo, nie w CI (Railway czeka na wszystkie workflow na commicie) |
 | e2e | Playwright Test (`@playwright/test`, Node) + `playwright-cli` do eksploracji — checked: 2026-10-16 | 1.64.1 / 0.1.22 | obowiązkowa warstwa od 2026-10-16 (§7); konfiguracja, seed i komendy: `context/foundation/test-stack.md` (`## E2E`); na razie tylko lokalnie, nie w CI |
-| AI-native eval | np. DeepEval albo wtyczka pytest z LLM-as-judge — checked: 2026-10-13 | n/a | §3 Phase 5. When NOT to use: logika deterministyczna (koszt, ranking pamięci, scalanie błędów, izolacja) — tam wystarczy zwykły test; nie w CI na każdy PR (koszt, niedeterminizm) |
+| AI-native eval | własny skrypt `scripts/eval/` (`run_eval.py` `run` / `compare`, oceniacz `scoring.py`, licznik kosztu `cost.py`, zestaw `golden.py`), bez biblioteki — checked: 2026-10-19 | n/a | prawdziwy model przez `conversations.llm`, ocena deterministyczna względem wzorca, bez sędziego LLM; zestaw wzorcowy z MERLIN 1.1 (http://hdl.handle.net/20.500.12124/6, CC BY-SA 4.0); kod oceniania w zwykłych testach w CI; cookbook §6.5. DeepEval odradzany: rejestruje wtyczkę `pytest11`, która ładowałaby się do każdego `uv run pytest`, także w CI, i ma domyślnie włączoną telemetrię. When NOT to use: logika deterministyczna (koszt, ranking pamięci, scalanie błędów, izolacja) — tam wystarczy zwykły test; nie w CI na każdy PR (koszt, niedeterminizm) |
 
 **Stack grounding tools (current session):**
 - Docs: Context7 — dostępny; nie odpytywany, bo wersje pochodzą z `uv.lock`; API (pytest-django, mutmut, OpenAI SDK) sprawdza `/10x-research` w każdej fazie; checked: 2026-10-13
@@ -115,7 +115,7 @@ phase lands; before that, the gate is `planned`.
 | unit + integration (pytest) | local + CI (PR i push do `main`) | wired | regresje logiki i przepływów |
 | wdrożenie na produkcję tylko po zielonym CI | Railway „Wait for CI” + workflow `ci.yml` na push do `main` i PR | wired | wdrożenie z czerwonymi testami, także przy bezpośrednim pushu na `main` |
 | mutation score na logice krytycznej | local, okresowo: `uv run python scripts/mutation/manual_mutants.py` (kod 0) oraz `uv run mutmut run` / `uv run mutmut results` | wired (lokalnie, nie w CI); kryterium: 0 niewyjaśnionych przeżyć — każde przeżycie ma wiersz w `scripts/mutation/accepted_survivors.md` | testy, które przechodzą na zepsutym kodzie |
-| AI eval (golden dataset, prawdziwy model) | local, przy zmianie promptu lub modelu | recommended after §3 Phase 5 | spadek jakości korekty i listy błędów |
+| AI eval (golden dataset, prawdziwy model) | local, ręcznie przed zmianą i po zmianie promptu tury, promptu analizy, tekstu bloku pamięci, `LLM_MODEL` albo reasoning effort: `scripts/eval/run_eval.py` `run` / `compare` (§6.5) | wired (lokalnie, nie w CI); kod oceniania i spójność zestawu sprawdza `uv run pytest` w CI | spadek jakości korekty, listy błędów i pamięci (pytania powtórzone w scenie) |
 | pre-prod smoke (health check Railway) | Railway, przy każdym wdrożeniu | wired | crash startu po zmianie ustawień lub zmiennych środowiskowych |
 
 Bramka CI blokuje wdrożenie, nie merge: czerwony commit może trafić na `main`, ale Railway go nie wdroży (deployment `SKIPPED`, produkcja zostaje na poprzedniej wersji; dowód kanarkiem `8ac139b`, 2026-10-15). Ochrona gałęzi na prywatnym repo wymaga GitHub Pro / Team (403, sprawdzone 2026-10-14) — świadomie nie wybrana. Ustawienie Railway i jego kopia: `context/deployment/deploy-plan.md`, `context/deployment/web-settings.json`.
@@ -203,7 +203,39 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.5 Adding an AI eval for a prompt or model change
 
-- TBD — see §3 Phase 5 for the golden-dataset mistake-detection and recast-quality pattern.
+- **Location**: `scripts/eval/` — `run_eval.py` (skrypt `run` / `compare`, docstring z użyciem i kodami wyjścia), `golden.py` (zestaw wzorcowy z atrybucją MERLIN), `scoring.py` (dopasowanie, twarde reguły, metryki, porównanie parami), `cost.py` (licznik kosztu z limitem); wyniki w `scripts/eval/results/`. Pliki nie pasują do `test_*.py` i leżą poza `testpaths`, więc ani `uv run pytest`, ani CI, ani mutmut ich nie uruchamiają.
+- **Kiedy uruchamiać** — tylko ręcznie, lokalnie, nigdy w CI, w hooku ani cyklicznie; przed zmianą i po zmianie jednego z pięciu elementów:
+  1. instrukcji tury (`llm._INSTRUCTIONS`),
+  2. instrukcji analizy (`llm._ANALYSIS_INSTRUCTIONS`),
+  3. tekstu bloku pamięci (`llm.format_memory`),
+  4. `LLM_MODEL`,
+  5. reasoning effort tury albo analizy (`LLM_REASONING_EFFORT`, `LLM_ANALYSIS_REASONING_EFFORT`).
+  Zmiana modelu u dostawcy pod tą samą nazwą zostaje niewykryta — świadome ograniczenie.
+- **Koszt i czas**: eval woła `conversations.llm` wprost, bez bazy, więc omija dzienny limit aplikacji; pilnuje go własny limit `--max-usd` (domyślnie 5 USD). Przed startem skrypt drukuje liczbę wywołań i górny szacunek z ustawień (0,03 USD tura, 0,07 USD analiza; pełny przebieg K=3: 4,84 USD). Plan zakładał do ok. 3,4 USD i 20–35 min; przebieg bazowy kosztował 0,83 USD i trwał ok. 12,5 min (analiza 555 s, tura 112 s, pamięć 28 s, długa analiza 46 s). Taniej: `--suite <seria>` i `--repeats 1`. Eval używa tego samego konta OpenAI co produkcja — wyczerpane środki zatrzymują też aplikację (§6.6).
+- **Run**:
+  - pełny przebieg: `uv run --env-file .env python scripts/eval/run_eval.py run [--suite analysis,turn,memory,latency] [--repeats 3] [--max-usd 5] [--out PATH]`; serie: `analysis` (12 rozmów), `turn` (20 przypadków), `memory` (5 scen), `latency` (jedna rozmowa 40 wiadomości, raz na przebieg, tylko czas i koszt względem timeoutu analizy 150 s i limitu proxy Railway 300 s);
+  - porównanie: `uv run python scripts/eval/run_eval.py compare A.json B.json` (A = przed zmianą, B = po; Δ = B − A);
+  - bez prawdziwego `OPENAI_API_KEY` (pusty albo `"test-key"` z `settings_test`) skrypt kończy się kodem 2 przed jakimkolwiek wywołaniem.
+- **Tryb pracy przy strojeniu**: tanie próby tylko na zmienianej serii, np. `run --suite turn --repeats 1 --max-usd 1 --out <katalog poza repo>/proba.json`, potem `compare <plik bazowy> <próba>`. Przed merge pełny przebieg K=3 na czystym drzewie (commit ze zmianą) i `compare` z plikiem bazowym. Przy K=1 wartość przypadku to jedno wywołanie, więc szum jest większy, a przedział szerszy.
+- **Jak czytać wynik**:
+  - **Kody wyjścia `run`**: 0 — przebieg pełny, 0 naruszeń twardych reguł i 0 nieudanych wywołań; 1 — pełny, ale z naruszeniami albo nieudanymi wywołaniami (wypisane z id przypadku i numerem powtórzenia); 2 — konfiguracja, brak prawdziwego klucza albo limit kosztu (wynik częściowy zapisany z `"complete": false`). `compare`: 0 — porównanie wydrukowane, 2 — brak pliku albo plik nie jest wynikiem skryptu.
+  - **Twarde naruszenia** (lista, nie średnia): A1 pozycja spoza wiadomości ucznia albo numer spoza zakresu, A2 zmienione `sentence`, A3 zgłoszona literówka, A4 pozycja w poprawnej wiadomości, A5 ponad 5 faktów albo 8 notatek; T1 tura kończy rozmowę. Każde naruszenie czytaj w surowym wyjściu modelu (`calls` w pliku JSON).
+  - **Metryki** (wyższa lepsza, poza `extras`): analiza `recall`, `category_accuracy`, `extras` (niedopasowane pozycje na rozmowę, niższa lepsza), `typo_free`, `notes_questions`; tura `recast`, `lecture_free`, `one_question`; pamięć `no_repeat`. Wartość przypadku = średnia z K powtórzeń, wartość przebiegu = średnia przypadków.
+  - **`compare`**: dla każdej metryki `n` (przypadki obecne w obu przebiegach z wartością — nieudane wywołania wypadają), A, B, średnia różnica sparowana per przypadek z 95% przedziałem (`Δ ± 1,96·SE`) i werdykt `difference` (przedział nie obejmuje zera) albo `within noise` (także przy `n < 2`). Ostrzeżenia: ten sam model i te same skróty promptów (różnica to szum), różne zbiory przypadków (np. po dodaniu przypadku). Na końcu „Changed cases (B - A)” malejąco po `|Δ|` — te przypadki czytasz w `calls` obu plików: tu oceniasz naturalność recastu i fałszywe alarmy znaczników, bo eval nie ma sędziego LLM.
+- **Plik bazowy**: najnowszy pełny przebieg K=3 na czystym drzewie w `scripts/eval/results/` (obecnie `2026-10-19-gpt-5.4-56e6109.json`). Po przyjętej zmianie promptu lub modelu (albo po zmianie zestawu) commitujesz nowy pełny przebieg z commita ze zmianą jako nowy plik bazowy; kolejne zmiany porównujesz z nim. Plików `-dirty` (zmienione śledzone pliki) i prób z `--out` nie commitujesz.
+- **Jak dodać przypadek** (`golden.py`):
+  1. Zdanie ucznia dosłownie z MERLIN 1.1 (niemiecki, ocena B1/B2), `source` = Author ID tekstu; poprawna forma z target hypothesis 1 — nigdy z modelu ani z wyniku aplikacji.
+  2. Każdą różnicę tekst ucznia ↔ wersja poprawiona klasyfikujesz: jednoznaczny błąd reguły → `GoldMistake` (kategoria wg reguły, `rule` nazwany, druga kategoria tylko przy regule granicznej); pisownia, wielka litera, pisownia złożeń bez zmiany sensu → `Typo` (nie wolno zgłosić); reszta → `Neutral` (ani plus, ani minus). Wiadomości partnera i notatki pamięci piszesz sam, poprawnie, bez tekstu korpusu.
+  3. Przypadek tury ma dokładnie jeden wyraźny błąd w ostatniej wiadomości ucznia i scenę z `conversations/topics.py`.
+  4. `uv run pytest tests/test_eval_golden.py` — test spójności (id, numery, klucze jako całe słowa, brak nakładania kluczy, kategorie, minimalna liczba wzorców na kategorię, licencja w docstringu).
+  5. Nowy przypadek zmienia zbiór przypadków — zrób nowy plik bazowy, zanim porównasz zmianę promptu.
+- **Wzorzec celowego zepsucia promptu** (dowód, że eval wykrywa pogorszenie, jak mutant dla testu klasycznego): w drzewie roboczym odwróć regułę w `conversations/llm.py` (np. „report typos and punctuation as mistakes” w obu promptach, tura ma jawnie wyjaśniać regułę), `run --suite analysis,turn --repeats 1 --max-usd 1 --out <poza repo>/broken.json`, `compare <plik bazowy> <broken.json>` — oczekiwany spadek `typo_free` / `lecture_free` z werdyktem `difference` — potem `git checkout conversations/llm.py`. Plik nie trafia do repo.
+- **Kod oceniania** (dopasowanie, reguły, metryki, porównanie, licznik kosztu) ma zwykłe testy w CI. Oczekiwane liczby są wpisane ręcznie z rachunkiem w komentarzu, nigdy liczone funkcjami oceniacza. Nowe zachowanie oceniacza potwierdzasz ręcznym mutantem (§6.1 krok 4; `scripts/eval/` nie jest w `[tool.mutmut]`; M35–M49).
+- **Reference tests**:
+  - `tests/test_eval_scoring.py::test_longer_wrong_with_gap_matches_the_gold_keywords`, `::test_two_items_for_one_gold_mistake_match_once_and_the_other_is_extra`, `::test_reported_typo_is_a3_and_not_an_extra`, `::test_turn_with_a_lecture_marker`, `::test_marker_inside_another_word_is_not_a_hit` — dopasowanie tolerancyjne jeden-do-jednego, twarde reguły, znaczniki wykładu po granicy słowa.
+  - `tests/test_eval_scoring.py::test_compare_pairs_cases_and_gives_the_interval_and_verdict`, `::test_call_may_start_when_it_reaches_the_cap_exactly`, `::test_call_may_not_start_when_it_would_pass_the_cap` — porównanie parami z przedziałem i brzeg limitu kosztu.
+  - `tests/test_eval_golden.py::test_analysis_case_is_consistent`, `::test_every_category_has_enough_gold_mistakes`, `::test_docstring_has_the_licence_and_the_merlin_handle` — spójność zestawu i licencja.
+  - `tests/test_eval_runner.py::test_run_under_test_settings_stops_before_any_call`, `::test_cost_cap_stops_the_run_before_it_is_passed`, `::test_compare_prints_the_paired_difference` — skrypt bez klucza nie woła modelu, limit zatrzymuje przebieg, `compare` na dwóch plikach.
 
 ### 6.6 Per-rollout-phase notes
 
@@ -221,6 +253,12 @@ here capturing anything surprising the rollout phase taught.)
 - **Phase 4 — Budget ceiling (2026-10-16):** research obalił założenie fazy: „suma dnia ≤ limit” nie była prawdą. Każda nieudana lub spóźniona płatna próba (timeout, zła lub pusta odpowiedź, wynik po zakończeniu rozmowy, nieudany zapis analizy) zapisywała koszt 0, a w trwającej rozmowie wysłanie wiadomości i „Try again” nigdy nie były odmawiane z powodu budżetu (twardo sprawdzany był tylko start). Zmiany w kodzie: księga `LLMCharge` dla wywołań bez `Message` ani wyniku analizy (prawdziwy koszt z `usage` albo szacunek 0,03 / koszt ostatniej tury / 0,07) i twardy dach `limit_reached` — po osiągnięciu limitu wysłanie i ponowienie tury są odmawiane z zakończeniem rozmowy `DAILY_LIMIT`, a ponowienie analizy czeka na reset (pierwsza próba analizy rusza zawsze, S-02). Ręczne mutanty 36/36 zgodne (nowe M25–M34); mutmut: 841 mutantów na 4 modułach, 60 przeżyć przed domknięciem → 57 po trzech nowych asercjach (odmowy bez powodu `None`, `ended_at` przy odmowie ponowienia tury) → 56 po review implementacji (`x_send_message__mutmut_7` zabity testem `test_message_as_long_as_the_field_allows_is_accepted`: wyrocznią jest `maxlength` pola, więc wiadomość o maksymalnej długości musi przejść), każde w rejestrze. Do przeniesienia przez `/10x-test-plan --refresh` (tu bez zmian w §2):
   - §2 Risk Response Guidance #4, „What would prove protection”: zamiast „suma kosztów dnia nie przekracza limitu” niezmiennik dachu — po osiągnięciu limitu żadne nowe płatne wywołanie się nie zaczyna, a dzień może przekroczyć limit tylko o wywołania rozpoczęte poniżej niego (najwyżej jedna tura w toku) i pierwsze próby analiz.
   - §2 ryzyko #4, Source: roadmap Q-07 częściowo zaadresowane (koszt nieudanych prób liczony, ponowienia zatrzymane dachem); otwarte zostają `max_output_tokens` i praca poza żądaniem HTTP.
+- **Phase 5 — AI eval layer (data) (2026-10-19):** obecne testy nic nie mówiły o jakości nauki (atrapy zwracają to, co test zakolejkował); teraz lokalny eval na prawdziwym modelu z zestawem z MERLIN 1.1 (§6.5). Przebieg bazowy `scripts/eval/results/2026-10-19-gpt-5.4-56e6109.json` (gpt-5.4, effort tury `none`, analizy `medium`, K=3, czyste drzewo): kod 1, 0,83 USD, 0 nieudanych wywołań; analiza `recall` 0,887, `category_accuracy` 0,851, `extras` 0,694, `typo_free` 0,917, `notes_questions` 0,819; tura `recast` 0,783, `lecture_free` 0,950, `one_question` 0,967; pamięć `no_repeat` 0,467. Długa analiza (40 wiadomości): 46,5 s i 0,057 USD — daleko poniżej timeoutu analizy 150 s i limitu proxy Railway 300 s; sprawa przekazana z Phase 2 zamknięta (jedna realistyczna rozmowa, nie najgorszy przypadek z wiadomościami po 2000 znaków). Przebieg na celowo zepsutym prompcie (reguła literówek odwrócona w obu promptach, tura ma wyjaśniać regułę; `--suite analysis,turn --repeats 1`): `typo_free` 0,909 → 0,000 (n=11) i `lecture_free` 1,000 → 0,000 (n=6), oba `difference`; `extras` +0,788 i `recast` −0,500 też `difference`. Zastrzeżenie: 15 wywołań (14 z 20 tur, 1 analiza) padło na `RateLimitError` 429 — wyczerpane środki na koncie OpenAI, w tym samym czasie produkcja też nie wysyłała wiadomości — więc `lecture_free` i `recast` policzone na n=6 przypadkach tury; powtórka ze wszystkimi 20 przypadkami tury czeka na doładowanie konta (otwarte TODO w `context/changes/testing-ai-eval-layer/change.md`). Słabości obecnych promptów (bez poprawek, to osobne zmiany):
+  - pamięć `no_repeat` 0,467: tura otwierająca zadaje ponownie pytania z notatek sceny (np. „Wie heißt Ihr Hund?”, „Möchten Sie etwas trinken?”, „Haben Sie eine Reservierung?”, „Wohin fahren Sie?”; `memory-restaurant` i `memory-train-delay` 0/3, `memory-dog-walk` 1/3);
+  - A3 ×3 w `schwimmbad`: analiza zgłasza literówkę „Mochtest” jako błąd; A4 ×2 w `wohnung-neuburg`: zgłoszone poprawne „eine neue Arbeit”;
+  - tura bez recastu w części przypadków (`paket-bitte`, `hund-urlaub` 0/3; `spielplatz-baby`, `verein-pruefung`, `party-frau` 1/3), wykład w `paket-hilfe` („sagt man” 3/3), dwa pytania w `bus-bank` (2/3) — do przeczytania w `calls` przed pierwszym strojeniem (część może wynikać z wąskich `correct_forms`, nie z modelu);
+  - analiza najsłabsza w `au-pair` i `wohnen-miete` (`recall` 0,67, `category_accuracy` 0,5, `extras` 1,67–2,0).
+  Mutacje: ręczne mutanty oceniacza M35–M49; `memory._mistakes__mutmut_47` zabity zwykłym testem, wiersz rejestru usunięty. Pełny przebieg po domknięciu (2026-10-19): ręczne mutanty 51/51 zgodne; mutmut 841 mutantów na 4 modułach, 786 zabitych, 55 przeżyć (56 po Phase 4 minus `mutmut_47`), każde w rejestrze — 0 niewyjaśnionych.
 
 ## 7. What We Deliberately Don't Test
 
@@ -234,7 +272,7 @@ contributors should respect these unless the underlying assumption changes.
 
 - Strategy (§1–§5) last reviewed: 2026-10-13
 - Stack versions last verified: 2026-10-13
-- AI-native tool references last verified: 2026-10-13
+- AI-native tool references last verified: 2026-10-19
 
 Refresh (`/10x-test-plan --refresh`) when:
 
