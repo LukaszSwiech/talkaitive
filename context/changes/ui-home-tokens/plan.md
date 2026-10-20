@@ -371,29 +371,29 @@ Brak migracji danych. Rollback = revert PR. `collectstatic` w starcie Railway (`
 
 #### Automated
 
-- [x] 1.1 Testy przechodzą: `uv run pytest`
-- [x] 1.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 1.3 Manifest zawiera oba pliki po prawdziwym `collectstatic` z produkcyjnym storage
-- [x] 1.4 Skan literałów w szablonach daje 0 trafień `<style`
+- [x] 1.1 Testy przechodzą: `uv run pytest` — 5510549
+- [x] 1.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 5510549
+- [x] 1.3 Manifest zawiera oba pliki po prawdziwym `collectstatic` z produkcyjnym storage — 5510549
+- [x] 1.4 Skan literałów w szablonach daje 0 trafień `<style` — 5510549
 
 #### Manual
 
-- [x] 1.5 Home, login, detail i account_delete wyglądają tak samo jak przed zmianą
+- [x] 1.5 Home, login, detail i account_delete wyglądają tak samo jak przed zmianą — 5510549
 
 ### Phase 2: Tokeny (jasne + ciemne) i strażnicy
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą, w tym nowi strażnicy
-- [ ] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 2.3 Skan literałów na szablonach i `components.css` daje 0 trafień
-- [ ] 2.4 Celowe złamanie wywraca strażnika szablonów i test kontrastu; po cofnięciu oba zielone
-- [ ] 2.5 `collectstatic` z produkcyjnym storage kończy się bez błędu
+- [x] 2.1 Testy przechodzą, w tym nowi strażnicy
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.3 Skan literałów na szablonach i `components.css` daje 0 trafień
+- [x] 2.4 Celowe złamanie wywraca strażnika szablonów i test kontrastu; po cofnięciu oba zielone
+- [x] 2.5 `collectstatic` z produkcyjnym storage kończy się bez błędu
 
 #### Manual
 
-- [ ] 2.6 Strony czytelne w jasnym i ciemnym motywie systemu, desktop + telefon
-- [ ] 2.7 Wartości kolorów sprawdzone w DevTools dla 2–3 par, zgodne z testem
+- [x] 2.6 Strony czytelne w jasnym i ciemnym motywie systemu, desktop + telefon
+- [x] 2.7 Wartości kolorów sprawdzone w DevTools dla 2–3 par, zgodne z testem
 
 ### Phase 3: Widok home na komponentach
 
