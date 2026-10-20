@@ -1,0 +1,6 @@
+/*
+ * Design tokens (colours and other theme values) shared by every page.
+ * Loaded before components.css, which reads them through var(--...).
+ * Values are taken from context/changes/ui-home-tokens/theme-source.css
+ * (tweakcn export); that file is not served.
+ */
