@@ -4,7 +4,7 @@ No model and no corpus: the checks only read the data. Keys and tokens must occu
 as whole words because the scorer matches them that way (`contains_phrase`), and
 the gold keys of one message must not share a word, because matching is greedy
 (an item that fits two gold mistakes takes the first). Source of the rules:
-context/changes/testing-ai-eval-layer/plan.md, phase 2, golden set and its tests.
+context/archive/2026-10-16-testing-ai-eval-layer/plan.md, phase 2, golden set and its tests.
 """
 
 import re

@@ -7,7 +7,7 @@ comment, never computed with the scorer's own functions.
 Sources: the hard rules and limits of the prompts in conversations/llm.py (only the
 learner's messages, `sentence` unchanged, no typos, at most 5 facts and 8 notes, one
 question at a time, `end_conversation` only after a confirmed goodbye) and the
-decisions of context/changes/testing-ai-eval-layer/plan.md (tolerant one-to-one
+decisions of context/archive/2026-10-16-testing-ai-eval-layer/plan.md (tolerant one-to-one
 matching by message number and keywords, metrics, paired comparison with a 95%
 interval, cost counted like the app's budget). Prices pinned below (gpt-5.4 per 1M
 tokens: input 2.50, cached input 0.25, output 15.00; estimates 0.03 per turn and
