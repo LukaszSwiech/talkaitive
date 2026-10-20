@@ -181,6 +181,41 @@ def test_failed_call_is_charged_and_recorded_and_exits_1(
 
 
 @pytest.mark.usefixtures("real_looking_key")
+def test_existing_result_file_is_not_overwritten_without_force(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A rerun on the same day and commit must not replace the committed baseline."""
+    monkeypatch.setattr(llm, "generate_turn", fail_if_called)
+    monkeypatch.setattr(llm, "analyze_mistakes", fail_if_called)
+    out = tmp_path / "result.json"
+    out.write_text("baseline", encoding="utf-8")
+
+    assert main(["run", "--suite", "memory", "--out", str(out)]) == 2
+    assert out.read_text(encoding="utf-8") == "baseline"
+
+
+@pytest.mark.usefixtures("real_looking_key")
+def test_interrupted_run_keeps_the_partial_result_and_reraises(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Ctrl-C or a bug mid-run must not lose the calls already paid for."""
+    turn = FakeGenerateTurn(turn_result)
+    turn.outcomes.extend([turn_result(), RuntimeError("bug")])
+    monkeypatch.setattr(llm, "generate_turn", turn)
+    monkeypatch.setattr(llm, "analyze_mistakes", fail_if_called)
+    out = tmp_path / "result.json"
+
+    with pytest.raises(RuntimeError, match="bug"):
+        main(["run", "--suite", "memory", "--repeats", "1", "--out", str(out)])
+
+    result = json.loads(out.read_text(encoding="utf-8"))
+    assert result["complete"] is False
+    assert len(result["calls"]["memory"]) == 1
+    # One call of 4,000 input tokens * 2.50 per 1M = 0.01.
+    assert Decimal(result["spent_usd"]) == Decimal("0.01")
+
+
+@pytest.mark.usefixtures("real_looking_key")
 def test_turn_that_ends_the_conversation_is_a_violation_and_exits_1(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

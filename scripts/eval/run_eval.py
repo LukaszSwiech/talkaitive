@@ -10,7 +10,7 @@ Usage:
 
     uv run --env-file .env python scripts/eval/run_eval.py run \
         [--suite analysis,turn,memory,latency] [--repeats 3] [--max-usd 5] \
-        [--out PATH]
+        [--out PATH] [--force]
     uv run python scripts/eval/run_eval.py compare A.json B.json
 
 Series (`--suite`, default all four):
@@ -30,18 +30,21 @@ neither.
 
 Cost: counted like the app (`cost.CostMeter`), including failed calls. Before the
 run the script prints the number of calls per series, the estimate (calls times the
-settings' per-call estimates, an upper bound) and the cap. Before every call it
-checks that the spend plus that call's estimate stays within `--max-usd`; when it
-would not, the partial result is written with `"complete": false`.
+settings' per-call estimates: measured averages, not maxima) and the cap. Before
+every call it checks that the spend plus that call's estimate stays within
+`--max-usd`; when it would not, the partial result is written with
+`"complete": false`. A call that costs more than its estimate can still pass the
+cap, by its overrun.
 
 The result goes to `scripts/eval/results/<YYYY-MM-DD>-<model>-<commit>[-dirty].json`
-(or `--out`); `-dirty` marks a run on modified tracked files. The key is never
+(or `--out`); `-dirty` marks a run on modified tracked files. An existing file is
+never overwritten without `--force` (checked before any call). The key is never
 printed or written.
 
 Exit codes (`run`): 0 complete run, no hard-rule violation and no failed call;
 1 complete run with violations or failed calls (listed with the case id); 2 a
 configuration error, no real `OPENAI_API_KEY` (empty or the test settings' value),
-or the cost cap reached (partial result written).
+an existing result file without `--force`, or the cost cap reached (partial result written).
 
 Exit codes (`compare`): 0 the comparison was printed; 2 a file is missing or not a
 result of this script.
@@ -62,7 +65,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from conversations.llm import AnalysisResult, TurnResult
     from scripts.eval.cost import CostMeter
+    from scripts.eval.scoring import Summary
 
 REPO = Path(__file__).resolve().parents[2]
 RESULTS_DIR = REPO / "scripts" / "eval" / "results"
@@ -151,6 +156,7 @@ def _parse_run_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--max-usd", default="5")
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--force", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -165,7 +171,7 @@ def _suites(text: str) -> list[str]:
     return [name for name in SUITES if name in names]
 
 
-def _analysis_output(result: Any) -> dict[str, Any]:
+def _analysis_output(result: "AnalysisResult") -> dict[str, Any]:
     return {
         "mistakes": [mistake.model_dump() for mistake in result.mistakes],
         "learner_facts": list(result.learner_facts),
@@ -177,7 +183,7 @@ def _analysis_output(result: Any) -> dict[str, Any]:
     }
 
 
-def _turn_output(result: Any) -> dict[str, Any]:
+def _turn_output(result: "TurnResult") -> dict[str, Any]:
     return {
         "reply": result.reply,
         "end_conversation": result.end_conversation,
@@ -189,8 +195,11 @@ def _turn_output(result: Any) -> dict[str, Any]:
 
 
 def _call(
-    state: _Run, kind: str, function: Callable[..., Any], **kwargs: Any
-) -> tuple[Any | None, float, Decimal, str | None]:
+    state: _Run,
+    kind: str,
+    function: Callable[..., "AnalysisResult | TurnResult"],
+    **kwargs: Any,
+) -> tuple["AnalysisResult | TurnResult | None", float, Decimal, str | None]:
     """One timed and priced model call: (result or None, seconds, cost, error)."""
     from conversations.llm import LLMError
 
@@ -348,7 +357,7 @@ def _prompt_hashes() -> dict[str, str]:
     }
 
 
-def _summary_json(summary: Any) -> dict[str, Any]:
+def _summary_json(summary: "Summary") -> dict[str, Any]:
     return {
         "cases": summary.cases,
         "run": summary.run,
@@ -456,18 +465,25 @@ def run(argv: Sequence[str]) -> int:
     out = args.out or RESULTS_DIR / result_filename(
         today, settings.LLM_MODEL, commit, dirty
     )
+    if out.exists() and not args.force:
+        raise ConfigError(f"{out} already exists; pass --force to overwrite it")
     state = _Run(meter=CostMeter(cap))
-    for repetition in range(1, args.repeats + 1):
-        for suite in suites:
-            if suite == "latency":
-                continue
-            if not _run_series(state, suite, repetition):
-                state.complete = False
+    interrupted: BaseException | None = None
+    try:
+        for repetition in range(1, args.repeats + 1):
+            for suite in suites:
+                if suite == "latency":
+                    continue
+                if not _run_series(state, suite, repetition):
+                    state.complete = False
+                    break
+            if not state.complete:
                 break
-        if not state.complete:
-            break
-    if state.complete and "latency" in suites:
-        state.complete = _run_latency(state)
+        if state.complete and "latency" in suites:
+            state.complete = _run_latency(state)
+    except BaseException as exc:  # Ctrl-C or a bug: keep what was already paid for
+        state.complete = False
+        interrupted = exc
 
     aggregate = {
         suite: _summary_json(scoring.aggregate(state.scores[suite]))
@@ -503,6 +519,9 @@ def run(argv: Sequence[str]) -> int:
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     _print_report(result)
     print(f"Result: {out}")
+    if interrupted is not None:
+        print("error: the run was interrupted; the result is partial")
+        raise interrupted
 
     if not state.complete:
         print("error: the cost cap stopped the run; the result is partial")

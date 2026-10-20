@@ -203,7 +203,7 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.5 Adding an AI eval for a prompt or model change
 
-- **Location**: `scripts/eval/` — `run_eval.py` (skrypt `run` / `compare`, docstring z użyciem i kodami wyjścia), `golden.py` (zestaw wzorcowy z atrybucją MERLIN), `scoring.py` (dopasowanie, twarde reguły, metryki, porównanie parami), `cost.py` (licznik kosztu z limitem); wyniki w `scripts/eval/results/`. Pliki nie pasują do `test_*.py` i leżą poza `testpaths`, więc ani `uv run pytest`, ani CI, ani mutmut ich nie uruchamiają.
+- **Location**: `scripts/eval/` — `run_eval.py` (skrypt `run` / `compare`, docstring z użyciem i kodami wyjścia), `golden.py` (zestaw wzorcowy z atrybucją MERLIN), `scoring.py` (dopasowanie, twarde reguły, metryki, porównanie parami), `cost.py` (licznik kosztu z limitem); wyniki w `scripts/eval/results/`. Pliki nie pasują do `test_*.py` i leżą poza `testpaths`, więc przebieg na prawdziwym modelu nigdy nie startuje z `uv run pytest` ani z CI. Sam kod modułów (oceniacz, licznik, zestaw, skrypt z atrapami) sprawdzają w CI testy `tests/test_eval_*.py`; mutmut kopiuje `scripts` (`also_copy`), ale go nie mutuje.
 - **Kiedy uruchamiać** — tylko ręcznie, lokalnie, nigdy w CI, w hooku ani cyklicznie; przed zmianą i po zmianie jednego z pięciu elementów:
   1. instrukcji tury (`llm._INSTRUCTIONS`),
   2. instrukcji analizy (`llm._ANALYSIS_INSTRUCTIONS`),
@@ -211,7 +211,7 @@ the relevant rollout phase ships; before that, the sub-section reads
   4. `LLM_MODEL`,
   5. reasoning effort tury albo analizy (`LLM_REASONING_EFFORT`, `LLM_ANALYSIS_REASONING_EFFORT`).
   Zmiana modelu u dostawcy pod tą samą nazwą zostaje niewykryta — świadome ograniczenie.
-- **Koszt i czas**: eval woła `conversations.llm` wprost, bez bazy, więc omija dzienny limit aplikacji; pilnuje go własny limit `--max-usd` (domyślnie 5 USD). Przed startem skrypt drukuje liczbę wywołań i górny szacunek z ustawień (0,03 USD tura, 0,07 USD analiza; pełny przebieg K=3: 4,84 USD). Plan zakładał do ok. 3,4 USD i 20–35 min; przebieg bazowy kosztował 0,83 USD i trwał ok. 12,5 min (analiza 555 s, tura 112 s, pamięć 28 s, długa analiza 46 s). Taniej: `--suite <seria>` i `--repeats 1`. Eval używa tego samego konta OpenAI co produkcja — wyczerpane środki zatrzymują też aplikację (§6.6).
+- **Koszt i czas**: eval woła `conversations.llm` wprost, bez bazy, więc omija dzienny limit aplikacji; pilnuje go własny limit `--max-usd` (domyślnie 5 USD); wywołanie droższe od swojego szacunku może go przekroczyć o tę nadwyżkę. Przed startem skrypt drukuje liczbę wywołań i szacunek z ustawień (średnie z pomiaru, nie maksima: 0,03 USD tura, 0,07 USD analiza; pełny przebieg K=3: 4,84 USD). Plan zakładał do ok. 3,4 USD i 20–35 min; przebieg bazowy kosztował 0,83 USD i trwał ok. 12,5 min (analiza 555 s, tura 112 s, pamięć 28 s, długa analiza 46 s). Taniej: `--suite <seria>` i `--repeats 1`. Eval używa tego samego konta OpenAI co produkcja — wyczerpane środki zatrzymują też aplikację (§6.6).
 - **Run**:
   - pełny przebieg: `uv run --env-file .env python scripts/eval/run_eval.py run [--suite analysis,turn,memory,latency] [--repeats 3] [--max-usd 5] [--out PATH]`; serie: `analysis` (12 rozmów), `turn` (20 przypadków), `memory` (5 scen), `latency` (jedna rozmowa 40 wiadomości, raz na przebieg, tylko czas i koszt względem timeoutu analizy 150 s i limitu proxy Railway 300 s);
   - porównanie: `uv run python scripts/eval/run_eval.py compare A.json B.json` (A = przed zmianą, B = po; Δ = B − A);

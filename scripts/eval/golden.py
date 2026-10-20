@@ -68,7 +68,7 @@ class GoldMistake:
 
 @dataclass(frozen=True)
 class Typo:
-    """Spelling, capitalisation or punctuation the analysis must not report."""
+    """Spelling, capitalisation or compound spelling the analysis must not report."""
 
     message: int
     token: str
