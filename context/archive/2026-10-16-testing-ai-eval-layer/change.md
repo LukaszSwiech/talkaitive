@@ -1,10 +1,10 @@
 ---
 change_id: testing-ai-eval-layer
 title: AI eval layer for correction and mistake-list quality (test plan Phase 5)
-status: impl_reviewed
+status: archived
 created: 2026-10-16
-updated: 2026-10-19
-archived_at: null
+updated: 2026-10-20
+archived_at: 2026-10-20T10:25:18Z
 ---
 
 ## Notes
