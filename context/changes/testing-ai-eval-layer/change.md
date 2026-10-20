@@ -30,4 +30,4 @@ After creating the folder, follow the downstream continuation rule.
 ## Open TODO
 
 - [x] After the OpenAI account is topped up (the dashboard was down on 2026-10-19), re-run the broken-prompt check so the turn series has all 20 cases: break `conversations/llm.py` as above, `uv run --env-file .env python scripts/eval/run_eval.py run --suite analysis,turn --repeats 1 --max-usd 1 --out <outside repo>/broken.json`, `uv run python scripts/eval/run_eval.py compare scripts/eval/results/2026-10-19-gpt-5.4-56e6109.json <outside repo>/broken.json`, `git checkout conversations/llm.py`. Update the results above and carry them into `test-plan.md` §6.6 in phase 3.
-- [ ] Confirm production on Railway sends messages again after the top-up (the 429 hit the app too).
+- [x] Confirm production on Railway sends messages again after the top-up (the 429 hit the app too). Confirmed by the user on 2026-10-20; "Try again" also resumed a conversation that had failed to start while the credits were exhausted.
