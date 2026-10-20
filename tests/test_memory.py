@@ -230,6 +230,33 @@ def test_most_recent_label_marks_the_notes_of_the_latest_ended_conversation(
     assert "Older visit." in text
 
 
+def test_explanation_of_a_pair_from_one_conversation_reaches_memory(
+    anna: User,
+) -> None:
+    """A pair seen in a single conversation keeps its explanation in memory.
+
+    Source: S-03 plan (context/archive/2026-10-07-cross-session-error-memory/
+    plan.md:143, :210: `PastMistake.explanation` from the newest occurrence, shown
+    in the memory block next to `wrong → correct`). Edge: one conversation with one
+    mistake, so only the first occurrence of the pair counts. Guards mutmut
+    `memory.x__mistakes__mutmut_47`.
+    """
+    conversation = make_conversation(anna, day=1)
+    add_mistake(
+        conversation,
+        1,
+        "habe gegangen",
+        "bin gegangen",
+        explanation="Verbs of movement form the perfect with sein.",
+    )
+
+    memory = select_memory(anna, "bakery", DE)
+
+    assert memory.mistakes[0].explanation == (
+        "Verbs of movement form the perfect with sein."
+    )
+
+
 def test_at_most_ten_mistakes(anna: User) -> None:
     conversation = make_conversation(anna, day=1)
     for position in range(1, 13):
