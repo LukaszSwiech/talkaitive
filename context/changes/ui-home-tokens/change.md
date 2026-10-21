@@ -1,7 +1,7 @@
 ---
 change_id: ui-home-tokens
 title: Ui home tokens
-status: implementing
+status: implemented
 created: 2026-10-20
 updated: 2026-10-21
 archived_at: null

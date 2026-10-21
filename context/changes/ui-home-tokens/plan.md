@@ -430,10 +430,10 @@ Brak migracji danych. Rollback = revert PR. `collectstatic` w starcie Railway (`
 
 #### Automated
 
-- [x] 5.1 Testy przechodzą: `uv run pytest`
-- [x] 5.2 Blok 10x-cli w `CLAUDE.md` nietknięty
+- [x] 5.1 Testy przechodzą: `uv run pytest` — ac01f69
+- [x] 5.2 Blok 10x-cli w `CLAUDE.md` nietknięty — ac01f69
 
 #### Manual
 
-- [x] 5.3 Sekcja UI w `CLAUDE.md` czytelna i zgodna z faktycznymi ścieżkami i klasami
-- [x] 5.4 Lista kontrolna `ui-quality-checklist.md` przejrzana przed `/10x-impl-review`
+- [x] 5.3 Sekcja UI w `CLAUDE.md` czytelna i zgodna z faktycznymi ścieżkami i klasami — ac01f69
+- [x] 5.4 Lista kontrolna `ui-quality-checklist.md` przejrzana przed `/10x-impl-review` — ac01f69
