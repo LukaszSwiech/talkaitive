@@ -17,6 +17,8 @@ threshold in both themes.
 
 Django messages render as the alert component with `message.level_tag` as its
 `data-variant`, so `components.css` must keep the `error` alias of `destructive`.
+
+The kitchen sink page `/ui/` shows every component in every state, only in DEBUG.
 """
 
 import math
@@ -28,7 +30,7 @@ import pytest
 from django.apps import apps
 from django.conf import settings
 from django.contrib.staticfiles import finders
-from django.test import Client
+from django.test import Client, override_settings
 
 from accounts.models import User
 
@@ -257,3 +259,71 @@ def test_token_pair_meets_wcag_contrast(
     )
 
     assert ratio >= minimum, f"{theme}: --{text} on --{background} is {ratio:.2f}:1"
+
+
+KITCHEN_SINK_URL = "/ui/"
+
+# Markup of every component and state the kitchen sink must show.
+KITCHEN_SINK_MARKUP = [
+    '<button type="button" class="btn">',
+    '<button type="button" class="btn" data-variant="secondary">',
+    '<button type="button" class="btn" data-variant="destructive">',
+    '<button type="button">',
+    '<button type="button" class="btn" disabled>',
+    '<a class="btn" href=',
+    '<a class="btn" aria-disabled="true">',
+    '<a class="link" data-variant="destructive" href=',
+    '<a class="link" data-variant="destructive" aria-disabled="true">',
+    '<ul class="choice-list">',
+    '<p class="alert" data-variant="destructive">',
+    '<p class="alert" data-variant="success">',
+    '<p class="alert" data-variant="warning">',
+    "Continue conversation",
+    '<div class="typing">',
+    '<span class="spinner"',
+    "<input",
+    "<textarea",
+    'class="bubble bubble-assistant"',
+    'class="bubble bubble-user"',
+    '<section class="mistakes">',
+]
+
+
+def login_client(user: User) -> Client:
+    client = Client()
+    client.force_login(user)
+    return client
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=False)
+def test_kitchen_sink_is_404_outside_debug() -> None:
+    user = User.objects.create_user("anna@example.de", "pass-12345-xyz")
+
+    response = login_client(user).get(KITCHEN_SINK_URL)
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_kitchen_sink_shows_every_component_in_debug() -> None:
+    user = User.objects.create_user("anna@example.de", "pass-12345-xyz")
+
+    response = login_client(user).get(KITCHEN_SINK_URL)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    missing = [markup for markup in KITCHEN_SINK_MARKUP if markup not in content]
+    assert missing == []
+    # Alerts here are components, not Django messages (tests look for this marker).
+    assert 'class="flash' not in content
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_kitchen_sink_sends_signed_out_visitor_to_login(client: Client) -> None:
+    response = client.get(KITCHEN_SINK_URL)
+
+    assert response.status_code == 302
+    assert response["Location"] == f"/login/?next={KITCHEN_SINK_URL}"

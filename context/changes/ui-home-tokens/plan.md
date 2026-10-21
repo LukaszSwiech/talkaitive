@@ -399,32 +399,32 @@ Brak migracji danych. Rollback = revert PR. `collectstatic` w starcie Railway (`
 
 #### Automated
 
-- [x] 3.1 Testy przechodzą: `uv run pytest`
-- [x] 3.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 3.3 Skan literałów daje 0 trafień
-- [x] 3.4 Celowe złamanie: link „Delete account” w pasku wywraca nowy test; po cofnięciu zielony
+- [x] 3.1 Testy przechodzą: `uv run pytest` — 0405ecb
+- [x] 3.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 0405ecb
+- [x] 3.3 Skan literałów daje 0 trafień — 0405ecb
+- [x] 3.4 Celowe złamanie: link „Delete account” w pasku wywraca nowy test; po cofnięciu zielony — 0405ecb
 
 #### Manual
 
-- [x] 3.5 Home w trzech wariantach w obu motywach, desktop + telefon
-- [x] 3.6 Wskaźnik pisania po kliknięciu tematu i wylogowanie działają
-- [x] 3.7 Komunikat po usunięciu konta wygląda jak alert success
+- [x] 3.5 Home w trzech wariantach w obu motywach, desktop + telefon — 0405ecb
+- [x] 3.6 Wskaźnik pisania po kliknięciu tematu i wylogowanie działają — 0405ecb
+- [x] 3.7 Komunikat po usunięciu konta wygląda jak alert success — 0405ecb
 
 ### Phase 4: Stany, kitchen sink i bramka wizualna
 
 #### Automated
 
-- [ ] 4.1 Testy przechodzą: `uv run pytest`
-- [ ] 4.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 4.3 Zrzuty przechodzą lokalnie dwa razy pod rząd
-- [ ] 4.4 Pełny zestaw E2E zielony: `npx playwright test`
-- [ ] 4.5 Celowe złamanie `--ring` wywraca zrzut fokusu; po cofnięciu zielony
+- [x] 4.1 Testy przechodzą: `uv run pytest`
+- [x] 4.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 4.3 Zrzuty przechodzą lokalnie dwa razy pod rząd
+- [x] 4.4 Pełny zestaw E2E zielony: `npx playwright test`
+- [x] 4.5 Celowe złamanie `--ring` wywraca zrzut fokusu; po cofnięciu zielony
 
 #### Manual
 
-- [ ] 4.6 Macierz 7 stanów na `/ui/` i home, w obu motywach, desktop + telefon
-- [ ] 4.7 Nawigacja samą klawiaturą po home: logiczna kolejność, fokus zawsze widoczny
-- [ ] 4.8 Strony login, detail i account_delete przejrzane w obu motywach
+- [x] 4.6 Macierz 7 stanów na `/ui/` i home, w obu motywach, desktop + telefon
+- [x] 4.7 Nawigacja samą klawiaturą po home: logiczna kolejność, fokus zawsze widoczny
+- [x] 4.8 Strony login, detail i account_delete przejrzane w obu motywach
 
 ### Phase 5: Reguła dla następnego agenta
 

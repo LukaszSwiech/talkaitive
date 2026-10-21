@@ -14,4 +14,6 @@ urlpatterns = [
         name="logout",
     ),
     path("account/delete/", views.account_delete, name="account_delete"),
+    # Always registered; the view returns 404 outside DEBUG.
+    path("ui/", views.ui_kitchen_sink, name="ui_kitchen_sink"),
 ]

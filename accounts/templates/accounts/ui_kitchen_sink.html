@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}UI kitchen sink - TalkAItive{% endblock %}
+
+{% block content %}
+  {# DEBUG only (accounts.views.ui_kitchen_sink). Nothing here submits a form: every button is type="button". #}
+  <h1>UI kitchen sink</h1>
+  <p>Every shared component in every state. Styles live in ui/css/components.css, values in ui/css/tokens.css.</p>
+
+  <section aria-labelledby="ks-buttons">
+    <h2 id="ks-buttons">Buttons</h2>
+    <p>
+      <button type="button" class="btn">Primary</button>
+      <button type="button" class="btn" data-variant="secondary">Secondary</button>
+      <button type="button" class="btn" data-variant="destructive">Destructive</button>
+      <button type="button">Bare button</button>
+      <a class="btn" href="{% url 'ui_kitchen_sink' %}">Link as button</a>
+    </p>
+    <p>
+      <button type="button" class="btn" disabled>Primary disabled</button>
+      <button type="button" class="btn" data-variant="secondary" disabled>Secondary disabled</button>
+      <button type="button" class="btn" data-variant="destructive" disabled>Destructive disabled</button>
+      <button type="button" disabled>Bare button disabled</button>
+      <a class="btn" aria-disabled="true">Link as button disabled</a>
+    </p>
+  </section>
+
+  <section aria-labelledby="ks-links">
+    <h2 id="ks-links">Links</h2>
+    <p>
+      <a class="link" data-variant="destructive" href="{% url 'ui_kitchen_sink' %}">Delete account</a>
+      &middot;
+      <a class="link" data-variant="destructive" aria-disabled="true">Delete account disabled</a>
+    </p>
+  </section>
+
+  <section aria-labelledby="ks-choice-list">
+    <h2 id="ks-choice-list">Choice list</h2>
+    <ul class="choice-list">
+      {% for topic in topics %}
+        <li><button type="button">{{ topic.title }}</button></li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section aria-labelledby="ks-alerts">
+    <h2 id="ks-alerts">Alerts</h2>
+    <p class="alert" data-variant="destructive">This topic does not exist. Please choose another one.</p>
+    <p class="alert" data-variant="success">Your account has been deleted.</p>
+    <p class="alert" data-variant="warning">
+      You have used today's conversation limit.
+      {% include "conversations/_reset_notice.html" %}
+    </p>
+  </section>
+
+  <section aria-labelledby="ks-active">
+    <h2 id="ks-active">Active conversation</h2>
+    <p>You have a conversation in progress: <strong>{{ topics.0.title }}</strong></p>
+    <p><a class="btn" href="{% url 'ui_kitchen_sink' %}">Continue conversation</a></p>
+  </section>
+
+  <section aria-labelledby="ks-loading">
+    <h2 id="ks-loading">Loading</h2>
+    <div class="typing">
+      <span class="spinner" aria-hidden="true"></span>
+      <span role="status">Agent is typing…</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="ks-fields">
+    <h2 id="ks-fields">Fields</h2>
+    <label for="ks-text">Text field</label>
+    <input type="text" id="ks-text" value="Guten Tag">
+    <label for="ks-textarea">Textarea</label>
+    <textarea id="ks-textarea" rows="3">Ich möchte zwei Brötchen, bitte.</textarea>
+  </section>
+
+  <section aria-labelledby="ks-transcript">
+    <h2 id="ks-transcript">Conversation bubbles</h2>
+    <div class="transcript">
+      <div class="bubble bubble-assistant">
+        <span class="who">Agent</span>
+        Guten Morgen! Was darf es sein?
+      </div>
+      <div class="bubble bubble-user">
+        <span class="who">You</span>
+        Ich möchte zwei Brötchen, bitte.
+      </div>
+    </div>
+  </section>
+
+  {% include "conversations/_mistakes.html" %}
+{% endblock %}
