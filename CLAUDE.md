@@ -47,6 +47,19 @@ Django 6.1 web app for German conversation practice (B1–B2). Spec: `context/fo
 - `.gitignore` excludes `.claude/`, `.agents/` and `.gitignore` itself, so edits to skills or settings there are not committed.
 - Never edit inside the `<!-- BEGIN/END @przeprogramowani/10x-cli -->` block. `10x get` replaces it with each lesson's version, but skips it (`rules.action: conflict_skipped`) once it's been edited by hand. Put project-specific corrections to course text in this section instead.
 
+### UI: tokens and components
+
+The design-system contract (from change `ui-home-tokens`). Read it before touching any template or CSS.
+
+- Colour values live only in `accounts/static/ui/css/tokens.css`: shadcn token names, light theme in `:root`, dark in `@media (prefers-color-scheme: dark)`, source the tweakcn export `context/changes/ui-home-tokens/theme-source.css`. Write each value as `oklch(L C H)` or `var(--token)` only (the contrast test parses just these), with a comment giving the tweakcn value when it differs. Both themes must pass WCAG AA: a new text/background pair gets a row in `CONTRAST_PAIRS` (`tests/test_ui.py`). `color-mix()` goes in `components.css`, never in `tokens.css`.
+- Components live in `accounts/static/ui/css/components.css` and read only `var(--…)`: `btn` (primary; `data-variant="secondary"` / `"destructive"`; works on `<a>`), `link` (`data-variant="destructive"`), `choice-list`, `alert` (`data-variant="destructive"` / `"success"` / `"warning"`; `"error"` only as the alias for Django messages), `page-footer`. A bare `<button>` gets the secondary look; `.notice` and `.error` are aliases for pages not yet on components. Check this list before adding a component, and add a new one there.
+- Variants only through `data-variant` (Basecoat convention: `<button class="btn" data-variant="destructive">`), never `btn-*` classes. Disabled: `disabled` on a `<button>`, `aria-disabled="true"` on an `<a>` without `href`.
+- A component with more than one HTML element, used in 2+ places, becomes `accounts/templates/ui/<name>.html` (folder reserved for components), called via `{% include "ui/<name>.html" with … only %}` and built from the same classes. If it contains a form, pass `csrf_token=csrf_token` explicitly (`only` drops it).
+- No colours, `<style>` or `style=` in templates; page CSS goes into `components.css`. `tests/test_ui.py` guards the templates and `components.css`.
+- `/ui/` (kitchen sink, `accounts/templates/accounts/ui_kitchen_sink.html`, DEBUG only, 404 elsewhere) shows every component in every state. Every new component or state goes there.
+- Screenshot gate: `npx playwright test tests/e2e/ui-home.spec.ts`, local only, never CI (if a dev server holds port 8000, prefix `E2E_PORT=8001`). Update baselines with `--update-snapshots` only for an intended visual change, and describe that change in the commit message.
+- Django messages render as `<p class="flash alert" data-variant="{{ message.level_tag }}">` in `base.html`. `class="flash` must stay at the start of that markup: negative assertions in `tests/test_conversation_views.py` look for it.
+
 <!-- BEGIN @przeprogramowani/10x-cli -->
 
 ## 10xDevs AI Toolkit - Module 3, Lesson 4 (E2E Tests)

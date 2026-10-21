@@ -52,6 +52,29 @@ Uwagi do zarzutów:
 - **C5: zmiana miejsca linku to decyzja produktowa.** W zakresie tej zmiany mieści się wizualne oznaczenie (wariant destructive / link drugorzędny), nie przeniesienie → pytanie otwarte Q2.
 - **Test przypina adres linku:** `tests/test_account_deletion.py:540` sprawdza literalny `href="/account/delete/"` na home. Restyling C5 nie może zmienić tego atrybutu.
 
+### Status zarzutów (2026-10-21, po fazach 1–5 planu)
+
+| # | Status | Faza | Co zrobiono |
+|---|---|---|---|
+| C1 | addressed | 2 | `accounts/static/ui/css/tokens.css` (jasny i ciemny motyw, wartości tweakcn poprawione do AA z komentarzem o źródle); wszystkie 12 literałów przepięte na `var(--…)`; strażnicy w `tests/test_ui.py`: brak literałów w szablonach i `components.css`, kontrast `CONTRAST_PAIRS` w obu motywach. |
+| C2 | addressed | 3 | Komponenty w `components.css`: `btn` (primary, `data-variant="secondary"` / `"destructive"`), `link`, `choice-list`, `alert`, `page-footer`; home na komponentach („Continue conversation” jako primary, „Log out” jako secondary, tematy jako lista kart). |
+| C3 | addressed | 4 | Hover, `:focus-visible` z pełnym `--ring`, disabled (`button:disabled`, `a[aria-disabled="true"]`), spinner zatrzymany przy `prefers-reduced-motion`; stany na `/ui/` i w zrzutach `tests/e2e/ui-home.spec.ts`. Wyłączanie wszystkich przycisków po dowolnym submit (`base.html`, także „Log out”) zostaje świadomie — plan wyklucza nowy JS. |
+| C4 | addressed | 1 (+5) | Oba inline `<style>` przeniesione do `accounts/static/ui/css/`, ładowane przed `{% block head %}`; reguła UI w `CLAUDE.md` (faza 5). |
+| C5 | addressed | 3 | „Delete account” w `<footer class="page-footer">` jako `class="link" data-variant="destructive"`, we wszystkich trzech gałęziach home; test `tests/test_account_deletion.py:548` pilnuje, że link stoi po `</header>`. |
+
+Decyzje, które ta zmiana świadomie otwiera:
+
+- **C4 otwiera decyzję F2 z 2026-10-07** (`context/archive/2026-10-07-account-and-data-deletion/reviews/impl-review.md:36-53`: pasek `.topbar` i jego `<style>` miały zostać w `home.html`). Reguły `.topbar` są teraz w `components.css` (sekcja „Home page”, przepięte na tokeny, układ bez zmian), a markup paska zostaje w `home.html`. Wspólny pasek dla wszystkich stron nadal jest po MVP (`context/foundation/roadmap.md:178`).
+- **C5 zmienia miejsce linku** uzgodnione w `context/archive/2026-10-07-account-and-data-deletion/plan-brief.md:24` („Link + przycisk »Log out« przy »Signed in as«”): przy „Signed in as” zostaje tylko „Log out”, link usuwania konta jest na dole strony.
+
+Deferred (poza zakresem `change.md:19`):
+
+- **Strony login, detail (rozmowa) i account_delete** — ich szablony nie były edytowane; dziedziczą tylko tokeny, wygląd gołego `<button>` (secondary), pierścień fokusu i aliasy `.notice` / `.error`. Dotyczy to też wzorca z C2 poza home (`detail.html:33/44/56` obok `:52`, `account_delete.html:20` obok `:21`). Powód: zmiana obejmuje jeden widok; każda z tych stron dostanie własną zmianę `/10x-ui`.
+
+Znany otwarty punkt:
+
+- **Skok układu przy loading na home.** Skrypt w `base.html` wstawia `#typing-indicator` za klikniętym formularzem (`form.after(typing)`), czyli w środku listy tematów, więc kolejne tematy przesuwają się w dół. Zaakceptowane przez użytkownika 2026-10-21; poprawka wymaga zmiany JS, którą ta zmiana wyklucza.
+
 ## Detailed Findings
 
 ### (a) Gdzie `tokens.css` i `components.css`, jak je ładować, czy testy się wywrócą

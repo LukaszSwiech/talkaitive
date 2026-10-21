@@ -414,26 +414,26 @@ Brak migracji danych. Rollback = revert PR. `collectstatic` w starcie Railway (`
 
 #### Automated
 
-- [x] 4.1 Testy przechodzą: `uv run pytest`
-- [x] 4.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 4.3 Zrzuty przechodzą lokalnie dwa razy pod rząd
-- [x] 4.4 Pełny zestaw E2E zielony: `npx playwright test`
-- [x] 4.5 Celowe złamanie `--ring` wywraca zrzut fokusu; po cofnięciu zielony
+- [x] 4.1 Testy przechodzą: `uv run pytest` — 21e4c26
+- [x] 4.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — 21e4c26
+- [x] 4.3 Zrzuty przechodzą lokalnie dwa razy pod rząd — 21e4c26
+- [x] 4.4 Pełny zestaw E2E zielony: `npx playwright test` — 21e4c26
+- [x] 4.5 Celowe złamanie `--ring` wywraca zrzut fokusu; po cofnięciu zielony — 21e4c26
 
 #### Manual
 
-- [x] 4.6 Macierz 7 stanów na `/ui/` i home, w obu motywach, desktop + telefon
-- [x] 4.7 Nawigacja samą klawiaturą po home: logiczna kolejność, fokus zawsze widoczny
-- [x] 4.8 Strony login, detail i account_delete przejrzane w obu motywach
+- [x] 4.6 Macierz 7 stanów na `/ui/` i home, w obu motywach, desktop + telefon — 21e4c26
+- [x] 4.7 Nawigacja samą klawiaturą po home: logiczna kolejność, fokus zawsze widoczny — 21e4c26
+- [x] 4.8 Strony login, detail i account_delete przejrzane w obu motywach — 21e4c26
 
 ### Phase 5: Reguła dla następnego agenta
 
 #### Automated
 
-- [ ] 5.1 Testy przechodzą: `uv run pytest`
-- [ ] 5.2 Blok 10x-cli w `CLAUDE.md` nietknięty
+- [x] 5.1 Testy przechodzą: `uv run pytest`
+- [x] 5.2 Blok 10x-cli w `CLAUDE.md` nietknięty
 
 #### Manual
 
-- [ ] 5.3 Sekcja UI w `CLAUDE.md` czytelna i zgodna z faktycznymi ścieżkami i klasami
-- [ ] 5.4 Lista kontrolna `ui-quality-checklist.md` przejrzana przed `/10x-impl-review`
+- [x] 5.3 Sekcja UI w `CLAUDE.md` czytelna i zgodna z faktycznymi ścieżkami i klasami
+- [x] 5.4 Lista kontrolna `ui-quality-checklist.md` przejrzana przed `/10x-impl-review`
