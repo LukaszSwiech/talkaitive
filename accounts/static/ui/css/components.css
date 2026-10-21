@@ -7,13 +7,50 @@
 body { font-family: var(--font-sans); background: var(--background); color: var(--foreground); max-width: 36rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
 label { display: block; margin-top: 1rem; }
 input, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; font-size: 1rem; font-family: inherit; background: var(--card); color: var(--card-foreground); border: 1px solid var(--input); }
-button, .button { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; }
-button:disabled { opacity: 0.6; cursor: progress; }
+/* Autofill paints its own (yellow) background with !important, which leaves the light dark-theme text unreadable; cover it with an inset shadow and keep the token colours. */
+input:-webkit-autofill { box-shadow: 0 0 0 100vmax var(--card) inset; -webkit-text-fill-color: var(--card-foreground); caret-color: var(--card-foreground); }
+/* Selected text in a field: the system highlight turns it white, unreadable on Safari's yellow autofill background (which the rule above does not always cover). */
+input::selection, textarea::selection { background: var(--primary); color: var(--primary-foreground); }
 [hidden] { display: none !important; }
+
+/*
+ * Components. Variants only through the data-variant attribute
+ * (e.g. .btn[data-variant="destructive"]), never through extra classes.
+ */
+
+/*
+ * Button: .btn is primary, on <button> or <a>; data-variant="secondary" | "destructive".
+ * A bare <button> without a class gets the secondary look (pages not yet on components).
+ */
+button, .btn { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; border: 1px solid transparent; border-radius: var(--radius); font-family: inherit; font-size: 1rem; line-height: 1.25; text-align: center; text-decoration: none; }
+button, .btn[data-variant="secondary"] { background: var(--secondary); color: var(--secondary-foreground); border-color: var(--border); }
+.btn { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.btn[data-variant="destructive"] { background: var(--destructive); color: var(--destructive-foreground); border-color: var(--destructive); }
+button:disabled { opacity: 0.6; cursor: progress; }
+
+/* Link: data-variant="destructive" for a link to a dangerous action. */
+.link { text-underline-offset: 0.15em; }
+.link[data-variant="destructive"] { color: var(--destructive); }
+
+/* Choice list: a vertical list whose items are full-width buttons on a card surface. */
+.choice-list { list-style: none; padding: 0; }
+.choice-list button { display: block; width: 100%; margin-top: 0.5rem; padding: 0.75rem 1rem; text-align: left; background: var(--card); color: var(--card-foreground); border-color: var(--border); box-shadow: var(--shadow-sm); }
+
+/*
+ * Alert: a message box; data-variant="destructive" | "success" | "warning".
+ * "error" is an alias of "destructive" for Django messages, whose level_tag goes
+ * straight into data-variant (base.html). .notice is an alias of the warning alert
+ * and .error is destructive text, both for pages not yet on components.
+ * .flash marks a Django message in tests and has no look of its own.
+ */
+.alert, .notice { padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); color: var(--foreground); }
+.alert[data-variant="destructive"], .alert[data-variant="error"] { background: var(--destructive-muted); color: var(--foreground); border-color: var(--destructive); }
+.alert[data-variant="success"] { background: var(--success-muted); color: var(--foreground); border-color: var(--success); }
+.alert[data-variant="warning"], .notice { background: var(--warning); color: var(--warning-foreground); }
 .error { color: var(--destructive); }
-.flash { padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: var(--muted); }
-.flash.error { background: var(--destructive-muted); }
-.notice { padding: 0.75rem; border-radius: 0.5rem; background: var(--warning); color: var(--warning-foreground); }
+
+/* Page footer: secondary links at the end of a page. */
+.page-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 
 /* Home page */
 .topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; margin-bottom: 1rem; }
@@ -21,9 +58,6 @@ button:disabled { opacity: 0.6; cursor: progress; }
 .topbar .account { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
 .topbar .account p { margin: 0; }
 .topbar .account button { margin-top: 0; }
-
-.topics { list-style: none; padding: 0; }
-.topics button { width: 100%; margin-top: 0.5rem; text-align: left; }
 
 /* Conversation page */
 .transcript { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }

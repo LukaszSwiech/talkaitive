@@ -384,31 +384,31 @@ Brak migracji danych. Rollback = revert PR. `collectstatic` w starcie Railway (`
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą, w tym nowi strażnicy
-- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [x] 2.3 Skan literałów na szablonach i `components.css` daje 0 trafień
-- [x] 2.4 Celowe złamanie wywraca strażnika szablonów i test kontrastu; po cofnięciu oba zielone
-- [x] 2.5 `collectstatic` z produkcyjnym storage kończy się bez błędu
+- [x] 2.1 Testy przechodzą, w tym nowi strażnicy — edd065e
+- [x] 2.2 Lint i format: `uv run ruff check . && uv run ruff format --check .` — edd065e
+- [x] 2.3 Skan literałów na szablonach i `components.css` daje 0 trafień — edd065e
+- [x] 2.4 Celowe złamanie wywraca strażnika szablonów i test kontrastu; po cofnięciu oba zielone — edd065e
+- [x] 2.5 `collectstatic` z produkcyjnym storage kończy się bez błędu — edd065e
 
 #### Manual
 
-- [x] 2.6 Strony czytelne w jasnym i ciemnym motywie systemu, desktop + telefon
-- [x] 2.7 Wartości kolorów sprawdzone w DevTools dla 2–3 par, zgodne z testem
+- [x] 2.6 Strony czytelne w jasnym i ciemnym motywie systemu, desktop + telefon — edd065e
+- [x] 2.7 Wartości kolorów sprawdzone w DevTools dla 2–3 par, zgodne z testem — edd065e
 
 ### Phase 3: Widok home na komponentach
 
 #### Automated
 
-- [ ] 3.1 Testy przechodzą: `uv run pytest`
-- [ ] 3.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 3.3 Skan literałów daje 0 trafień
-- [ ] 3.4 Celowe złamanie: link „Delete account” w pasku wywraca nowy test; po cofnięciu zielony
+- [x] 3.1 Testy przechodzą: `uv run pytest`
+- [x] 3.2 Lint i format: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.3 Skan literałów daje 0 trafień
+- [x] 3.4 Celowe złamanie: link „Delete account” w pasku wywraca nowy test; po cofnięciu zielony
 
 #### Manual
 
-- [ ] 3.5 Home w trzech wariantach w obu motywach, desktop + telefon
-- [ ] 3.6 Wskaźnik pisania po kliknięciu tematu i wylogowanie działają
-- [ ] 3.7 Komunikat po usunięciu konta wygląda jak alert success
+- [x] 3.5 Home w trzech wariantach w obu motywach, desktop + telefon
+- [x] 3.6 Wskaźnik pisania po kliknięciu tematu i wylogowanie działają
+- [x] 3.7 Komunikat po usunięciu konta wygląda jak alert success
 
 ### Phase 4: Stany, kitchen sink i bramka wizualna
 

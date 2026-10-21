@@ -7,23 +7,22 @@
       <p>Signed in as {{ user.email }}</p>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit">Log out</button>
+        <button type="submit" class="btn" data-variant="secondary">Log out</button>
       </form>
-      <a href="{% url 'account_delete' %}">Delete account</a>
     </div>
   </header>
 
   {% if active_conversation %}
     <p>You have a conversation in progress: <strong>{{ active_conversation.topic_title }}</strong></p>
-    <p><a class="button" href="{% url 'conversation_detail' pk=active_conversation.pk %}">Continue conversation</a></p>
+    <p><a class="btn" href="{% url 'conversation_detail' pk=active_conversation.pk %}">Continue conversation</a></p>
   {% elif exhausted %}
-    <p class="notice">
+    <p class="alert" data-variant="warning">
       You have used today's conversation limit.
       {% include "conversations/_reset_notice.html" %}
     </p>
   {% else %}
     <h2>Choose a topic</h2>
-    <ul class="topics">
+    <ul class="choice-list">
       {% for topic in topics %}
         <li>
           <form method="post" action="{% url 'conversation_start' %}" data-waits-for-agent>
@@ -35,4 +34,8 @@
       {% endfor %}
     </ul>
   {% endif %}
+
+  <footer class="page-footer">
+    <a class="link" data-variant="destructive" href="{% url 'account_delete' %}">Delete account</a>
+  </footer>
 {% endblock %}

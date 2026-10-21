@@ -14,6 +14,9 @@ The contrast test reads `tokens.css` (light `:root` and the dark
 its light value), resolves `var(--...)` aliases, converts OKLCH to sRGB (clipped to
 the sRGB gamut) and checks each pair in `CONTRAST_PAIRS` against its WCAG 2.x
 threshold in both themes.
+
+Django messages render as the alert component with `message.level_tag` as its
+`data-variant`, so `components.css` must keep the `error` alias of `destructive`.
 """
 
 import math
@@ -25,6 +28,9 @@ import pytest
 from django.apps import apps
 from django.conf import settings
 from django.contrib.staticfiles import finders
+from django.test import Client
+
+from accounts.models import User
 
 STYLESHEETS = ["ui/css/tokens.css", "ui/css/components.css"]
 
@@ -217,6 +223,22 @@ def test_contrast_ratio_matches_known_wcag_values() -> None:
 
     assert contrast_ratio(white, black) == pytest.approx(21.0)
     assert contrast_ratio(white, white) == pytest.approx(1.0)
+
+
+@pytest.mark.django_db
+def test_error_message_renders_as_the_error_alert_variant(client: Client) -> None:
+    """Django's `error` level tag reaches the alert through its `error` alias."""
+    user = User.objects.create_user("anna@example.de", "pass-12345-xyz")
+    client.force_login(user)
+
+    response = client.post(
+        "/conversations/start/", {"topic": "no-such-topic"}, follow=True
+    )
+
+    assert '<p class="flash alert" data-variant="error">' in response.content.decode()
+    path = finders.find("ui/css/components.css")
+    assert path is not None
+    assert '.alert[data-variant="error"]' in Path(path).read_text()
 
 
 @pytest.mark.parametrize("theme", THEMES)

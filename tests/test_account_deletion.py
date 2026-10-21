@@ -538,3 +538,11 @@ def test_home_links_to_account_deletion(anna: User) -> None:
     home = login_client(anna).get("/")
 
     assert 'href="/account/delete/"' in home.content.decode()
+
+
+@pytest.mark.django_db
+def test_home_account_deletion_link_is_below_the_top_bar(anna: User) -> None:
+    """The link sits at the end of the page, away from "Log out" in the top bar."""
+    content = login_client(anna).get("/").content.decode()
+
+    assert content.index('href="/account/delete/"') > content.index("</header>")
