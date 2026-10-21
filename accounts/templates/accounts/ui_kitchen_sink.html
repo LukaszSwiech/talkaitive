@@ -3,7 +3,8 @@
 {% block title %}UI kitchen sink - TalkAItive{% endblock %}
 
 {% block content %}
-  {# DEBUG only (accounts.views.ui_kitchen_sink). Nothing here submits a form: every button is type="button". #}
+  {# DEBUG only (conversations.views.ui_kitchen_sink). Nothing here submits a form: every button is type="button". #}
+  {# The page opens scrolled to the bottom: base.html scrolls any page with a .transcript, and the bubbles sample has one. #}
   <h1>UI kitchen sink</h1>
   <p>Every shared component in every state. Styles live in ui/css/components.css, values in ui/css/tokens.css.</p>
 
@@ -26,12 +27,12 @@
   </section>
 
   <section aria-labelledby="ks-links">
-    <h2 id="ks-links">Links</h2>
-    <p>
+    <h2 id="ks-links">Links in a page footer</h2>
+    <footer class="page-footer">
       <a class="link" data-variant="destructive" href="{% url 'ui_kitchen_sink' %}">Delete account</a>
       &middot;
       <a class="link" data-variant="destructive" aria-disabled="true">Delete account disabled</a>
-    </p>
+    </footer>
   </section>
 
   <section aria-labelledby="ks-choice-list">

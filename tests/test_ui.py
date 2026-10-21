@@ -36,8 +36,10 @@ from accounts.models import User
 
 STYLESHEETS = ["ui/css/tokens.css", "ui/css/components.css"]
 
-# The colour part of the /10x-ui literal scan.
-COLOUR_LITERAL = re.compile(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|oklch\(")
+# The colour part of the /10x-ui literal scan, plus the other CSS colour functions.
+COLOUR_LITERAL = re.compile(
+    r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|oklch\(|oklab\(|lab\(|lch\(|hwb\(|color\("
+)
 INLINE_STYLE = re.compile(r"<style| style=")
 
 # Directories inside BASE_DIR that hold copies or third-party code, not project apps.
@@ -53,12 +55,15 @@ CONTRAST_PAIRS: list[tuple[str, str, float]] = [
     ("foreground", "success-muted", 4.5),
     ("foreground", "bubble-assistant", 4.5),
     ("foreground", "bubble-user", 4.5),
+    ("card-foreground", "card", 4.5),
     ("primary-foreground", "primary", 4.5),
+    ("primary-foreground", "primary-hover", 4.5),
     ("secondary-foreground", "secondary", 4.5),
     ("muted-foreground", "background", 4.5),
     ("muted-foreground", "card", 4.5),
     ("accent-foreground", "accent", 4.5),
     ("destructive-foreground", "destructive", 4.5),
+    ("destructive-foreground", "destructive-hover", 4.5),
     ("destructive", "background", 4.5),
     ("destructive", "card", 4.5),
     ("warning-foreground", "warning", 4.5),
@@ -274,6 +279,7 @@ KITCHEN_SINK_MARKUP = [
     '<a class="btn" aria-disabled="true">',
     '<a class="link" data-variant="destructive" href=',
     '<a class="link" data-variant="destructive" aria-disabled="true">',
+    '<footer class="page-footer">',
     '<ul class="choice-list">',
     '<p class="alert" data-variant="destructive">',
     '<p class="alert" data-variant="success">',

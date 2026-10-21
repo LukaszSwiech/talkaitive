@@ -286,6 +286,12 @@ Domyka stany interakcji, dodaje stronę `/ui/` (tylko DEBUG) pokazującą wszyst
 
 **Implementation Note**: Po zielonej automatyce zatrzymaj się na ręczne potwierdzenie przed fazą 5.
 
+**Addendum (impl-review 2026-10-21, `reviews/impl-review.md`)**:
+- Zrzut loading przerywa `POST /conversations/start/` od razu (`route.abort('aborted')`) i czeka na `requestfailed`, zamiast wstrzymywać żądanie — wstrzymane żądanie blokuje lokatory (`tests/e2e/ui-home.spec.ts`). Intencja bez zmian: rozmowa nie powstaje.
+- Skok układu przy loading (`form.after(typing)` przesuwa tematy) zaakceptowany przez użytkownika 2026-10-21, bo plan wyklucza nowy JS (`research.md`).
+- Widok `ui_kitchen_sink` i trasa `ui/` są w `conversations/views.py` i `conversations/urls.py`, nie w `accounts/` — `accounts` nie importuje `conversations` (F2). Szablon zostaje w `accounts/templates/accounts/`.
+- Hover przycisków primary i destructive czyta tokeny `--primary-hover` / `--destructive-hover` z parami w `CONTRAST_PAIRS`, zamiast `color-mix()` (ciemny hover primary miał 4.49:1, F1). `/ui/` pokazuje też `page-footer` (F4).
+
 ---
 
 ## Phase 5: Reguła dla następnego agenta

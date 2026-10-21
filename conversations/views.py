@@ -2,11 +2,14 @@
 
 Every conversation is fetched through `for_user`, so another user's conversation is
 a 404. POST views always redirect (POST -> redirect -> GET).
+`ui_kitchen_sink` is a DEBUG-only page with every shared UI component in every state.
 """
+
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -19,6 +22,9 @@ from .llm import LLMError
 from .models import Conversation, Mistake
 from .services import AnalysisNotNeeded, ConversationError
 from .topics import TOPICS
+
+# The kitchen sink's "now" for its reset notice; see ui_kitchen_sink.
+KITCHEN_SINK_NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 
 
 def _get_conversation(request: AuthenticatedHttpRequest, pk: int) -> Conversation:
@@ -157,3 +163,43 @@ def conversation_analyze(request: AuthenticatedHttpRequest, pk: int) -> HttpResp
     except LLMError:
         pass  # The page shows the error and "Try again".
     return _to_detail(conversation)
+
+
+@require_GET
+def ui_kitchen_sink(request: AuthenticatedHttpRequest) -> HttpResponse:
+    """Every component of `ui/css/components.css` in every state, for looking at the UI.
+
+    Only in DEBUG; elsewhere the page does not exist. It reads no user data: the
+    mistakes are unsaved samples rendered through the real `_mistakes.html`.
+    """
+    if not settings.DEBUG:
+        raise Http404
+    sample_mistakes = [
+        Mistake(
+            category=Mistake.Category.GRAMMAR,
+            wrong="Ich habe gegangen",
+            correct="Ich bin gegangen",
+            sentence="Gestern habe ich in den Park gegangen.",
+            explanation="Verbs of movement form the Perfekt with sein.",
+            occurrences=2,
+        ),
+        Mistake(
+            category=Mistake.Category.WORD_ORDER,
+            wrong="weil ich habe keine Zeit",
+            correct="weil ich keine Zeit habe",
+            sentence="Ich komme nicht, weil ich habe keine Zeit.",
+            explanation="In a clause with weil the verb goes to the end.",
+        ),
+    ]
+    return render(
+        request,
+        "accounts/ui_kitchen_sink.html",
+        {
+            "topics": TOPICS[:3],
+            "mistakes": sample_mistakes,
+            # A fixed sample instant, not now(): the page stays the same every day,
+            # so its screenshots (tests/e2e/ui-home.spec.ts) do too.
+            "reset_at": next_reset(KITCHEN_SINK_NOW),
+            "budget_time_zone": settings.BUDGET_TIME_ZONE,
+        },
+    )

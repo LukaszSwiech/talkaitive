@@ -29,13 +29,13 @@ button, .btn[data-variant="secondary"] { background: var(--secondary); color: va
 .btn { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
 .btn[data-variant="destructive"] { background: var(--destructive); color: var(--destructive-foreground); border-color: var(--destructive); }
 /*
- * Hover: primary and destructive at 90% over the page background (shadcn's bg-primary/90),
- * which keeps their text at 4.5:1 in both themes; secondary and the bare <button> turn
- * --accent, a pair the contrast test checks. A disabled button keeps its look.
+ * Hover: primary and destructive turn --primary-hover / --destructive-hover; secondary and
+ * the bare <button> turn --accent. The contrast test checks each of these under its text.
+ * A disabled button keeps its look: :disabled for a <button>, aria-disabled for an <a>.
  */
-button:hover:not(:disabled), .btn[data-variant="secondary"]:hover:not(:disabled) { background: var(--accent); color: var(--accent-foreground); }
-.btn:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 90%, var(--background)); color: var(--primary-foreground); }
-.btn[data-variant="destructive"]:hover:not(:disabled) { background: color-mix(in srgb, var(--destructive) 90%, var(--background)); color: var(--destructive-foreground); }
+button:hover:not(:disabled), .btn[data-variant="secondary"]:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--accent); color: var(--accent-foreground); }
+.btn:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--primary-hover); color: var(--primary-foreground); }
+.btn[data-variant="destructive"]:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--destructive-hover); color: var(--destructive-foreground); }
 /* Disabled: a <button> with disabled (base.html disables every button while a form is sent), or an <a> with aria-disabled="true" and no href. */
 button:disabled, a[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
 
