@@ -2,7 +2,7 @@
 // Risk: ui-visual-regression — a change to a token, a component rule or the home
 // markup silently changes how home or a component state looks (colours, focus
 // ring, hover, loading indicator) in the light or dark theme, on desktop or phone.
-// Related: context/changes/ui-home-tokens/plan.md, phase 4.
+// Related: context/archive/2026-10-20-ui-home-tokens/plan.md, phase 4.
 //
 // Baselines live in ui-home.spec.ts-snapshots/ and are committed. Update them
 // (npx playwright test tests/e2e/ui-home.spec.ts --update-snapshots) only for an
