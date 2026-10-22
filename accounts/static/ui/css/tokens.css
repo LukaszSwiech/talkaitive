@@ -1,0 +1,83 @@
+/*
+ * Design tokens (colours and other theme values) shared by every page.
+ * Loaded before components.css, which reads them through var(--...).
+ * Values are taken from context/changes/ui-home-tokens/theme-source.css
+ * (tweakcn export); that file is not served.
+ *
+ * Every value that differs from tweakcn says so in a comment, with the source
+ * value and the reason (mostly WCAG AA contrast: 4.5:1 for text, 3:1 for
+ * focus rings and field borders). tests/test_ui.py checks the contrast of the
+ * token pairs in both themes and only reads two forms of colour value:
+ * a literal oklch(L C H) or an alias var(--other-token). Keep color-mix()
+ * and other forms out of this file.
+ *
+ * The dark theme follows the system setting. Tokens it does not redefine
+ * keep their light value (aliases then resolve to the dark values).
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --background: oklch(0.9383 0.0042 236.4993);
+  --foreground: oklch(0.3211 0 0);
+  --card: oklch(1.0000 0 0);
+  --card-foreground: oklch(0.3211 0 0);
+  --primary: oklch(0.2972 0.0398 246.6002);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.9670 0.0029 264.5419);
+  --secondary-foreground: oklch(0.5000 0.0904 80.9413); /* tweakcn: oklch(0.6325 0.0904 80.9413); 3.17:1 on --secondary, darkened to 5.51:1 */
+  --muted: oklch(0.9846 0.0017 247.8389);
+  --muted-foreground: oklch(0.5000 0.0234 264.3637); /* tweakcn: oklch(0.5510 0.0234 264.3637); 4.04:1 on --background, darkened to 5.01:1 */
+  --accent: oklch(0.9119 0.0222 243.8174);
+  --accent-foreground: oklch(0.3791 0.1378 265.5222);
+  --destructive: oklch(0.5200 0.2000 25.3313); /* tweakcn: oklch(0.6368 0.2078 25.3313); 3.14:1 as text on --background and 3.76:1 under white text, darkened to 5.11:1 and 6.12:1 */
+  --destructive-foreground: oklch(1.0000 0 0);
+  --primary-hover: oklch(0.3700 0.0349 245.8139); /* not in tweakcn: --primary at 90% over --background (shadcn's bg-primary/90), 10.39:1 under --primary-foreground */
+  --destructive-hover: oklch(0.5429 0.1886 22.6302); /* not in tweakcn: --destructive at 90% over --background, 5.51:1 under --destructive-foreground */
+  --border: oklch(0.8853 0 0);
+  --input: oklch(0.6000 0.0029 264.5420); /* tweakcn: oklch(0.9700 0.0029 264.5420); lighter than --background, darkened to 3.30:1 on --background and 3.95:1 on --card (WCAG 1.4.11) */
+  --ring: oklch(0.5700 0.0904 80.9413); /* tweakcn: oklch(0.6325 0.0904 80.9413); 2.92:1 on --background, darkened to 3.76:1 (4.51:1 on --card) */
+
+  /* Not in tweakcn: the app's own status and chat colours. */
+  --success: oklch(0.4800 0.1300 150); /* text of a corrected word: 5.14:1 on --background */
+  --success-muted: oklch(0.9500 0.0400 150); /* background of a success message */
+  --warning: oklch(0.9700 0.0450 90); /* background of a notice (daily limit) */
+  --warning-foreground: var(--foreground);
+  --destructive-muted: oklch(0.9500 0.0250 15); /* background of an error message */
+  --bubble-assistant: var(--card);
+  --bubble-user: oklch(0.9400 0.0350 155); /* stays green, as before the tokens */
+
+  --radius: 0.75rem;
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.10), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --font-sans: Inter, system-ui, sans-serif; /* tweakcn: Inter, sans-serif; Inter is not loaded, so fall back to the system font */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.2598 0.0306 262.6666);
+    --foreground: oklch(0.9219 0 0);
+    --card: oklch(0.3106 0.0301 268.6365);
+    --card-foreground: oklch(0.9219 0 0);
+    --primary: oklch(0.6325 0.0904 80.9413);
+    --primary-foreground: oklch(0.2000 0.0306 262.6666); /* tweakcn: oklch(1.0000 0 0); white on the gold --primary is 3.49:1, dark text gives 5.19:1 */
+    --secondary: oklch(0.8853 0 0);
+    --secondary-foreground: oklch(0.4461 0.0263 256.8018);
+    --muted: oklch(0.3095 0.0266 266.7132);
+    --muted-foreground: oklch(0.7155 0 0);
+    --accent: oklch(0.3380 0.0589 267.5867);
+    --accent-foreground: oklch(0.7800 0.0904 80.9413); /* tweakcn: oklch(0.6325 0.0904 80.9413); 3.41:1 on --accent, lightened to 5.92:1 */
+    --destructive: oklch(0.7200 0.1600 25.3313); /* tweakcn: oklch(0.6368 0.2078 25.3313); 4.14:1 as text on --background and 3.76:1 under white text, lightened to 5.85:1 (4.95:1 on --card) */
+    --destructive-foreground: oklch(0.2000 0.0306 262.6666); /* tweakcn: oklch(1.0000 0 0); the lighter --destructive needs dark text: 6.82:1 */
+    --primary-hover: oklch(0.6615 0.0825 81.5491); /* --primary at 90% over --foreground: over --background the dark text drops to 4.49:1, lighter gives 5.82:1 */
+    --destructive-hover: oklch(0.6763 0.1452 24.4384); /* --destructive at 90% over --background, 5.81:1 under --destructive-foreground */
+    --border: oklch(0.3843 0.0301 269.7337);
+    --input: oklch(0.6200 0.0301 269.7337); /* tweakcn: oklch(0.3843 0.0301 269.7337); 1.58:1 on --background, lightened to 4.26:1 (3.61:1 on --card, WCAG 1.4.11) */
+    --ring: oklch(0.7853 0.0998 82.0579);
+
+    --success: oklch(0.7800 0.1500 150); /* 8.23:1 on --background */
+    --success-muted: oklch(0.3300 0.0500 150);
+    --warning: oklch(0.3500 0.0600 85);
+    --destructive-muted: oklch(0.3300 0.0700 25);
+    --bubble-user: oklch(0.3400 0.0500 155);
+  }
+}

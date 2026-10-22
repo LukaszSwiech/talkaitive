@@ -1,0 +1,99 @@
+/*
+ * Shared element and component styles for every page.
+ * Loaded after tokens.css and before each page's {% block head %}.
+ */
+
+/* Base elements */
+body { font-family: var(--font-sans); background: var(--background); color: var(--foreground); max-width: 36rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+label { display: block; margin-top: 1rem; }
+input, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; font-size: 1rem; font-family: inherit; background: var(--card); color: var(--card-foreground); border: 1px solid var(--input); }
+/* Autofill paints its own (yellow) background with !important, which leaves the light dark-theme text unreadable; cover it with an inset shadow and keep the token colours. */
+input:-webkit-autofill { box-shadow: 0 0 0 100vmax var(--card) inset; -webkit-text-fill-color: var(--card-foreground); caret-color: var(--card-foreground); }
+/* Selected text in a field: the system highlight turns it white, unreadable on Safari's yellow autofill background (which the rule above does not always cover). */
+input::selection, textarea::selection { background: var(--primary); color: var(--primary-foreground); }
+[hidden] { display: none !important; }
+/* Keyboard focus: a full --ring outline with a gap, so it shows on the page background and on a card. */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/*
+ * Components. Variants only through the data-variant attribute
+ * (e.g. .btn[data-variant="destructive"]), never through extra classes.
+ */
+
+/*
+ * Button: .btn is primary, on <button> or <a>; data-variant="secondary" | "destructive".
+ * A bare <button> without a class gets the secondary look (pages not yet on components).
+ */
+button, .btn { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; border: 1px solid transparent; border-radius: var(--radius); font-family: inherit; font-size: 1rem; line-height: 1.25; text-align: center; text-decoration: none; }
+button, .btn[data-variant="secondary"] { background: var(--secondary); color: var(--secondary-foreground); border-color: var(--border); }
+.btn { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.btn[data-variant="destructive"] { background: var(--destructive); color: var(--destructive-foreground); border-color: var(--destructive); }
+/*
+ * Hover: primary and destructive turn --primary-hover / --destructive-hover; secondary and
+ * the bare <button> turn --accent. The contrast test checks each of these under its text.
+ * A disabled button keeps its look: :disabled for a <button>, aria-disabled for an <a>.
+ */
+button:hover:not(:disabled), .btn[data-variant="secondary"]:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--accent); color: var(--accent-foreground); }
+.btn:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--primary-hover); color: var(--primary-foreground); }
+.btn[data-variant="destructive"]:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--destructive-hover); color: var(--destructive-foreground); }
+/* Disabled: a <button> with disabled (base.html disables every button while a form is sent), or an <a> with aria-disabled="true" and no href. */
+button:disabled, a[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
+
+/* Link: data-variant="destructive" for a link to a dangerous action. */
+.link { text-underline-offset: 0.15em; }
+.link[data-variant="destructive"] { color: var(--destructive); }
+.link:hover:not([aria-disabled="true"]) { text-decoration-thickness: 0.15em; }
+.link[data-variant="destructive"]:hover:not([aria-disabled="true"]) { color: color-mix(in srgb, var(--destructive) 75%, var(--foreground)); }
+
+/* Choice list: a vertical list whose items are full-width buttons on a card surface. */
+.choice-list { list-style: none; padding: 0; }
+.choice-list button { display: block; width: 100%; margin-top: 0.5rem; padding: 0.75rem 1rem; text-align: left; background: var(--card); color: var(--card-foreground); border-color: var(--border); box-shadow: var(--shadow-sm); }
+.choice-list button:hover:not(:disabled) { background: var(--accent); color: var(--accent-foreground); border-color: var(--ring); }
+
+/*
+ * Alert: a message box; data-variant="destructive" | "success" | "warning".
+ * "error" is an alias of "destructive" for Django messages, whose level_tag goes
+ * straight into data-variant (base.html). .notice is an alias of the warning alert
+ * and .error is destructive text, both for pages not yet on components.
+ * .flash marks a Django message in tests and has no look of its own.
+ */
+.alert, .notice { padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); color: var(--foreground); }
+.alert[data-variant="destructive"], .alert[data-variant="error"] { background: var(--destructive-muted); color: var(--foreground); border-color: var(--destructive); }
+.alert[data-variant="success"] { background: var(--success-muted); color: var(--foreground); border-color: var(--success); }
+.alert[data-variant="warning"], .notice { background: var(--warning); color: var(--warning-foreground); }
+.error { color: var(--destructive); }
+
+/* Page footer: secondary links at the end of a page. */
+.page-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+/* Home page */
+.topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; margin-bottom: 1rem; }
+.topbar h1 { margin: 0; }
+.topbar .account { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.topbar .account p { margin: 0; }
+.topbar .account button { margin-top: 0; }
+
+/* Conversation page */
+.transcript { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
+.bubble { max-width: 85%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; overflow-wrap: anywhere; }
+.bubble .who { display: block; font-size: 0.75rem; font-weight: 600; opacity: 0.7; }
+.bubble-assistant { align-self: flex-start; background: var(--bubble-assistant); }
+.bubble-user { align-self: flex-end; background: var(--bubble-user); }
+.actions { display: flex; gap: 0.5rem; align-items: baseline; }
+
+/* Waiting indicator (#typing-indicator in base.html; also shown on home when a topic starts) */
+.typing { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; color: var(--muted-foreground); }
+.spinner { width: 1rem; height: 1rem; border: 2px solid var(--border); border-top-color: var(--muted-foreground); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+/* The text next to the spinner already says that the app is waiting. */
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+/* Mistake list after a conversation */
+.mistakes ol { padding-left: 1.5rem; }
+.mistakes li { margin-bottom: 1rem; }
+.mistakes li p { margin: 0.25rem 0; }
+.mistakes .category { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; opacity: 0.7; }
+.mistakes .wrong { color: var(--destructive); text-decoration: line-through; }
+.mistakes .correct { color: var(--success); font-weight: 600; }
+.mistakes .count { margin-left: 0.25rem; font-size: 0.875rem; opacity: 0.7; }
+.mistakes .sentence { font-style: italic; color: var(--muted-foreground); }

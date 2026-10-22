@@ -28,4 +28,6 @@ urlpatterns = [
         views.conversation_analyze,
         name="conversation_analyze",
     ),
+    # Always registered; the view returns 404 outside DEBUG.
+    path("ui/", views.ui_kitchen_sink, name="ui_kitchen_sink"),
 ]

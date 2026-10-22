@@ -1,49 +1,17 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}TalkAItive{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'ui/css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'ui/css/components.css' %}">
   {% block head %}{% endblock %}
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
-    label { display: block; margin-top: 1rem; }
-    input, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; font-size: 1rem; font-family: inherit; }
-    button, .button { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; }
-    button:disabled { opacity: 0.6; cursor: progress; }
-    [hidden] { display: none !important; }
-    .error { color: #b00020; }
-    .flash { padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: #f1f1f1; }
-    .flash.error { background: #fdecee; }
-    .notice { padding: 0.75rem; border-radius: 0.5rem; background: #fff6dd; }
-
-    .topics { list-style: none; padding: 0; }
-    .topics button { width: 100%; margin-top: 0.5rem; text-align: left; }
-
-    .transcript { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
-    .bubble { max-width: 85%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; overflow-wrap: anywhere; }
-    .bubble .who { display: block; font-size: 0.75rem; font-weight: 600; opacity: 0.7; }
-    .bubble-assistant { align-self: flex-start; background: #eef1f6; }
-    .bubble-user { align-self: flex-end; background: #dcf3e4; }
-    .actions { display: flex; gap: 0.5rem; align-items: baseline; }
-
-    .typing { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; color: #555; }
-    .spinner { width: 1rem; height: 1rem; border: 2px solid #ccc; border-top-color: #555; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .mistakes ol { padding-left: 1.5rem; }
-    .mistakes li { margin-bottom: 1rem; }
-    .mistakes li p { margin: 0.25rem 0; }
-    .mistakes .category { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; opacity: 0.7; }
-    .mistakes .wrong { color: #b00020; text-decoration: line-through; }
-    .mistakes .correct { color: #1b7f3b; font-weight: 600; }
-    .mistakes .count { margin-left: 0.25rem; font-size: 0.875rem; opacity: 0.7; }
-    .mistakes .sentence { font-style: italic; color: #555; }
-  </style>
 </head>
 <body>
   {% for message in messages %}
-    <p class="flash {{ message.tags }}">{{ message }}</p>
+    <p class="flash alert" data-variant="{{ message.level_tag }}">{{ message }}</p>
   {% endfor %}
   {% block content %}{% endblock %}
 
