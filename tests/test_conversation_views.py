@@ -26,6 +26,7 @@ from conversations.topics import get_topic
 from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn, add_charge
 
 START_URL = "/conversations/start/"
+START_RANDOM_URL = "/conversations/start/random/"
 
 
 def make_result(reply: str = "Guten Tag!", end: bool = False) -> TurnResult:
@@ -448,6 +449,68 @@ def test_llm_error_on_start_redirects_to_own_conversation_not_another_users(
     lukaszs = Conversation.objects.get(user=lukasz)
     assert response["Location"] == detail_url(lukaszs)
     assert response["Location"] != detail_url(annas)
+
+
+@pytest.fixture
+def last_candidate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make "Surprise me" draw the last candidate instead of a random one."""
+    monkeypatch.setattr(
+        "conversations.services.random.choice", lambda candidates: candidates[-1]
+    )
+
+
+@pytest.mark.django_db
+def test_surprise_me_starts_the_drawn_topic(
+    anna_client: Client, anna: User, fake_llm: FakeGenerateTurn, last_candidate: None
+) -> None:
+    drawn = services.surprise_topic_key(anna)
+
+    response = anna_client.post(START_RANDOM_URL)
+
+    conversation = Conversation.objects.get()
+    assert response.status_code == 302
+    assert response["Location"] == detail_url(conversation)
+    assert conversation.topic == drawn
+    assert len(fake_llm.calls) == 1
+
+
+@pytest.mark.django_db
+def test_get_on_surprise_me_is_not_allowed(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    assert anna_client.get(START_RANDOM_URL).status_code == 405
+    assert not Conversation.objects.exists()
+
+
+@pytest.mark.django_db
+def test_surprise_me_with_an_active_conversation_is_refused(
+    anna_client: Client, fake_llm: FakeGenerateTurn
+) -> None:
+    conversation = start(anna_client)
+
+    response = anna_client.post(START_RANDOM_URL, follow=True)
+
+    assert response.redirect_chain == [("/", 302)]
+    assert list(Conversation.objects.all()) == [conversation]
+    assert len(fake_llm.calls) == 1
+    [notice] = list(response.context["messages"])
+    assert str(notice) == "You already have a conversation in progress."
+
+
+@pytest.mark.django_db
+def test_surprise_me_with_exhausted_budget_is_refused(
+    anna_client: Client, fake_llm: FakeGenerateTurn, settings
+) -> None:
+    # Nothing spent, but one estimated turn (0.03) does not fit into the budget.
+    settings.DAILY_BUDGET_USD = Decimal("0.03")
+
+    response = anna_client.post(START_RANDOM_URL, follow=True)
+
+    assert response.redirect_chain == [("/", 302)]
+    assert not Conversation.objects.exists()
+    assert fake_llm.calls == []
+    [notice] = list(response.context["messages"])
+    assert str(notice) == services.DAILY_LIMIT_REACHED
 
 
 @pytest.mark.django_db
@@ -971,6 +1034,7 @@ def test_every_url_with_an_id_is_covered_by_the_404_test() -> None:
     [
         ("get", "/"),
         ("post", START_URL),
+        ("post", START_RANDOM_URL),
         ("get", "/conversations/1/"),
         ("post", "/conversations/1/messages/"),
         ("post", "/conversations/1/retry/"),

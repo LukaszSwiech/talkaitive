@@ -36,6 +36,7 @@ is left; a retry waits for the reset once the limit is reached.
 """
 
 import logging
+import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -65,7 +66,7 @@ from .llm import (
 )
 from .memory import select_memory
 from .models import Conversation, LLMCharge, Message, Mistake
-from .topics import Topic, get_topic
+from .topics import TOPICS, Topic, get_topic
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,19 @@ def _clear_turn_marker(conversation: Conversation, started_at: datetime) -> None
     Conversation.objects.for_user(conversation.user).filter(
         pk=conversation.pk, agent_turn_started_at=started_at
     ).update(agent_turn_started_at=None)
+
+
+def surprise_topic_key(user: User) -> str:
+    """A random topic key for "Surprise me", other than the user's last topic.
+
+    The last conversation counts whether it has ended or not. Without one, when its
+    topic is no longer in `TOPICS`, or when no other topic is left, every topic can
+    be drawn.
+    """
+    keys = [topic.key for topic in TOPICS]
+    last = Conversation.objects.for_user(user).order_by("-created_at", "-id").first()
+    candidates = [key for key in keys if last is None or key != last.topic]
+    return random.choice(candidates or keys)
 
 
 def start_conversation(user: User, topic_key: str, now: datetime) -> Conversation:

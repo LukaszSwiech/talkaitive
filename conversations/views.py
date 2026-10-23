@@ -59,9 +59,19 @@ def home(request: AuthenticatedHttpRequest) -> HttpResponse:
 
 @require_POST
 def conversation_start(request: AuthenticatedHttpRequest) -> HttpResponse:
+    return _start(request, request.POST.get("topic", ""))
+
+
+@require_POST
+def conversation_start_random(request: AuthenticatedHttpRequest) -> HttpResponse:
+    """Start "Surprise me": a random topic, other than the user's last one."""
+    return _start(request, services.surprise_topic_key(request.user))
+
+
+def _start(request: AuthenticatedHttpRequest, topic_key: str) -> HttpResponse:
     try:
         conversation = services.start_conversation(
-            request.user, request.POST.get("topic", ""), timezone.now()
+            request.user, topic_key, timezone.now()
         )
     except ConversationError as exc:
         messages.error(request, str(exc))

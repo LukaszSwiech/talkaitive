@@ -436,24 +436,24 @@ Brak migracji bazy. Istniejące rozmowy zachowują swoje `topic_title` i `topic_
 
 #### Automated
 
-- [x] 1.1 Nowe strażniki przechodzą: `uv run pytest tests/test_topics.py`
-- [x] 1.2 Cały zestaw testów przechodzi: `uv run pytest`
-- [x] 1.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .`
-- [x] 1.4 Django nie zgłasza problemów: `uv run python manage.py check`
+- [x] 1.1 Nowe strażniki przechodzą: `uv run pytest tests/test_topics.py` — 38975e9
+- [x] 1.2 Cały zestaw testów przechodzi: `uv run pytest` — 38975e9
+- [x] 1.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .` — 38975e9
+- [x] 1.4 Django nie zgłasza problemów: `uv run python manage.py check` — 38975e9
 
 #### Manual
 
-- [x] 1.5 `README.md` ikon podaje wersję Tabler, źródło i listę 21 plików zgodną z tabelą w tym planie
-- [x] 1.6 Usunięcie jednego pliku `.svg` (próba na chwilę) wywraca `tests/test_topics.py` z czytelnym komunikatem; plik przywrócony
+- [x] 1.5 `README.md` ikon podaje wersję Tabler, źródło i listę 21 plików zgodną z tabelą w tym planie — 38975e9
+- [x] 1.6 Usunięcie jednego pliku `.svg` (próba na chwilę) wywraca `tests/test_topics.py` z czytelnym komunikatem; plik przywrócony — 38975e9
 
 ### Phase 2: Surprise me — losowanie i trasa
 
 #### Automated
 
-- [ ] 2.1 Testy losowania i trasy przechodzą: `uv run pytest tests/test_conversations.py tests/test_conversation_views.py`
-- [ ] 2.2 Cały zestaw testów przechodzi: `uv run pytest`
-- [ ] 2.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 2.4 Mutanty izolacji w widokach dalej działają: `uv run python scripts/mutation/manual_mutants.py M1 M2` kończy się kodem 0
+- [x] 2.1 Testy losowania i trasy przechodzą: `uv run pytest tests/test_conversations.py tests/test_conversation_views.py`
+- [x] 2.2 Cały zestaw testów przechodzi: `uv run pytest`
+- [x] 2.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .`
+- [x] 2.4 Mutanty izolacji w widokach dalej działają: `uv run python scripts/mutation/manual_mutants.py M1 M2` kończy się kodem 0
 
 ### Phase 3: Siatka na home i kitchen sink
 
