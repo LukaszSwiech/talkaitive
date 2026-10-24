@@ -488,10 +488,10 @@ Brak migracji bazy. Istniejące rozmowy zachowują swoje `topic_title` i `topic_
 
 #### Automated
 
-- [x] 5.1 Sekcja wspomina nowe komponenty i katalog ikon: `grep -n "topic-card\|ui/icons" CLAUDE.md` zwraca wiersze z sekcji UI
-- [x] 5.2 Blok 10x-cli nietknięty: `git diff CLAUDE.md` nie pokazuje zmian między `<!-- BEGIN` a `<!-- END`
-- [x] 5.3 Cały zestaw pytest przechodzi: `uv run pytest`
+- [x] 5.1 Sekcja wspomina nowe komponenty i katalog ikon: `grep -n "topic-card\|ui/icons" CLAUDE.md` zwraca wiersze z sekcji UI — f5846a9
+- [x] 5.2 Blok 10x-cli nietknięty: `git diff CLAUDE.md` nie pokazuje zmian między `<!-- BEGIN` a `<!-- END` — f5846a9
+- [x] 5.3 Cały zestaw pytest przechodzi: `uv run pytest` — f5846a9
 
 #### Manual
 
-- [x] 5.4 Instrukcję „Adding a topic or icon” da się wykonać krok po kroku bez zaglądania do kodu (przegląd przez użytkownika)
+- [x] 5.4 Instrukcję „Adding a topic or icon” da się wykonać krok po kroku bez zaglądania do kodu (przegląd przez użytkownika) — f5846a9
