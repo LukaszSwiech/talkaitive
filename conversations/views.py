@@ -21,7 +21,7 @@ from .budget import is_exhausted, limit_reached, next_reset
 from .llm import LLMError
 from .models import Conversation, Mistake
 from .services import AnalysisNotNeeded, ConversationError
-from .topics import TOPICS
+from .topics import TOPICS, topics_by_category
 
 # The kitchen sink's "now" for its reset notice; see ui_kitchen_sink.
 KITCHEN_SINK_NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
@@ -50,7 +50,7 @@ def home(request: AuthenticatedHttpRequest) -> HttpResponse:
         {
             "active_conversation": active,
             "exhausted": exhausted,
-            "topics": TOPICS,
+            "topic_groups": topics_by_category(),
             "reset_at": next_reset(now),
             "budget_time_zone": settings.BUDGET_TIME_ZONE,
         },
@@ -206,6 +206,10 @@ def ui_kitchen_sink(request: AuthenticatedHttpRequest) -> HttpResponse:
         "accounts/ui_kitchen_sink.html",
         {
             "topics": TOPICS[:3],
+            # One sample card per category: its first topic.
+            "topic_samples": [
+                (category, topics[0]) for category, topics in topics_by_category()
+            ],
             "mistakes": sample_mistakes,
             # A fixed sample instant, not now(): the page stays the same every day,
             # so its screenshots (tests/e2e/ui-home.spec.ts) do too.

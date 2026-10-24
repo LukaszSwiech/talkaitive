@@ -450,27 +450,27 @@ Brak migracji bazy. Istniejące rozmowy zachowują swoje `topic_title` i `topic_
 
 #### Automated
 
-- [x] 2.1 Testy losowania i trasy przechodzą: `uv run pytest tests/test_conversations.py tests/test_conversation_views.py`
-- [x] 2.2 Cały zestaw testów przechodzi: `uv run pytest`
-- [x] 2.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .`
-- [x] 2.4 Mutanty izolacji w widokach dalej działają: `uv run python scripts/mutation/manual_mutants.py M1 M2` kończy się kodem 0
+- [x] 2.1 Testy losowania i trasy przechodzą: `uv run pytest tests/test_conversations.py tests/test_conversation_views.py` — 070e583
+- [x] 2.2 Cały zestaw testów przechodzi: `uv run pytest` — 070e583
+- [x] 2.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .` — 070e583
+- [x] 2.4 Mutanty izolacji w widokach dalej działają: `uv run python scripts/mutation/manual_mutants.py M1 M2` kończy się kodem 0 — 070e583
 
 ### Phase 3: Siatka na home i kitchen sink
 
 #### Automated
 
-- [ ] 3.1 Testy UI i widoków przechodzą: `uv run pytest tests/test_ui.py tests/test_conversation_views.py`
-- [ ] 3.2 Cały zestaw testów przechodzi: `uv run pytest`
-- [ ] 3.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .`
-- [ ] 3.4 W repo nie zostało użycie `choice-list`: `grep -rn "choice-list" accounts conversations tests` zwraca pusty wynik
+- [x] 3.1 Testy UI i widoków przechodzą: `uv run pytest tests/test_ui.py tests/test_conversation_views.py`
+- [x] 3.2 Cały zestaw testów przechodzi: `uv run pytest`
+- [x] 3.3 Lint i format czyste: `uv run ruff check . && uv run ruff format --check .`
+- [x] 3.4 W repo nie zostało użycie `choice-list`: `grep -rn "choice-list" accounts conversations tests` zwraca pusty wynik
 
 #### Manual
 
-- [ ] 3.5 Home w jasnym i ciemnym motywie: siatka 1 kolumna na telefonie (DevTools ~390 px), 2–3 kolumny na desktopie, ikony w kolorze tekstu karty
-- [ ] 3.6 Klik w każdy link kategorii: nagłówek sekcji widoczny pod paskiem sticky; pasek na telefonie mieści się w jednej linii i przewija się poziomo
-- [ ] 3.7 Klawiatura: Tab przechodzi przez „Surprise me”, linki paska i karty z widocznym fokusem; po przewinięciu w dół Shift+Tab wraca w górę i karta z fokusem nie chowa się pod paskiem
-- [ ] 3.8 „Surprise me” z prawdziwym LLM (`uv run --env-file .env python manage.py runserver`) pokazuje „Agent is typing…” i otwiera rozmowę z innym tematem niż poprzednia
-- [ ] 3.9 Kitchen sink `/ui/` pokazuje sekcję „Topic grid” ze stanem disabled; inne strony (logowanie, rozmowa) mają dawną szerokość
+- [x] 3.5 Home w jasnym i ciemnym motywie: siatka 1 kolumna na telefonie (DevTools ~390 px), 2–3 kolumny na desktopie, ikony w kolorze tekstu karty
+- [x] 3.6 Klik w każdy link kategorii: nagłówek sekcji widoczny pod paskiem sticky; pasek na telefonie mieści się w jednej linii i przewija się poziomo
+- [x] 3.7 Klawiatura: Tab przechodzi przez „Surprise me”, linki paska i karty z widocznym fokusem; po przewinięciu w dół Shift+Tab wraca w górę i karta z fokusem nie chowa się pod paskiem
+- [x] 3.8 „Surprise me” z prawdziwym LLM (`uv run --env-file .env python manage.py runserver`) pokazuje „Agent is typing…” i otwiera rozmowę z innym tematem niż poprzednia
+- [x] 3.9 Kitchen sink `/ui/` pokazuje sekcję „Topic grid” ze stanem disabled; inne strony (logowanie, rozmowa) mają dawną szerokość
 
 ### Phase 4: E2E i zrzuty
 

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="{% static 'ui/css/components.css' %}">
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   {% for message in messages %}
     <p class="flash alert" data-variant="{{ message.level_tag }}">{{ message }}</p>
   {% endfor %}

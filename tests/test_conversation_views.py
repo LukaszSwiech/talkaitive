@@ -22,7 +22,7 @@ from conversations.llm import (
 )
 from conversations.memory import select_memory
 from conversations.models import Conversation, Message, Mistake
-from conversations.topics import get_topic
+from conversations.topics import CATEGORIES, TOPICS, get_topic
 from tests.fakes import FakeAnalyzeMistakes, FakeGenerateTurn, add_charge
 
 START_URL = "/conversations/start/"
@@ -365,8 +365,80 @@ def test_home_lists_topics_without_active_conversation(
 
     assert "Signed in as anna@example.de" in page
     assert "Choose a topic" in page
-    assert "Bakery: ordering breakfast rolls" in page
+    # The card shows the name and subtitle, not the full title.
+    assert '<span class="topic-name">Bakery</span>' in page
+    assert '<span class="topic-subtitle">Ordering breakfast rolls</span>' in page
     assert "Continue conversation" not in page
+
+
+@pytest.mark.django_db
+def test_home_has_a_category_nav_and_a_section_per_category(
+    anna_client: Client,
+) -> None:
+    page = anna_client.get("/").content.decode()
+
+    [nav] = re.findall(
+        r'<nav class="category-nav" aria-label="Topic categories">(.*?)</nav>',
+        page,
+        re.DOTALL,
+    )
+    links = re.findall(r'<a href="#([^"]+)">([^<]+)</a>', nav)
+    assert links == [(category.key, escape(category.label)) for category in CATEGORIES]
+    sections = re.findall(r'<section class="topic-section" id="([^"]+)"', page)
+    assert sections == [category.key for category in CATEGORIES]
+
+
+@pytest.mark.django_db
+def test_home_offers_every_topic_exactly_once(anna_client: Client) -> None:
+    page = anna_client.get("/").content.decode()
+
+    keys = re.findall(r'<input type="hidden" name="topic" value="([^"]+)">', page)
+    assert sorted(keys) == sorted(topic.key for topic in TOPICS)
+    assert len(keys) == len(set(keys))
+
+
+@pytest.mark.django_db
+def test_every_topic_card_has_a_decorative_icon(anna_client: Client) -> None:
+    page = anna_client.get("/").content.decode()
+
+    cards = re.findall(
+        r'<button type="submit" class="topic-card">(.*?)</button>', page, re.DOTALL
+    )
+    assert len(cards) == len(TOPICS)
+    assert all("<svg" in card and 'aria-hidden="true"' in card for card in cards)
+
+
+@pytest.mark.django_db
+def test_home_surprise_me_form_starts_a_random_topic_and_waits_for_the_agent(
+    anna_client: Client,
+) -> None:
+    page = anna_client.get("/").content.decode()
+
+    form = (
+        f'<form method="post" action="{reverse("conversation_start_random")}"'
+        " data-waits-for-agent>"
+    )
+    assert page.count(form) == 1
+    assert "Surprise me" in page.split(form, 1)[1].split("</form>", 1)[0]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("branch", ["active conversation", "daily limit"])
+def test_home_without_topic_choice_has_no_surprise_me_or_category_nav(
+    anna_client: Client, fake_llm: FakeGenerateTurn, settings, branch: str
+) -> None:
+    if branch == "active conversation":
+        start(anna_client)
+    else:
+        # Nothing spent, but one estimated turn (0.03) does not fit into the budget.
+        settings.DAILY_BUDGET_USD = Decimal("0.03")
+
+    page = anna_client.get("/").content.decode()
+
+    assert "Choose a topic" not in page
+    assert "Surprise me" not in page
+    assert 'class="category-nav"' not in page
+    assert 'class="topic-grid"' not in page
 
 
 @pytest.mark.django_db

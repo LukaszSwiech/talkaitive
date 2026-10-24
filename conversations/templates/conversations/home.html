@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block body_class %}page-wide{% endblock %}
+
 {% block content %}
   <header class="topbar">
     <h1>TalkAItive</h1>
@@ -22,17 +24,31 @@
     </p>
   {% else %}
     <h2>Choose a topic</h2>
-    <ul class="choice-list">
-      {% for topic in topics %}
-        <li>
-          <form method="post" action="{% url 'conversation_start' %}" data-waits-for-agent>
-            {% csrf_token %}
-            <input type="hidden" name="topic" value="{{ topic.key }}">
-            <button type="submit">{{ topic.title }}</button>
-          </form>
-        </li>
+    <form method="post" action="{% url 'conversation_start_random' %}" data-waits-for-agent>
+      {% csrf_token %}
+      <button type="submit" class="btn">{% include "ui/icons/arrows-shuffle.svg" %} Surprise me</button>
+    </form>
+    <nav class="category-nav" aria-label="Topic categories">
+      {% for category, topics in topic_groups %}
+        <a href="#{{ category.key }}">{{ category.label }}</a>
       {% endfor %}
-    </ul>
+    </nav>
+    {% for category, topics in topic_groups %}
+      <section class="topic-section" id="{{ category.key }}" aria-labelledby="{{ category.key }}-heading">
+        <h3 id="{{ category.key }}-heading">{{ category.label }}</h3>
+        <ul class="topic-grid">
+          {% for topic in topics %}
+            <li>
+              <form method="post" action="{% url 'conversation_start' %}" data-waits-for-agent>
+                {% csrf_token %}
+                <input type="hidden" name="topic" value="{{ topic.key }}">
+                {% include "ui/topic-card.html" with topic=topic type="submit" only %}
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endfor %}
   {% endif %}
 
   <footer class="page-footer">

@@ -45,10 +45,36 @@ button:disabled, a[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
 .link:hover:not([aria-disabled="true"]) { text-decoration-thickness: 0.15em; }
 .link[data-variant="destructive"]:hover:not([aria-disabled="true"]) { color: color-mix(in srgb, var(--destructive) 75%, var(--foreground)); }
 
-/* Choice list: a vertical list whose items are full-width buttons on a card surface. */
-.choice-list { list-style: none; padding: 0; }
-.choice-list button { display: block; width: 100%; margin-top: 0.5rem; padding: 0.75rem 1rem; text-align: left; background: var(--card); color: var(--card-foreground); border-color: var(--border); box-shadow: var(--shadow-sm); }
-.choice-list button:hover:not(:disabled) { background: var(--accent); color: var(--accent-foreground); border-color: var(--ring); }
+/* Wide page: a template sets {% block body_class %}page-wide{% endblock %} (home and the kitchen sink, for the topic grid). */
+body.page-wide { max-width: 60rem; }
+
+/* Icon: an inline SVG from ui/icons/ (class="icon" on its root); it takes the text colour through currentColor. */
+.icon { width: 1.5rem; height: 1.5rem; flex: none; }
+.btn .icon { width: 1.25em; height: 1.25em; vertical-align: -0.3em; }
+
+/*
+ * Category nav: sticky jump links to the topic sections. One line on every width
+ * (scrolls sideways instead of wrapping), so its height stays fixed and the
+ * scroll-padding-top below covers it. The full background hides the cards under it.
+ * The padding leaves room for the focus outline, which the overflow would clip.
+ */
+.category-nav { position: sticky; top: 0; z-index: 1; display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.5rem 0.25rem; background: var(--background); }
+.category-nav a { flex: none; padding: 0.25rem 0.75rem; border: 1px solid var(--border); border-radius: 999px; color: var(--foreground); font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
+.category-nav a:hover { background: var(--accent); color: var(--accent-foreground); }
+/* A jump link and a focused element scrolled into view both stop below the sticky nav (WCAG 2.4.11). */
+html:has(.category-nav) { scroll-padding-top: 4rem; }
+
+/* Topic grid: a list of topic cards, as many columns as fit. */
+.topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.75rem; list-style: none; margin: 0; padding: 0; }
+.topic-grid form { height: 100%; }
+
+/* Topic card (ui/topic-card.html): a button on a card surface, the icon left of the name over the subtitle. */
+.topic-card { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 0.75rem; width: 100%; height: 100%; margin-top: 0; padding: 0.75rem 1rem; text-align: left; background: var(--card); color: var(--card-foreground); border-color: var(--border); box-shadow: var(--shadow-sm); }
+.topic-card .icon { grid-row: span 2; }
+.topic-card .topic-name { font-weight: 600; }
+.topic-card .topic-subtitle { font-size: 0.875rem; color: var(--muted-foreground); }
+.topic-card:hover:not(:disabled) { background: var(--accent); color: var(--accent-foreground); border-color: var(--ring); }
+.topic-card:hover:not(:disabled) .topic-subtitle { color: var(--accent-foreground); }
 
 /*
  * Alert: a message box; data-variant="destructive" | "success" | "warning".
