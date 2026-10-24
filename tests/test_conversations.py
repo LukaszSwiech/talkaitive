@@ -9,6 +9,7 @@ from django.db import IntegrityError, transaction
 import talkaitive.settings
 from accounts.models import PracticeLanguage, User
 from conversations.models import Conversation, Message, Mistake
+from conversations.services import surprise_topic_key
 from conversations.topics import TOPICS, get_topic
 
 
@@ -22,10 +23,10 @@ def lukasz(db) -> User:
     return User.objects.create_user("lukasz@example.de", "pass-12345-xyz")
 
 
-def make_conversation(user: User, **fields: str) -> Conversation:
+def make_conversation(user: User, topic: str = "bakery", **fields: str) -> Conversation:
     return Conversation.objects.create(
         user=user,
-        topic="bakery",
+        topic=topic,
         topic_title="Bakery",
         topic_scenario="You are a baker.",
         language=PracticeLanguage.GERMAN,
@@ -191,6 +192,80 @@ def test_get_topic_returns_known_topic_and_none_for_unknown() -> None:
     assert topic.title
     assert topic.scenario
     assert get_topic("does-not-exist") is None
+
+
+ALL_KEYS = [topic.key for topic in TOPICS]
+
+
+@pytest.fixture
+def drawn_from(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
+    """The candidate lists `surprise_topic_key` draws from; it picks the first."""
+    calls: list[list[str]] = []
+
+    def choice(candidates: list[str]) -> str:
+        calls.append(list(candidates))
+        return candidates[0]
+
+    monkeypatch.setattr("conversations.services.random.choice", choice)
+    return calls
+
+
+@pytest.mark.django_db
+def test_surprise_without_history_draws_from_every_topic(
+    anna: User, drawn_from: list[list[str]]
+) -> None:
+    assert surprise_topic_key(anna) == ALL_KEYS[0]
+    assert drawn_from == [ALL_KEYS]
+
+
+@pytest.mark.django_db
+def test_surprise_skips_the_last_topic(anna: User, drawn_from: list[list[str]]) -> None:
+    make_conversation(anna, topic="bakery")
+
+    surprise_topic_key(anna)
+
+    [candidates] = drawn_from
+    assert len(candidates) == len(ALL_KEYS) - 1
+    assert "bakery" not in candidates
+    assert candidates == [key for key in ALL_KEYS if key != "bakery"]
+
+
+@pytest.mark.django_db
+def test_surprise_skips_only_the_newest_topic(
+    anna: User, drawn_from: list[list[str]]
+) -> None:
+    make_conversation(anna, topic="dog-walk", status=Conversation.Status.ENDED)
+    make_conversation(anna, topic="bakery")
+
+    surprise_topic_key(anna)
+
+    [candidates] = drawn_from
+    assert "dog-walk" in candidates
+    assert candidates == [key for key in ALL_KEYS if key != "bakery"]
+
+
+@pytest.mark.django_db
+def test_surprise_ignores_another_users_last_topic(
+    anna: User, lukasz: User, drawn_from: list[list[str]]
+) -> None:
+    """Source: PRD Prywatność (Guardrails); the last topic is read through `for_user`."""
+    make_conversation(anna, topic="dog-walk", status=Conversation.Status.ENDED)
+    make_conversation(lukasz, topic="bakery")
+
+    surprise_topic_key(anna)
+
+    assert drawn_from == [[key for key in ALL_KEYS if key != "dog-walk"]]
+
+
+@pytest.mark.django_db
+def test_surprise_after_a_removed_topic_draws_from_every_topic(
+    anna: User, drawn_from: list[list[str]]
+) -> None:
+    make_conversation(anna, topic="removed-topic")
+
+    surprise_topic_key(anna)
+
+    assert drawn_from == [ALL_KEYS]
 
 
 def test_llm_model_has_a_price_entry() -> None:

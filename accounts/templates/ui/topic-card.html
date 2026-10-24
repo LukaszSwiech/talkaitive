@@ -1,0 +1,7 @@
+{# Topic card: {% include "ui/topic-card.html" with topic=topic type="submit" only %}; add disabled=True for the disabled state. #}
+{# The button's accessible name is "<name> <subtitle>"; the icon is decorative (aria-hidden). #}
+<button type="{{ type }}" class="topic-card"{% if disabled %} disabled{% endif %}>
+  {% include topic.icon_template %}
+  <span class="topic-name">{{ topic.name }}</span>
+  <span class="topic-subtitle">{{ topic.subtitle }}</span>
+</button>

@@ -2,6 +2,8 @@
 
 {% block title %}UI kitchen sink - TalkAItive{% endblock %}
 
+{% block body_class %}page-wide{% endblock %}
+
 {% block content %}
   {# DEBUG only (conversations.views.ui_kitchen_sink). Nothing here submits a form: every button is type="button". #}
   {# The page opens scrolled to the bottom: base.html scrolls any page with a .transcript, and the bubbles sample has one. #}
@@ -35,13 +37,23 @@
     </footer>
   </section>
 
-  <section aria-labelledby="ks-choice-list">
-    <h2 id="ks-choice-list">Choice list</h2>
-    <ul class="choice-list">
-      {% for topic in topics %}
-        <li><button type="button">{{ topic.title }}</button></li>
+  <section aria-labelledby="ks-topic-grid">
+    <h2 id="ks-topic-grid">Topic grid</h2>
+    {# The first topic of each category; the last card shows the disabled state. #}
+    <p><button type="button" class="btn">{% include "ui/icons/arrows-shuffle.svg" %} Surprise me</button></p>
+    <nav class="category-nav" aria-label="Topic categories">
+      {% for category, topic in topic_samples %}
+        <a href="#ks-{{ category.key }}">{{ category.label }}</a>
       {% endfor %}
-    </ul>
+    </nav>
+    {% for category, topic in topic_samples %}
+      <section class="topic-section" id="ks-{{ category.key }}" aria-labelledby="ks-{{ category.key }}-heading">
+        <h3 id="ks-{{ category.key }}-heading">{{ category.label }}</h3>
+        <ul class="topic-grid">
+          <li>{% include "ui/topic-card.html" with topic=topic type="button" disabled=forloop.last only %}</li>
+        </ul>
+      </section>
+    {% endfor %}
   </section>
 
   <section aria-labelledby="ks-alerts">
@@ -56,7 +68,7 @@
 
   <section aria-labelledby="ks-active">
     <h2 id="ks-active">Active conversation</h2>
-    <p>You have a conversation in progress: <strong>{{ topics.0.title }}</strong></p>
+    <p>You have a conversation in progress: <strong>{{ sample_topic.title }}</strong></p>
     <p><a class="btn" href="{% url 'ui_kitchen_sink' %}">Continue conversation</a></p>
   </section>
 

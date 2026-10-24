@@ -2,13 +2,13 @@
 // Risk: ui-visual-regression — a change to a token, a component rule or the home
 // markup silently changes how home or a component state looks (colours, focus
 // ring, hover, loading indicator) in the light or dark theme, on desktop or phone.
-// Related: context/changes/ui-home-tokens/plan.md, phase 4.
+// Related: context/archive/2026-10-20-ui-home-tokens/plan.md, phase 4.
 //
 // Baselines live in ui-home.spec.ts-snapshots/ and are committed. Update them
 // (npx playwright test tests/e2e/ui-home.spec.ts --update-snapshots) only for an
 // intended visual change, and say what changed in the commit message.
 //
-// The tests create no data in e2e.sqlite3: the loading test aborts the start
+// The tests create no data in e2e.sqlite3: the loading tests abort the start
 // request in the browser, so it never reaches the server.
 import { test, expect, type Page } from '@playwright/test';
 
@@ -59,7 +59,7 @@ for (const colorScheme of THEMES) {
         );
         await page.route('**/conversations/start/', (route) => route.abort('aborted'));
 
-        await page.getByRole('button', { name: 'Walking the dog' }).click();
+        await page.getByRole('button', { name: /Dog walk/ }).click();
         await aborted;
 
         await expect(page.getByText('Agent is typing…')).toBeVisible();
@@ -68,6 +68,45 @@ for (const colorScheme of THEMES) {
         await expect(page).toHaveScreenshot(shot('home-loading'), {
           mask: [signedInAs(page)],
         });
+      });
+
+      test('Surprise me shows the waiting state', async ({ page }) => {
+        await openHomeWithTopicList(page);
+        // Cancelled in the browser like the topic start above: no conversation.
+        const aborted = page.waitForEvent('requestfailed', (request) =>
+          request.url().endsWith('/conversations/start/random/'),
+        );
+        await page.route('**/conversations/start/random/', (route) => route.abort('aborted'));
+
+        await page.getByRole('button', { name: 'Surprise me' }).click();
+        await aborted;
+
+        await expect(page.getByText('Agent is typing…')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Log out' })).toBeDisabled();
+        await expect(page).toHaveScreenshot(shot('home-surprise-loading'), {
+          mask: [signedInAs(page)],
+        });
+      });
+
+      // Not the last category: "Social life" plus the footer is shorter than the
+      // screen, so it never reaches the top and would pass without the padding.
+      test('jump link shows the category heading below the sticky bar', async ({ page }) => {
+        await openHomeWithTopicList(page);
+        const nav = page.getByRole('navigation', { name: 'Topic categories' });
+        const heading = page.getByRole('heading', { level: 3, name: 'Neighbours & small talk' });
+
+        await nav.getByRole('link', { name: 'Neighbours & small talk' }).click();
+
+        await expect(page).toHaveURL(/#small-talk$/);
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+        await expect(heading).toBeInViewport();
+        // scroll-padding-top on html keeps the jump target out from under the
+        // sticky bar; without it the heading lands at the top, behind the bar.
+        const navBox = await nav.boundingBox();
+        const headingBox = await heading.boundingBox();
+        expect(navBox).not.toBeNull();
+        expect(headingBox).not.toBeNull();
+        expect(headingBox!.y).toBeGreaterThanOrEqual(navBox!.y + navBox!.height);
       });
 
       test('kitchen sink with every component', async ({ page }) => {
@@ -88,11 +127,11 @@ for (const colorScheme of THEMES) {
         await expect(page).toHaveScreenshot(shot('ui-focus'));
       });
 
-      test('kitchen sink with the pointer over a choice list item', async ({ page }) => {
+      test('kitchen sink with the pointer over a topic card', async ({ page }) => {
         await page.goto('/ui/');
         const item = page
-          .getByRole('region', { name: 'Choice list' })
-          .getByRole('button', { name: 'Supermarket' });
+          .getByRole('region', { name: 'Topic grid' })
+          .getByRole('button', { name: /Supermarket/ });
 
         await item.hover();
 

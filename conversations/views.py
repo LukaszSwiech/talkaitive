@@ -21,7 +21,7 @@ from .budget import is_exhausted, limit_reached, next_reset
 from .llm import LLMError
 from .models import Conversation, Mistake
 from .services import AnalysisNotNeeded, ConversationError
-from .topics import TOPICS
+from .topics import TOPICS, topics_by_category
 
 # The kitchen sink's "now" for its reset notice; see ui_kitchen_sink.
 KITCHEN_SINK_NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
@@ -50,7 +50,7 @@ def home(request: AuthenticatedHttpRequest) -> HttpResponse:
         {
             "active_conversation": active,
             "exhausted": exhausted,
-            "topics": TOPICS,
+            "topic_groups": topics_by_category(),
             "reset_at": next_reset(now),
             "budget_time_zone": settings.BUDGET_TIME_ZONE,
         },
@@ -59,9 +59,19 @@ def home(request: AuthenticatedHttpRequest) -> HttpResponse:
 
 @require_POST
 def conversation_start(request: AuthenticatedHttpRequest) -> HttpResponse:
+    return _start(request, request.POST.get("topic", ""))
+
+
+@require_POST
+def conversation_start_random(request: AuthenticatedHttpRequest) -> HttpResponse:
+    """Start "Surprise me": a random topic, other than the user's last one."""
+    return _start(request, services.surprise_topic_key(request.user))
+
+
+def _start(request: AuthenticatedHttpRequest, topic_key: str) -> HttpResponse:
     try:
         conversation = services.start_conversation(
-            request.user, request.POST.get("topic", ""), timezone.now()
+            request.user, topic_key, timezone.now()
         )
     except ConversationError as exc:
         messages.error(request, str(exc))
@@ -195,7 +205,11 @@ def ui_kitchen_sink(request: AuthenticatedHttpRequest) -> HttpResponse:
         request,
         "accounts/ui_kitchen_sink.html",
         {
-            "topics": TOPICS[:3],
+            "sample_topic": TOPICS[0],
+            # One sample card per category: its first topic.
+            "topic_samples": [
+                (category, topics[0]) for category, topics in topics_by_category()
+            ],
             "mistakes": sample_mistakes,
             # A fixed sample instant, not now(): the page stays the same every day,
             # so its screenshots (tests/e2e/ui-home.spec.ts) do too.
