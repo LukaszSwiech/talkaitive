@@ -476,22 +476,22 @@ Brak migracji bazy. Istniejące rozmowy zachowują swoje `topic_title` i `topic_
 
 #### Automated
 
-- [x] 4.1 Spec przechodzi z nowymi baseline'ami: `npx playwright test tests/e2e/ui-home.spec.ts`
-- [x] 4.2 Celowe zepsucie: usunięcie `scroll-padding-top` z `html:has(.category-nav)` wywraca test skoku do kategorii; po przywróceniu znowu zielony
-- [x] 4.3 Cały zestaw pytest przechodzi: `uv run pytest`
+- [x] 4.1 Spec przechodzi z nowymi baseline'ami: `npx playwright test tests/e2e/ui-home.spec.ts` — 0b8c6a7
+- [x] 4.2 Celowe zepsucie: usunięcie `scroll-padding-top` z `html:has(.category-nav)` wywraca test skoku do kategorii; po przywróceniu znowu zielony — 0b8c6a7
+- [x] 4.3 Cały zestaw pytest przechodzi: `uv run pytest` — 0b8c6a7
 
 #### Manual
 
-- [x] 4.4 Przegląd nowych PNG (home w 2 motywach × 2 szerokościach, kitchen sink, surprise-loading): układ, ikony, pasek i fokus wyglądają jak zamierzono
+- [x] 4.4 Przegląd nowych PNG (home w 2 motywach × 2 szerokościach, kitchen sink, surprise-loading): układ, ikony, pasek i fokus wyglądają jak zamierzono — 0b8c6a7
 
 ### Phase 5: Reguła w CLAUDE.md
 
 #### Automated
 
-- [ ] 5.1 Sekcja wspomina nowe komponenty i katalog ikon: `grep -n "topic-card\|ui/icons" CLAUDE.md` zwraca wiersze z sekcji UI
-- [ ] 5.2 Blok 10x-cli nietknięty: `git diff CLAUDE.md` nie pokazuje zmian między `<!-- BEGIN` a `<!-- END`
-- [ ] 5.3 Cały zestaw pytest przechodzi: `uv run pytest`
+- [x] 5.1 Sekcja wspomina nowe komponenty i katalog ikon: `grep -n "topic-card\|ui/icons" CLAUDE.md` zwraca wiersze z sekcji UI
+- [x] 5.2 Blok 10x-cli nietknięty: `git diff CLAUDE.md` nie pokazuje zmian między `<!-- BEGIN` a `<!-- END`
+- [x] 5.3 Cały zestaw pytest przechodzi: `uv run pytest`
 
 #### Manual
 
-- [ ] 5.4 Instrukcję „Adding a topic or icon” da się wykonać krok po kroku bez zaglądania do kodu (przegląd przez użytkownika)
+- [x] 5.4 Instrukcję „Adding a topic or icon” da się wykonać krok po kroku bez zaglądania do kodu (przegląd przez użytkownika)
