@@ -205,7 +205,7 @@ def ui_kitchen_sink(request: AuthenticatedHttpRequest) -> HttpResponse:
         request,
         "accounts/ui_kitchen_sink.html",
         {
-            "topics": TOPICS[:3],
+            "sample_topic": TOPICS[0],
             # One sample card per category: its first topic.
             "topic_samples": [
                 (category, topics[0]) for category, topics in topics_by_category()

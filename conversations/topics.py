@@ -24,7 +24,11 @@ class Topic:
 
     @property
     def icon_template(self) -> str:
-        """Template path of the topic's icon (`accounts/templates/ui/icons/`)."""
+        """Template path of the topic's icon (`accounts/templates/ui/icons/`).
+
+        Render cards only from `TOPICS`: a `Topic` rebuilt from a conversation's copy
+        has no icon, and its path would not exist.
+        """
         return f"ui/icons/{self.icon}.svg"
 
 

@@ -62,14 +62,16 @@ body.page-wide { max-width: 60rem; }
 .category-nav a { flex: none; padding: 0.25rem 0.75rem; border: 1px solid var(--border); border-radius: 999px; color: var(--foreground); font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
 .category-nav a:hover { background: var(--accent); color: var(--accent-foreground); }
 /* A jump link and a focused element scrolled into view both stop below the sticky nav (WCAG 2.4.11). */
-html:has(.category-nav) { scroll-padding-top: 4rem; }
+html:has(.category-nav) { scroll-padding-top: 4.5rem; }
 
 /* Topic grid: a list of topic cards, as many columns as fit. */
 .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.75rem; list-style: none; margin: 0; padding: 0; }
-.topic-grid form { height: 100%; }
+/* Each <li> is a column: the card's form fills it, and the waiting indicator (base.html puts it after the form) sits below instead of over the next row. */
+.topic-grid li { display: flex; flex-direction: column; }
+.topic-grid form { flex: 1; }
 
 /* Topic card (ui/topic-card.html): a button on a card surface, the icon left of the name over the subtitle. */
-.topic-card { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 0.75rem; width: 100%; height: 100%; margin-top: 0; padding: 0.75rem 1rem; text-align: left; background: var(--card); color: var(--card-foreground); border-color: var(--border); box-shadow: var(--shadow-sm); }
+.topic-card { display: grid; grid-template-columns: auto 1fr; align-items: center; align-content: center; column-gap: 0.75rem; width: 100%; height: 100%; margin-top: 0; padding: 0.75rem 1rem; text-align: left; background: var(--card); color: var(--card-foreground); border-color: var(--border); box-shadow: var(--shadow-sm); }
 .topic-card .icon { grid-row: span 2; }
 .topic-card .topic-name { font-weight: 600; }
 .topic-card .topic-subtitle { font-size: 0.875rem; color: var(--muted-foreground); }

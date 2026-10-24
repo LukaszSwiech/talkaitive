@@ -225,7 +225,7 @@ def test_surprise_skips_the_last_topic(anna: User, drawn_from: list[list[str]]) 
     surprise_topic_key(anna)
 
     [candidates] = drawn_from
-    assert len(candidates) == 19
+    assert len(candidates) == len(ALL_KEYS) - 1
     assert "bakery" not in candidates
     assert candidates == [key for key in ALL_KEYS if key != "bakery"]
 

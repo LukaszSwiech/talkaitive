@@ -1,7 +1,7 @@
 ---
 change_id: ui-home-topic-grid
 title: Home topic card grid with categories, jump links, Surprise me and icons
-status: implemented
+status: impl_reviewed
 created: 2026-10-22
 updated: 2026-10-24
 archived_at: null

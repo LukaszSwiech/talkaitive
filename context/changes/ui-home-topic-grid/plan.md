@@ -99,7 +99,7 @@ Jedna gałąź `ui-home-topic-grid` (już istnieje) i jeden PR dla wszystkich fa
 | doctor-appointment | Doctor | Calling for an appointment | appointments | stethoscope |
 | pharmacy | Pharmacy | Something for a cold | errands | pill |
 | colleague-weekend | Weekend plans | Chatting with a colleague | social | briefcase |
-| playground | Playground | Chatting with another parent | small-talk | swing |
+| playground | Playground | Chatting with another parent | small-talk | horse-toy |
 | post-office | Post office | Sending a parcel | errands | mail |
 | hairdresser | Hairdresser | Explaining the cut you want | errands | scissors |
 | restaurant | Restaurant | Ordering and paying | social | tools-kitchen-2 |
@@ -113,6 +113,8 @@ Jedna gałąź `ui-home-topic-grid` (już istnieje) i jeden PR dla wszystkich fa
 | car-workshop | Car workshop | Booking a tyre change | errands | car |
 
 Ikona przycisku „Surprise me”: `arrows-shuffle`. Razem 21 plików.
+
+Zamiana: `swing` nie istnieje w Tabler v3.49.0, więc `playground` używa `horse-toy` (zapisane też w `accounts/templates/ui/icons/README.md`).
 
 #### 2. Wklejone ikony Tabler
 
