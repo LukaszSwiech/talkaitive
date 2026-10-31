@@ -1,0 +1,184 @@
+name: AI review
+
+# Advisory: never a required check, never blocks a merge. No push trigger, because
+# Railway waits for all workflows on a commit. Fork PRs are never reviewed.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Number of the same-repo PR to review
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# One group per PR, so a late run cannot overwrite a newer verdict. A labeled event for
+# any other label is skipped by the job's if, but in the PR's group it would still
+# cancel a running review, so it gets a group of its own.
+concurrency:
+  group: ${{ github.event.action == 'labeled' && github.event.label.name != 'ai-cr:review' && format('ai-review-run-{0}', github.run_id) || format('ai-review-pr-{0}', github.event.pull_request.number || inputs.pr_number) }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # state == 'open': adding ai-cr:review to a closed or merged PR starts no paid run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       github.event.pull_request.state == 'open' &&
+       (github.event.action != 'labeled' || github.event.label.name == 'ai-cr:review'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      # A dispatch has no PR payload for the job's if to read. This runs before
+      # checkout, so no fork code is ever checked out or installed.
+      - name: Refuse a PR this workflow must not review
+        id: guard
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          fields=$(gh pr view "$PR_NUMBER" --json isCrossRepository,baseRefName,state --jq '"\(.isCrossRepository) \(.baseRefName) \(.state)"')
+          if [ "$fields" != "false main OPEN" ]; then
+            echo "::error::Refusing: the PR must come from this repo, target main and be open."
+            exit 1
+          fi
+
+      # Before the model step, so ai-cr:review exists for a retry even when the first
+      # run goes red. A ':' in a label name in a URL path is encoded as %3A.
+      - name: Ensure labels exist
+        id: ensure-labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ensure_label() {
+            local errors
+            if errors=$(gh api "repos/$GH_REPO/labels/${1/:/%3A}" 2>&1 >/dev/null); then
+              return 0
+            fi
+            case "$errors" in
+              *"HTTP 404"*) ;;
+              *)
+                printf '%s\n' "$errors" >&2
+                return 1
+                ;;
+            esac
+            gh api --method POST "repos/$GH_REPO/labels" -f "name=$1" -f "color=$2" --silent
+          }
+          ensure_label "ai-cr:passed" "0e8a16"
+          ensure_label "ai-cr:failed" "d73a4a"
+          ensure_label "ai-cr:review" "ededed"
+
+      # Same SHAs as ci.yml. Depth 2 holds both parents of the merge commit, which is
+      # all the script's `git diff HEAD^1 HEAD` needs. On a pull_request the empty ref
+      # means the event's merge commit.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/pull/{0}/merge', inputs.pr_number) || '' }}
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - run: uv sync --locked --no-dev
+
+      # The only step with the model key, and it holds no GitHub token. --no-sync stops
+      # uv run from reinstalling the dev group.
+      - name: Review the diff
+        id: review
+        timeout-minutes: 5
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: uv run --no-sync python -m scripts.review.run_review --comment-file "$RUNNER_TEMP/ai-review-comment.md"
+
+      # The script writes the comment before the verdict, so a set verdict means the
+      # comment exists. The verdict is checked again before it builds a label name.
+      - name: Post the comment and the result label
+        id: post
+        if: steps.review.outputs.verdict != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERDICT: ${{ steps.review.outputs.verdict }}
+        run: |
+          delete_label() {
+            local errors
+            if errors=$(gh api --method DELETE "repos/$GH_REPO/issues/$PR_NUMBER/labels/${1/:/%3A}" 2>&1 >/dev/null); then
+              return 0
+            fi
+            case "$errors" in
+              *"HTTP 404"*) return 0 ;;
+              *)
+                printf '%s\n' "$errors" >&2
+                return 1
+                ;;
+            esac
+          }
+          case "$VERDICT" in
+            pass)
+              result="ai-cr:passed"
+              opposite="ai-cr:failed"
+              ;;
+            fail)
+              result="ai-cr:failed"
+              opposite="ai-cr:passed"
+              ;;
+            *)
+              echo "::error::Unexpected verdict from the review step."
+              exit 1
+              ;;
+          esac
+          gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/ai-review-comment.md"
+          delete_label "$opposite"
+          gh api --method POST "repos/$GH_REPO/issues/$PR_NUMBER/labels" -f "labels[]=$result" --silent
+
+      # A pass label from an older commit must not survive a run that could not review
+      # the new one. A failed guard means this PR is not ours to touch.
+      - name: Remove result labels after a failure
+        id: failure-cleanup
+        if: failure() && steps.guard.outcome != 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          delete_label() {
+            local errors
+            if errors=$(gh api --method DELETE "repos/$GH_REPO/issues/$PR_NUMBER/labels/${1/:/%3A}" 2>&1 >/dev/null); then
+              return 0
+            fi
+            case "$errors" in
+              *"HTTP 404"*) return 0 ;;
+              *)
+                printf '%s\n' "$errors" >&2
+                return 1
+                ;;
+            esac
+          }
+          delete_label "ai-cr:passed"
+          delete_label "ai-cr:failed"
+
+      # labeled fires only when a label is added, so it must go for a later retry.
+      - name: Remove the retry label
+        id: retry-cleanup
+        if: ${{ !cancelled() && steps.guard.outcome != 'failure' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          delete_label() {
+            local errors
+            if errors=$(gh api --method DELETE "repos/$GH_REPO/issues/$PR_NUMBER/labels/${1/:/%3A}" 2>&1 >/dev/null); then
+              return 0
+            fi
+            case "$errors" in
+              *"HTTP 404"*) return 0 ;;
+              *)
+                printf '%s\n' "$errors" >&2
+                return 1
+                ;;
+            esac
+          }
+          delete_label "ai-cr:review"

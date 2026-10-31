@@ -241,7 +241,7 @@ Wire the script to GitHub with split credentials and pin its safety properties w
 
 - **Triggers**: `pull_request` with `branches: [main]` and `types: [opened, synchronize, reopened, labeled]`; `workflow_dispatch` with a required number input `pr_number`. No `push`.
 - **Permissions**: `contents: read`, `pull-requests: write` only. Add `issues: write` solely if the real run proves it is needed (Phase 4).
-- **Job `if`**: as in research section 5: dispatch, or same-repo head and (not `labeled`, or the label is `ai-cr:review`).
+- **Job `if`**: as in research section 5: dispatch, or same-repo head and (not `labeled`, or the label is `ai-cr:review`). Note (added at implementation, orchestrator's decision, it can only lower cost): on `pull_request` the condition also requires `github.event.pull_request.state == 'open'`, so adding `ai-cr:review` to a closed or merged PR starts no paid run. The workflow test asserts this.
 - **Concurrency**: `cancel-in-progress: true`, group keyed on the PR number; a `labeled` event for any other label gets a group with `github.run_id` instead.
 - **Job**: `ubuntu-latest`, `timeout-minutes: 10`. Job-level env: `PR_NUMBER` (`github.event.pull_request.number || inputs.pr_number`) and `GH_REPO`.
 - **Steps, in order**:
@@ -409,18 +409,18 @@ Known limits, stated rather than solved:
 
 #### Automated
 
-- [x] 2.1 Script tests pass: `uv run pytest tests/test_review_script.py`
-- [x] 2.2 Full suite passes: `uv run pytest`
-- [x] 2.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
-- [x] 2.4 Without a key, the script stops before any call: `env -u OPENAI_API_KEY uv run python -m scripts.review.run_review --comment-file /dev/null` exits 2 with one config line
+- [x] 2.1 Script tests pass: `uv run pytest tests/test_review_script.py` — 84ee1c8
+- [x] 2.2 Full suite passes: `uv run pytest` — 84ee1c8
+- [x] 2.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .` — 84ee1c8
+- [x] 2.4 Without a key, the script stops before any call: `env -u OPENAI_API_KEY uv run python -m scripts.review.run_review --comment-file /dev/null` exits 2 with one config line — 84ee1c8
 
 ### Phase 3: Workflow
 
 #### Automated
 
-- [ ] 3.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py`
-- [ ] 3.2 Full suite passes: `uv run pytest`
-- [ ] 3.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
+- [x] 3.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py`
+- [x] 3.2 Full suite passes: `uv run pytest`
+- [x] 3.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
 
 ### Phase 4: Real run on the PR
 
