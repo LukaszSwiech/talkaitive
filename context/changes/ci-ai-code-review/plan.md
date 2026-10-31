@@ -426,15 +426,15 @@ Known limits, stated rather than solved:
 
 #### Automated
 
-- [ ] 4.1 The PR exists and targets `main`: `gh pr view ci-ai-code-review --json baseRefName,state`
-- [ ] 4.2 The AI review run is green: `gh run list --workflow ai-review.yml --branch ci-ai-code-review --limit 1`
-- [ ] 4.3 The log has the cost line and no diff or model text: `gh run view <id> --log`, then grep for `cost:` and grep for a sentence of the posted summary and a line of the PR's diff, which must not match
-- [ ] 4.4 Exactly one result label is set, and the comment exists: `gh pr view ci-ai-code-review --json labels,comments`
-- [ ] 4.5 Full suite and lint are green on the final commit: `uv run pytest` and `uv run ruff check . && uv run ruff format .`
+- [x] 4.1 The PR exists and targets `main`: `gh pr view ci-ai-code-review --json baseRefName,state` — 6507322
+- [x] 4.2 The AI review run is green: `gh run list --workflow ai-review.yml --branch ci-ai-code-review --limit 1` — 6507322
+- [x] 4.3 The log has the cost line and no diff or model text: `gh run view <id> --log`, then grep for `cost:` and grep for a sentence of the posted summary and a line of the PR's diff, which must not match — 6507322
+- [x] 4.4 Exactly one result label is set, and the comment exists: `gh pr view ci-ai-code-review --json labels,comments` — 6507322
+- [x] 4.5 Full suite and lint are green on the final commit: `uv run pytest` and `uv run ruff check . && uv run ruff format .` — 6507322
 
 #### Manual
 
 - [ ] 4.6 User gate: the user has set `OPENAI_API_KEY` with a dedicated CI key and a monthly limit
-- [ ] 4.7 Adding `ai-cr:review` to the PR starts a second run, and the label is gone afterwards
-- [ ] 4.8 The comment reads as a useful review, in English, with the advisory note and the scope note
+- [x] 4.7 Adding `ai-cr:review` to the PR starts a second run, and the label is gone afterwards — 6507322
+- [x] 4.8 The comment reads as a useful review, in English, with the advisory note and the scope note — 6507322
 - [ ] 4.9 The user takes 3 screenshots in Brave (pipeline view, job logs, LLM comment), with no tokens or private data visible
