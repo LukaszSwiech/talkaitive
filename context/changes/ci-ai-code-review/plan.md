@@ -401,18 +401,18 @@ Known limits, stated rather than solved:
 
 #### Automated
 
-- [x] 1.1 Criteria tests pass: `uv run pytest tests/test_review_criteria.py`
-- [x] 1.2 Full suite passes: `uv run pytest`
-- [x] 1.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
+- [x] 1.1 Criteria tests pass: `uv run pytest tests/test_review_criteria.py` — f41a680
+- [x] 1.2 Full suite passes: `uv run pytest` — f41a680
+- [x] 1.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .` — f41a680
 
 ### Phase 2: Review script
 
 #### Automated
 
-- [ ] 2.1 Script tests pass: `uv run pytest tests/test_review_script.py`
-- [ ] 2.2 Full suite passes: `uv run pytest`
-- [ ] 2.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
-- [ ] 2.4 Without a key, the script stops before any call: `env -u OPENAI_API_KEY uv run python -m scripts.review.run_review --comment-file /dev/null` exits 2 with one config line
+- [x] 2.1 Script tests pass: `uv run pytest tests/test_review_script.py`
+- [x] 2.2 Full suite passes: `uv run pytest`
+- [x] 2.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
+- [x] 2.4 Without a key, the script stops before any call: `env -u OPENAI_API_KEY uv run python -m scripts.review.run_review --comment-file /dev/null` exits 2 with one config line
 
 ### Phase 3: Workflow
 
