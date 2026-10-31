@@ -418,9 +418,9 @@ Known limits, stated rather than solved:
 
 #### Automated
 
-- [x] 3.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py`
-- [x] 3.2 Full suite passes: `uv run pytest`
-- [x] 3.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .`
+- [x] 3.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py` — 3361ac5
+- [x] 3.2 Full suite passes: `uv run pytest` — 3361ac5
+- [x] 3.3 Lint and format are clean: `uv run ruff check . && uv run ruff format .` — 3361ac5
 
 ### Phase 4: Real run on the PR
 

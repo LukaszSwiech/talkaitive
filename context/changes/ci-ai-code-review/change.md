@@ -1,7 +1,7 @@
 ---
 change_id: ci-ai-code-review
 title: AI code review agent in GitHub Actions
-status: implementing
+status: impl_reviewed
 created: 2026-10-31
 updated: 2026-10-31
 archived_at: null

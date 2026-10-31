@@ -43,6 +43,8 @@ from talkaitive.settings import LLM_MODEL, LLM_PRICES_USD_PER_MTOK
 MAX_DIFF_CHARS = 60_000
 MAX_COMMENT_CHARS = 60_000
 MAX_DROPPED_PATHS_SHOWN = 20
+# Keeps the scope note far below `MAX_COMMENT_CHARS`, even after sanitising.
+MAX_PATH_CHARS_SHOWN = 200
 # Includes reasoning tokens, which is why the effort is low.
 MAX_OUTPUT_TOKENS = 6000
 REASONING_EFFORT = "low"
@@ -131,10 +133,12 @@ def sanitize(text: str) -> str:
     """Untrusted text made safe for a PR comment.
 
     Only what notifies people or fetches URLs by itself: @mentions, images and raw
-    HTML (including comments). Markdown links stay.
+    HTML (including comments). Markdown links stay. `&` goes first: GitHub decodes a
+    character reference before it looks for mentions, so `&#64;octocat` is a mention.
     """
     return (
-        text.replace("<", "&lt;")
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
         .replace("![", "!\\[")
         .replace("@", f"@{_ZERO_WIDTH_SPACE}")
     )
@@ -145,7 +149,8 @@ def _scope_note(dropped_paths: Sequence[str]) -> str:
     note = f"**Scope:** not reviewed by design: {excluded}."
     if dropped_paths:
         shown = [
-            f"`{sanitize(path)}`" for path in dropped_paths[:MAX_DROPPED_PATHS_SHOWN]
+            f"`{sanitize(path[:MAX_PATH_CHARS_SHOWN])}`"
+            for path in dropped_paths[:MAX_DROPPED_PATHS_SHOWN]
         ]
         hidden = len(dropped_paths) - len(shown)
         more = f", and {hidden} more" if hidden else ""
@@ -167,6 +172,9 @@ def render_comment(review: Review, dropped_paths: Sequence[str]) -> str:
 
     A list rather than a table, so a `|` in model text cannot break the layout; a
     rationale is folded onto one line, so it cannot leave its bullet.
+
+    The fixed notes come before the model's text, so neither the size cap nor an
+    unclosed code fence in that text can take them away.
     """
     verdict = final_verdict(review)
     bullets = [
@@ -174,18 +182,17 @@ def render_comment(review: Review, dropped_paths: Sequence[str]) -> str:
         f"{' '.join(sanitize(criterion.rationale).split())}"
         for name, criterion in criterion_scores(review).items()
     ]
-    parts = [
-        f"## AI review: {verdict}",
-        _ADVISORY_NOTE,
-        "\n".join(bullets),
-        sanitize(review.summary),
-    ]
+    parts = [f"## AI review: {verdict}", _ADVISORY_NOTE]
     if verdict != review.verdict:
         parts.append(
             "**Note:** the model said pass, but a criterion at or below the floor "
             "turns this review into a fail."
         )
-    parts.append(_scope_note(dropped_paths))
+    parts += [
+        _scope_note(dropped_paths),
+        "\n".join(bullets),
+        sanitize(review.summary),
+    ]
     return _cap_comment("\n\n".join(parts))
 
 

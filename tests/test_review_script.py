@@ -209,6 +209,27 @@ def test_sanitize_neutralises_mentions_images_and_html() -> None:
     assert_neutralised(run_review.sanitize(HOSTILE))
 
 
+@pytest.mark.parametrize(
+    "reference",
+    [
+        # GitHub's renderer turns these three into a real mention (checked against
+        # its /markdown API), so `@` alone is not enough to break one.
+        "&#64;octocat",
+        "&#x40;octocat",
+        "&commat;octocat",
+        "&#60;img src=x&#62;",
+        "&lt;img src=x&gt;",
+        "&#33;[x](http://evil)",
+    ],
+)
+def test_sanitize_stops_character_references_from_decoding(reference: str) -> None:
+    assert run_review.sanitize(reference) == reference.replace("&", "&amp;")
+
+
+def test_sanitize_does_not_escape_its_own_entity() -> None:
+    assert run_review.sanitize("a < b & c") == "a &lt; b &amp; c"
+
+
 def test_comment_neutralises_the_summary_and_the_rationales() -> None:
     comment = run_review.render_comment(
         make_review(summary=HOSTILE, rationale=HOSTILE), []
@@ -285,6 +306,47 @@ def test_comment_body_is_capped_with_a_visible_note() -> None:
 
     assert len(comment) <= run_review.MAX_COMMENT_CHARS
     assert comment.endswith(run_review.COMMENT_CUT_NOTE)
+
+
+def test_every_note_survives_the_cap_whatever_the_model_and_the_paths_hold() -> None:
+    long_paths = ["&" * 4000 + str(number) for number in range(23)]
+
+    comment = run_review.render_comment(
+        make_review(
+            "pass",
+            tests=FAIL_FLOOR,
+            summary="s" * 100_000,
+            rationale="r" * 100_000,
+        ),
+        long_paths,
+    )
+
+    assert len(comment) <= run_review.MAX_COMMENT_CHARS
+    assert comment.endswith(run_review.COMMENT_CUT_NOTE)
+    assert "AI review: fail" in comment
+    assert "advisory" in comment.lower()
+    assert "floor" in comment
+    assert "**Scope:**" in comment
+    assert "uv.lock" in comment
+    assert "Truncated" in comment
+    assert "and 3 more" in comment
+
+
+def test_an_unclosed_code_fence_in_model_text_cannot_swallow_the_notes() -> None:
+    comment = run_review.render_comment(
+        make_review("pass", tests=FAIL_FLOOR, summary="```\nnever closed"), ["x.py"]
+    )
+
+    fence = comment.index("```")
+    for note in ("Advisory", "floor", "**Scope:**", "Truncated"):
+        assert comment.index(note) < fence
+
+
+def test_a_long_dropped_path_is_shortened_in_the_scope_note() -> None:
+    comment = run_review.render_comment(make_review(), ["x" * 4000])
+
+    assert "x" * run_review.MAX_PATH_CHARS_SHOWN in comment
+    assert "x" * (run_review.MAX_PATH_CHARS_SHOWN + 1) not in comment
 
 
 def test_comment_within_the_cap_has_no_cut_note() -> None:
