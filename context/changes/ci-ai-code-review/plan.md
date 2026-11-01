@@ -434,7 +434,7 @@ Known limits, stated rather than solved:
 
 #### Manual
 
-- [ ] 4.6 User gate: the user has set `OPENAI_API_KEY` with a dedicated CI key and a monthly limit
+- [x] 4.6 User gate: the user has set `OPENAI_API_KEY` with a dedicated CI key and a monthly limit
 - [x] 4.7 Adding `ai-cr:review` to the PR starts a second run, and the label is gone afterwards — 6507322
 - [x] 4.8 The comment reads as a useful review, in English, with the advisory note and the scope note — 6507322
-- [ ] 4.9 The user takes 3 screenshots in Brave (pipeline view, job logs, LLM comment), with no tokens or private data visible
+- [x] 4.9 The user takes 3 screenshots in Brave (pipeline view, job logs, LLM comment), with no tokens or private data visible
