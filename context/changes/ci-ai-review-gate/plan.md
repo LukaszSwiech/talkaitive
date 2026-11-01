@@ -412,10 +412,10 @@ Deviations from the phase text, recorded during `/10x-implement`:
 
 #### Automated
 
-- [x] 3.1 No stale wording remains: `grep -n "doradczy" context/foundation/test-plan.md` and `grep -n "(private)" context/deployment/deploy-plan.md` find nothing
-- [x] 3.2 Reviewed diff is under 100000 characters
-- [x] 3.3 Full quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`
-- [x] 3.4 Phase commit exists: `docs(ci-ai-review-gate): describe the gate, its limits and how to retry`
+- [x] 3.1 No stale wording remains: `grep -n "doradczy" context/foundation/test-plan.md` and `grep -n "(private)" context/deployment/deploy-plan.md` find nothing — 7e495b5
+- [x] 3.2 Reviewed diff is under 100000 characters — 7e495b5
+- [x] 3.3 Full quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` — 7e495b5
+- [x] 3.4 Phase commit exists: `docs(ci-ai-review-gate): describe the gate, its limits and how to retry` — 7e495b5
 
 #### Manual
 
