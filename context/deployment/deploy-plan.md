@@ -18,6 +18,7 @@ Change `ci-ai-review-gate` makes the AI review a real gate on merges to `main`. 
 
 - **Required check:** `review` (GitHub Actions, app 15368, `strict: false`, admins not enforced). It is the only required check. The check's name is the job's name, so renaming the job leaves the check waiting forever.
 - **What stops a merge:** a blocker (`data_isolation`, `no_secrets`, `correctness`, `migrations`) at or below the floor of 3, a truncated diff, or an operational failure (API, key, unusable output). A low `tests` or `openai_boundary`, or the model's own fail alone, is only a warning in the comment.
+- **What passes with no model call, and what is always red:** a PR changing only `uv.lock`, `package-lock.json` or `context/` has an empty reviewed diff, so it passes with no model call; the owner reads lockfile PRs by hand, because a lockfile reaches production on deploy. A fork PR is always red and can only go in by admin merge.
 - **The repo must stay public:** going private disables branch protection on the free plan.
 - **Merge through GitHub, not a local fast-forward:** a red `review` on the same SHA can skip the Railway deploy. A merge through GitHub makes a new SHA with no `review` run on it.
 - **Retry:** `gh run rerun <id>`, on the same SHA. This is also a re-roll of the model's answer, accepted as the owner's call. It is useless for truncation, which needs a split PR.

@@ -173,7 +173,7 @@ The workflow becomes a real check: one trigger, nothing skipped, forks red, a re
 - `ensure-labels` loses the `ai-cr:review` line and its comment about retries.
 - Checkout has no `ref`; the rest of `with` and the comment on depth stay.
 - `retry-cleanup` is removed. `post` and `failure-cleanup` are unchanged.
-- New last step, `id: stop`, `name: Stop on a failed review`, `if: steps.review.outputs.verdict == 'fail'`, `run` prints a fixed `::error::` and does `exit 1`, with no expressions in `run`, no `env`, no `always()`.
+- New last step, `id: stop`, `name: Stop on a failed review`, `if: steps.review.outputs.verdict != 'pass'`, `run` prints a fixed `::error::` and does `exit 1`, with no expressions in `run`, no `env`, no `always()`.
 
 #### 2. Workflow tests
 
@@ -384,6 +384,8 @@ No data changes. Rollback: `gh api --method DELETE repos/LukaszSwiech/talkaitive
 Deviations from the phase text, recorded during `/10x-implement`:
 
 - Phase 1, empty-diff branch: the plan says the branch tests `full_diff.strip()`, and also that a truncated diff can never take it and that `" " * (MAX_DIFF_CHARS + 1)` gives `verdict=fail`. `full_diff.strip()` alone would pass that whitespace diff, so the condition is `not truncated and not full_diff.strip()`, which meets the other two statements. The stricter reading won.
+- Phase 2, stop step (impl-review F1): the condition changed from `== 'fail'` to `!= 'pass'`, so only an explicit pass ends green; the Phase 2 contract above is updated to match. In a run that exits 0 with no verdict, an older `ai-cr:passed` label can remain next to the red job (accepted).
+- Phase 1, comment (impl-review F5): a fixed `**Model summary (untrusted):**` line now comes before the model's summary.
 
 ## Progress
 
@@ -419,7 +421,7 @@ Deviations from the phase text, recorded during `/10x-implement`:
 
 #### Manual
 
-- [ ] 3.5 `/10x-impl-review` is done and its findings are fixed before the first push
+- [x] 3.5 `/10x-impl-review` is done and its findings are fixed before the first push
 
 ### Phase 4: Go live and fail test
 

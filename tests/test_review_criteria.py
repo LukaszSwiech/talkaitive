@@ -105,6 +105,11 @@ def test_openai_boundary_description_names_both_exemptions() -> None:
 # --- verdict floor ------------------------------------------------------------------
 
 
+def test_the_floor_is_the_decided_value() -> None:
+    """The other floor tests are relative to the constant, so they cannot catch this."""
+    assert FAIL_FLOOR == 3
+
+
 def test_model_pass_with_scores_above_the_floor_stays_pass() -> None:
     assert final_verdict(make_review("pass"), truncated=False) == "pass"
 

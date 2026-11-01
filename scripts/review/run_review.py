@@ -62,6 +62,7 @@ TIMEOUT_SECONDS = 180
 EXCLUDED_PATHS = ("uv.lock", "package-lock.json", "context")
 
 COMMENT_CUT_NOTE = "\n\n_This comment was cut at its size cap._"
+MODEL_SUMMARY_LABEL = "**Model summary (untrusted):**"
 
 _PRICES = LLM_PRICES_USD_PER_MTOK[LLM_MODEL]
 _ZERO_WIDTH_SPACE = "​"
@@ -231,6 +232,8 @@ def render_comment(
         *_verdict_notes(review, verdict, truncated),
         _scope_note(dropped_paths),
         "\n".join(bullets),
+        # Sanitising keeps line structure, so the summary can hold a fake heading.
+        MODEL_SUMMARY_LABEL,
         sanitize(review.summary),
     ]
     return _cap_comment("\n\n".join(parts))

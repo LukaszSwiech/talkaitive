@@ -144,10 +144,11 @@ jobs:
 
       # Last, and with no always(): on a reviewed fail no step has failed yet, so the
       # cleanup above stayed out and the comment and the label remain. If an earlier
-      # step failed, this is skipped and the job is red anyway.
+      # step failed, this is skipped and the job is red anyway. Only an explicit pass
+      # ends green, so a review step that exits 0 with no verdict ends red here too.
       - name: Stop on a failed review
         id: stop
-        if: steps.review.outputs.verdict == 'fail'
+        if: steps.review.outputs.verdict != 'pass'
         run: |
           echo "::error::The AI review failed. The PR comment says why."
           exit 1

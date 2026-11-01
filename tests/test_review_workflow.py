@@ -70,6 +70,10 @@ def run_blocks() -> list[str]:
     return [candidate["run"] for candidate in steps() if "run" in candidate]
 
 
+def last_line(run: str) -> str:
+    return run.strip().splitlines()[-1].strip()
+
+
 def pinned_actions(parsed: dict[Any, Any]) -> dict[str, str]:
     return {
         candidate["uses"].split("@")[0]: candidate["uses"].split("@")[1]
@@ -99,6 +103,7 @@ def test_the_only_trigger_is_pull_request_with_exactly_three_types() -> None:
     triggers = workflow()[True]
     assert set(triggers) == {"pull_request"}
     assert "pull_request_target" not in REVIEW_WORKFLOW.read_text(encoding="utf-8")
+    assert set(triggers["pull_request"]) == {"branches", "types"}
     assert triggers["pull_request"]["branches"] == ["main"]
     assert set(triggers["pull_request"]["types"]) == {
         "opened",
@@ -200,7 +205,7 @@ def test_the_guard_comes_first_and_ends_red_for_a_fork() -> None:
         "github.event.pull_request.head.repo.full_name != github.repository"
     )
     assert "GH_TOKEN" not in guard.get("env", {})
-    assert "exit 1" in guard["run"]
+    assert last_line(guard["run"]) == "exit 1"
 
 
 def test_steps_run_in_the_safe_order() -> None:
@@ -218,33 +223,43 @@ def test_steps_run_in_the_safe_order() -> None:
     assert step_index("stop") == len(steps()) - 1
 
 
-def test_the_stop_step_ends_the_job_red_only_on_a_fail_verdict() -> None:
+def test_the_stop_step_ends_the_job_red_on_anything_but_a_pass() -> None:
+    """Red by default: a review step exiting 0 with no verdict must not end green."""
     stop = step("stop")
     assert stop["name"] == "Stop on a failed review"
-    assert stop["if"] == "steps.review.outputs.verdict == 'fail'"
-    assert "always()" not in stop["if"]
-    assert "failure()" not in stop["if"]
-    assert "exit 1" in stop["run"]
+    assert stop["if"] == "steps.review.outputs.verdict != 'pass'"
+    assert last_line(stop["run"]) == "exit 1"
     assert "env" not in stop
 
 
-def test_the_review_step_runs_the_script_without_a_sync() -> None:
-    run = step("review")["run"]
-    assert run.startswith("uv run --no-sync python -m scripts.review.run_review ")
-    assert '--comment-file "$RUNNER_TEMP/ai-review-comment.md"' in run
+def test_the_review_step_runs_exactly_the_script_without_a_sync() -> None:
+    assert step("review")["run"] == (
+        "uv run --no-sync python -m scripts.review.run_review "
+        '--comment-file "$RUNNER_TEMP/ai-review-comment.md"'
+    )
     assert step("review")["timeout-minutes"] == 5
     assert "uv sync --locked --no-dev" in run_blocks()
 
 
-def test_the_post_step_validates_the_verdict_it_gets_through_env() -> None:
+def test_the_post_step_runs_on_any_verdict_and_validates_it_through_env() -> None:
     post = step("post")
-    assert "steps.review.outputs.verdict" in post["if"]
+    assert post["if"] == "steps.review.outputs.verdict != ''"
     assert post["env"]["VERDICT"] == "${{ steps.review.outputs.verdict }}"
     run = post["run"]
     assert 'case "$VERDICT" in' in run
-    assert re.search(r"^\s*pass\)$", run, re.MULTILINE)
-    assert re.search(r"^\s*fail\)$", run, re.MULTILINE)
+    assert re.search(
+        r'^\s*pass\)\n\s*result="ai-cr:passed"\n\s*opposite="ai-cr:failed"\n\s*;;$',
+        run,
+        re.MULTILINE,
+    )
+    assert re.search(
+        r'^\s*fail\)\n\s*result="ai-cr:failed"\n\s*opposite="ai-cr:passed"\n\s*;;$',
+        run,
+        re.MULTILINE,
+    )
     assert re.search(r"^\s*\*\)\n.*\n\s*exit 1$", run, re.MULTILINE)
+    assert re.search(r'^\s*delete_label "\$opposite"$', run, re.MULTILINE)
+    assert '-f "labels[]=$result"' in run
 
 
 def test_cleanup_touches_no_label_after_a_failed_guard() -> None:
@@ -279,6 +294,7 @@ def test_the_removed_retry_path_is_gone() -> None:
 def test_only_a_404_is_tolerated() -> None:
     assert not [block for block in run_blocks() if "|| true" in block]
     assert not [candidate for candidate in steps() if "continue-on-error" in candidate]
+    assert "continue-on-error" not in job()
     for step_id in ("ensure-labels", "post", "failure-cleanup"):
         run = step(step_id)["run"]
         assert '*"HTTP 404"*)' in run
