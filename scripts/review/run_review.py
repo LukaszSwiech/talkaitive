@@ -40,7 +40,7 @@ from scripts.review.cost import cost_line, cost_usd, unknown_cost_line, worst_ca
 from scripts.review.criteria import Review, Verdict, criterion_scores, final_verdict
 from talkaitive.settings import LLM_MODEL, LLM_PRICES_USD_PER_MTOK
 
-MAX_DIFF_CHARS = 60_000
+MAX_DIFF_CHARS = 120_000
 MAX_COMMENT_CHARS = 60_000
 MAX_DROPPED_PATHS_SHOWN = 20
 # Keeps the scope note far below `MAX_COMMENT_CHARS`, even after sanitising.
