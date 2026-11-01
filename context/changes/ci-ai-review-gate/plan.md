@@ -403,19 +403,19 @@ Deviations from the phase text, recorded during `/10x-implement`:
 
 #### Automated
 
-- [x] 2.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py`
-- [x] 2.2 Full suite passes: `uv run pytest`
-- [x] 2.3 Lint and format are clean: `uv run ruff check .` and `uv run ruff format --check .`
-- [x] 2.4 Phase commit exists: `feat(ci-ai-review-gate): make the review job a real check that ends red on a fail`
+- [x] 2.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py` — cef42e1
+- [x] 2.2 Full suite passes: `uv run pytest` — cef42e1
+- [x] 2.3 Lint and format are clean: `uv run ruff check .` and `uv run ruff format --check .` — cef42e1
+- [x] 2.4 Phase commit exists: `feat(ci-ai-review-gate): make the review job a real check that ends red on a fail` — cef42e1
 
 ### Phase 3: Docs and review before the first push
 
 #### Automated
 
-- [ ] 3.1 No stale wording remains: `grep -n "doradczy" context/foundation/test-plan.md` and `grep -n "(private)" context/deployment/deploy-plan.md` find nothing
-- [ ] 3.2 Reviewed diff is under 100000 characters
-- [ ] 3.3 Full quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`
-- [ ] 3.4 Phase commit exists: `docs(ci-ai-review-gate): describe the gate, its limits and how to retry`
+- [x] 3.1 No stale wording remains: `grep -n "doradczy" context/foundation/test-plan.md` and `grep -n "(private)" context/deployment/deploy-plan.md` find nothing
+- [x] 3.2 Reviewed diff is under 100000 characters
+- [x] 3.3 Full quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`
+- [x] 3.4 Phase commit exists: `docs(ci-ai-review-gate): describe the gate, its limits and how to retry`
 
 #### Manual
 

@@ -9,8 +9,21 @@ Legend used on the step headings below: ✅ done as planned · ⚠️ done, but 
 - All plan steps (0–10) are finished. Steps 4, 5, 7 and 9 went differently from the plan; the step headings link to the matching deviation.
 - **2026-10-02:** the production database schema was reset because of `AUTH_USER_MODEL = "accounts.User"` (e-mail login); the superuser was recreated. See [Auth change: database reset](#auth-change-database-reset-2026-10-02).
 - **2026-10-06:** `OPENAI_API_KEY` added on `web` with change `first-corrected-conversation` (S-01, first LLM code). See [Live resources](#live-resources).
-- **2026-10-15:** CI gate on with change `testing-suite-trust-and-ci`. Workflow `CI` (ruff check, ruff format --check, pytest on SQLite) runs on every PR and every push to `main`; Railway "Wait for CI" (`checkSuites = true`) holds each deploy until it passes and skips it when it fails. Proven with a canary: `8ac139b` (deliberately failing test) → CI red, deploy `SKIPPED`, production stayed on `f93e499`; revert `3d97f46` → CI green, deploy `SUCCESS`, `/healthz/` 200. The gate blocks deploys, not merges: branch protection on a private repo needs GitHub Pro/Team (403, checked 2026-10-14).
+- **2026-10-15:** CI gate on with change `testing-suite-trust-and-ci`. Workflow `CI` (ruff check, ruff format --check, pytest on SQLite) runs on every PR and every push to `main`; Railway "Wait for CI" (`checkSuites = true`) holds each deploy until it passes and skips it when it fails. Proven with a canary: `8ac139b` (deliberately failing test) → CI red, deploy `SKIPPED`, production stayed on `f93e499`; revert `3d97f46` → CI green, deploy `SUCCESS`, `/healthz/` 200. The gate blocks deploys, not merges: branch protection on a private repo needs GitHub Pro/Team (403, checked 2026-10-14). That 403 applied while the repo was private; the repo is public now and has branch protection through change `ci-ai-review-gate`, see [AI review merge gate](#ai-review-merge-gate).
 - Open work: [TODO](#todo).
+
+## AI review merge gate
+
+Change `ci-ai-review-gate` makes the AI review a real gate on merges to `main`. The workflow is `.github/workflows/ai-review.yml`.
+
+- **Required check:** `review` (GitHub Actions, app 15368, `strict: false`, admins not enforced). It is the only required check. The check's name is the job's name, so renaming the job leaves the check waiting forever.
+- **What stops a merge:** a blocker (`data_isolation`, `no_secrets`, `correctness`, `migrations`) at or below the floor of 3, a truncated diff, or an operational failure (API, key, unusable output). A low `tests` or `openai_boundary`, or the model's own fail alone, is only a warning in the comment.
+- **The repo must stay public:** going private disables branch protection on the free plan.
+- **Merge through GitHub, not a local fast-forward:** a red `review` on the same SHA can skip the Railway deploy. A merge through GitHub makes a new SHA with no `review` run on it.
+- **Retry:** `gh run rerun <id>`, on the same SHA. This is also a re-roll of the model's answer, accepted as the owner's call. It is useless for truncation, which needs a split PR.
+- **A PR retargeted to `main`** gets no run until a push or a reopen, so it stays blocked until then.
+- **Threat model:** the gate stops honest mistakes and agents working normally. A PR can edit its own workflow and the review script, so the owner reads by hand any PR touching `.github/workflows/` or `scripts/review/`.
+- **Rollback:** `gh api --method DELETE repos/LukaszSwiech/talkaitive/branches/main/protection` removes the protection at once.
 
 ## Prerequisites
 
@@ -148,7 +161,7 @@ This covers four risk-register rows: the single sync worker with its 30 s timeou
 ### Live resources
 | Item | Value |
 |---|---|
-| GitHub repo | `LukaszSwiech/talkaitive` (private). A push to `main` auto-deploys `web` after CI passes (trigger checked 2026-10-15 through the API: branch `main`, `checkSuites` on since 2026-10-15). Workflow `.github/workflows/ci.yml` runs on every PR and push to `main`; gate proven with canary `8ac139b` (`SKIPPED`) and revert `3d97f46` (`SUCCESS`). Railway waits for **all** workflows on a commit, so any slow workflow must not run on `push`. |
+| GitHub repo | `LukaszSwiech/talkaitive` (public). Merges to `main` require the check `review`, see [AI review merge gate](#ai-review-merge-gate). A push to `main` auto-deploys `web` after CI passes (trigger checked 2026-10-15 through the API: branch `main`, `checkSuites` on since 2026-10-15). Workflow `.github/workflows/ci.yml` runs on every PR and push to `main`; gate proven with canary `8ac139b` (`SKIPPED`) and revert `3d97f46` (`SUCCESS`). Railway waits for **all** workflows on a commit, so any slow workflow must not run on `push`. |
 | Railway project | `talkaitive` (`8f6d357b-b551-4247-8863-183f57ea6acc`), workspace preferred region `europe-west4-drams3a` |
 | Railway plan | **Hobby** since 2026-09-28. Before that the account was on Trial; the 2026-09-25 run wrongly assumed Hobby. The Postgres volume (`4fd1fea4-0e5e-49a5-a92d-adaf64c1d18c` in `production`) is still 500 MB, the Trial size; Hobby allows up to 5 GB. |
 | Environment | `production` (`3a4465d3-f273-472e-a82c-0441375014a5`) |
