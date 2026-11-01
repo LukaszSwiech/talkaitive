@@ -2,7 +2,7 @@
 
 The six TalkAItive criteria are named fields, so the schema itself forces the model
 to score all six. A criterion the diff does not touch scores 10; otherwise the floor
-below would fail every backend PR on the UI criterion.
+below would fail every PR that has, say, no migration in it.
 """
 
 from typing import Literal
@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field
 Score = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 Verdict = Literal["pass", "fail"]
 
-# A score at or below this fails the review, whatever the model's verdict says.
+# A blocker at or below this fails the review, whatever the model's verdict says. A
+# warning criterion at or below this only gets a note in the comment.
 FAIL_FLOOR = 3
 
 _UNTOUCHED = "Also 10 when the diff does not touch this area."
@@ -37,23 +38,32 @@ class Review(BaseModel):
             f"to another user. 10: every such query is scoped. {_UNTOUCHED}"
         )
     )
-    type_hints: CriterionScore = Field(
+    no_secrets: CriterionScore = Field(
         description=(
-            "New models, views and services are type-hinted. 1: new code has no type "
-            f"hints. 10: all new code is fully type-hinted. {_UNTOUCHED}"
+            "No keys, tokens or passwords in code. 1: a real-looking secret is "
+            "committed. 10: no secret values, configuration comes from env vars. "
+            f"{_UNTOUCHED}"
+        )
+    )
+    correctness: CriterionScore = Field(
+        description=(
+            "Logic errors, missed cases and regressions in the changed code. 1: a "
+            f"clear bug that breaks behaviour. 10: none found. {_UNTOUCHED}"
+        )
+    )
+    migrations: CriterionScore = Field(
+        description=(
+            "Database migrations are safe: main auto-deploys and migrate runs "
+            "pre-deploy, so this covers data loss, irreversible or locking "
+            "operations, a non-null column without a default, and a model change "
+            "with no migration. 1: would break or lose production data. 10: safe. "
+            f"{_UNTOUCHED}"
         )
     )
     tests: CriterionScore = Field(
         description=(
             "Changed behaviour has tests. 1: behaviour changes with no test at all. "
             f"10: every changed behaviour is covered by a test. {_UNTOUCHED}"
-        )
-    )
-    no_secrets: CriterionScore = Field(
-        description=(
-            "No keys, tokens or passwords in code. 1: a real-looking secret is "
-            "committed. 10: no secret values, configuration comes from env vars. "
-            f"{_UNTOUCHED}"
         )
     )
     openai_boundary: CriterionScore = Field(
@@ -64,26 +74,20 @@ class Review(BaseModel):
             f"OpenAI directly. 10: the boundary holds. {_UNTOUCHED}"
         )
     )
-    ui_contract: CriterionScore = Field(
-        description=(
-            "The UI tokens and components contract: no colours, <style> or style= in "
-            "templates; variants only through data-variant; colour values only in "
-            "tokens.css. 1: a template hard-codes colours or styles. 10: the contract "
-            f"is followed everywhere. {_UNTOUCHED}"
-        )
-    )
     verdict: Verdict
     summary: str = Field(description="A short review summary in Markdown.")
 
 
 CRITERIA = (
     "data_isolation",
-    "type_hints",
-    "tests",
     "no_secrets",
+    "correctness",
+    "migrations",
+    "tests",
     "openai_boundary",
-    "ui_contract",
 )
+BLOCKERS = ("data_isolation", "no_secrets", "correctness", "migrations")
+WARNINGS = ("tests", "openai_boundary")
 
 
 def criterion_scores(review: Review) -> dict[str, CriterionScore]:
@@ -91,17 +95,30 @@ def criterion_scores(review: Review) -> dict[str, CriterionScore]:
     return {name: getattr(review, name) for name in CRITERIA}
 
 
-def floor_failed(review: Review) -> bool:
-    """Whether any criterion is at or below `FAIL_FLOOR`."""
-    return any(c.score <= FAIL_FLOOR for c in criterion_scores(review).values())
+def _at_or_below_floor(review: Review, names: tuple[str, ...]) -> list[str]:
+    return [
+        name
+        for name, criterion in criterion_scores(review).items()
+        if name in names and criterion.score <= FAIL_FLOOR
+    ]
 
 
-def final_verdict(review: Review) -> Verdict:
-    """`fail` if the model said so or any criterion is at or below `FAIL_FLOOR`.
+def failed_blockers(review: Review) -> list[str]:
+    """The blockers at or below `FAIL_FLOOR`, in `CRITERIA` order."""
+    return _at_or_below_floor(review, BLOCKERS)
 
-    This can lower a verdict and never raises one, which makes a prompt-injected
-    "pass" harder to obtain.
+
+def low_warnings(review: Review) -> list[str]:
+    """The warning criteria at or below `FAIL_FLOOR`, in `CRITERIA` order."""
+    return _at_or_below_floor(review, WARNINGS)
+
+
+def final_verdict(review: Review, *, truncated: bool) -> Verdict:
+    """`fail` if the diff was cut or any blocker is at or below `FAIL_FLOOR`.
+
+    `review.verdict` is never read: a prompt-injected "pass" cannot rescue a failed
+    blocker, and the model's own "fail" cannot stop a PR alone.
     """
-    if review.verdict == "fail" or floor_failed(review):
+    if truncated or failed_blockers(review):
         return "fail"
     return "pass"

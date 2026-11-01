@@ -12,7 +12,8 @@ Exit codes: 0 reviewed, whether the verdict is pass or fail, or nothing to revie
 1 a runtime failure (API error, unusable output, refusal, git error); 2 a
 configuration error (`OPENAI_API_KEY` empty or missing), checked before git and
 before any call. On a non-zero exit neither the comment file nor `$GITHUB_OUTPUT` is
-written.
+written. A reviewed fail exits 0 on purpose: the workflow ends the job red, after it
+has posted the comment and the label.
 
 Trust boundary: the diff and everything the model returns are untrusted. The model
 gets no tools, and its text reaches only the sanitised comment file. The logs are
@@ -37,7 +38,15 @@ from openai.types.responses import EasyInputMessageParam
 from pydantic import ValidationError
 
 from scripts.review.cost import cost_line, cost_usd, unknown_cost_line, worst_case_usd
-from scripts.review.criteria import Review, Verdict, criterion_scores, final_verdict
+from scripts.review.criteria import (
+    FAIL_FLOOR,
+    Review,
+    Verdict,
+    criterion_scores,
+    failed_blockers,
+    final_verdict,
+    low_warnings,
+)
 from talkaitive.settings import LLM_MODEL, LLM_PRICES_USD_PER_MTOK
 
 MAX_DIFF_CHARS = 120_000
@@ -56,7 +65,6 @@ COMMENT_CUT_NOTE = "\n\n_This comment was cut at its size cap._"
 
 _PRICES = LLM_PRICES_USD_PER_MTOK[LLM_MODEL]
 _ZERO_WIDTH_SPACE = "​"
-_ADVISORY_NOTE = "_Advisory only: this review never blocks a merge._"
 
 # A line of content always starts with `+`, `-` or a space, so this only finds real
 # headers; a path holding a newline is quoted by git.
@@ -167,8 +175,45 @@ def _cap_comment(body: str) -> str:
     return body[: MAX_COMMENT_CHARS - len(COMMENT_CUT_NOTE)] + COMMENT_CUT_NOTE
 
 
-def render_comment(review: Review, dropped_paths: Sequence[str]) -> str:
-    """The PR comment. Rendered from `final_verdict`, not the model's own verdict.
+def _verdict_notes(review: Review, verdict: Verdict, truncated: bool) -> list[str]:
+    """Why the verdict is what it is. Built from constants only, no model text."""
+    notes = []
+    failed = failed_blockers(review)
+    if failed:
+        note = (
+            f"**Blocked:** {', '.join(failed)} scored at or below the floor of "
+            f"{FAIL_FLOOR}."
+        )
+        if review.verdict == "pass":
+            note += " The model said pass, but it cannot override a blocker."
+        notes.append(note)
+    if truncated:
+        notes.append(
+            "**Blocked:** the diff was cut at its size cap, so part of it was not "
+            "reviewed. This fails whatever the scores say. Split the PR."
+        )
+    low = low_warnings(review)
+    if low:
+        notes.append(
+            f"**Warning:** {', '.join(low)} scored at or below the floor of "
+            f"{FAIL_FLOOR}. This does not stop the merge."
+        )
+    if review.verdict == "fail" and verdict == "pass":
+        notes.append(
+            "**Warning:** the model's own verdict was fail, but no blocker is at or "
+            "below the floor, so this does not stop the merge. Read the summary."
+        )
+    return notes
+
+
+def render_comment(
+    review: Review,
+    dropped_paths: Sequence[str],
+    *,
+    verdict: Verdict,
+    truncated: bool,
+) -> str:
+    """The PR comment, with the one verdict `run` also writes to `$GITHUB_OUTPUT`.
 
     A list rather than a table, so a `|` in model text cannot break the layout; a
     rationale is folded onto one line, so it cannot leave its bullet.
@@ -176,19 +221,14 @@ def render_comment(review: Review, dropped_paths: Sequence[str]) -> str:
     The fixed notes come before the model's text, so neither the size cap nor an
     unclosed code fence in that text can take them away.
     """
-    verdict = final_verdict(review)
     bullets = [
         f"- **{name}**: {criterion.score}/10. "
         f"{' '.join(sanitize(criterion.rationale).split())}"
         for name, criterion in criterion_scores(review).items()
     ]
-    parts = [f"## AI review: {verdict}", _ADVISORY_NOTE]
-    if verdict != review.verdict:
-        parts.append(
-            "**Note:** the model said pass, but a criterion at or below the floor "
-            "turns this review into a fail."
-        )
-    parts += [
+    parts = [
+        f"## AI review: {verdict}",
+        *_verdict_notes(review, verdict, truncated),
         _scope_note(dropped_paths),
         "\n".join(bullets),
         sanitize(review.summary),
@@ -201,7 +241,6 @@ def render_nothing_to_review() -> str:
     return "\n\n".join(
         [
             "## AI review: pass",
-            _ADVISORY_NOTE,
             "There was nothing reviewable in this diff, so no model call was made.",
             _scope_note([]),
         ]
@@ -270,7 +309,9 @@ def run(argv: Sequence[str]) -> int:
         f"diff: {len(full_diff)} characters, truncated: {'yes' if truncated else 'no'}"
     )
 
-    if not diff.strip():
+    # Only a diff that is blank in full and was not cut. A truncated diff always goes
+    # on to the fail verdict, even one that is all whitespace.
+    if not truncated and not full_diff.strip():
         print("cost: 0.000000 USD (no model call)")
         _write_result(args.comment_file, render_nothing_to_review(), "pass")
         return 0
@@ -300,10 +341,11 @@ def run(argv: Sequence[str]) -> int:
         print(f"status: {response.status}")
         return 1
 
+    verdict = final_verdict(review, truncated=truncated)
     _write_result(
         args.comment_file,
-        render_comment(review, dropped_paths),
-        final_verdict(review),
+        render_comment(review, dropped_paths, verdict=verdict, truncated=truncated),
+        verdict,
     )
     return 0
 
