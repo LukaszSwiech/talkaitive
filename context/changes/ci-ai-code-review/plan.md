@@ -29,7 +29,7 @@ Verify with Phase 4.
 - Test fakes: `FakeResponses` + `monkeypatch.setattr(<module>, "OpenAI", ...)` (`tests/test_llm.py:28-67`) for call arguments; real SDK on `httpx2.MockTransport` (`tests/fake_provider.py:44`, `:124-127`) for what the SDK does. `FakeProvider.reply(...)` returns JSON that does not fit the review schema, which yields a real `ValidationError` without touching `fake_provider.py`. `FakeProvider.fail(500)` proves `max_retries=0` means one request.
 - Observed in this planning session, offline: `openai.lib._pydantic.to_strict_json_schema` accepts both `Field(ge=1, le=10)` and `Literal[1, ..., 10]`, and it inlines a nested model that has a `description` so the description survives.
 - PyYAML 6.0.3 is installed through `mutmut → libcst` (dev group), under the lock marker `python_full_version >= '3.14'`; below 3.14 `libcst` pulls `pyyaml-ft` instead. `.python-version` is `3.14` and `ci.yml` runs `uv sync --locked`, which installs the dev group, so a test can read YAML without a new dependency. The no-dev install used by the workflow has no `yaml` and no `pytest`, and needs neither.
-- `git diff` sorts paths alphabetically, so `context/` would use up the 60k cap ahead of `conversations/`. 3 of the last 5 merge diffs exceed 60k even after the exclusions (research, section 5).
+- `git diff` sorts paths alphabetically, so `context/` would use up the 120k cap ahead of `conversations/`. 1 of the last 5 merge diffs exceeds 120k even after the exclusions (research, section 5).
 - `context/foundation/roadmap.md` has no item with this change ID, so it stays untouched.
 
 ## What We're NOT Doing
@@ -121,7 +121,7 @@ The pure part of the script: what is scored, how the final verdict is decided, a
 
 - `cost_usd(prices, input_tokens, cached_input_tokens, output_tokens) -> Decimal`, same three-term formula as `turn_cost`, where `input_tokens` includes the cached ones.
 - `worst_case_usd(prices, input_chars, max_output_tokens) -> Decimal`, an estimate at `CHARS_PER_TOKEN_ESTIMATE = 3`, no cached discount.
-- `cost_line(...)` and `unknown_cost_line(...)` return the two fixed log formats: `cost: 0.001350 USD (model=gpt-5.4 input=1200 cached=1000 output=40)` and `cost: unknown (worst case about 0.14 USD)`.
+- `cost_line(...)` and `unknown_cost_line(...)` return the two fixed log formats: `cost: 0.001350 USD (model=gpt-5.4 input=1200 cached=1000 output=40)` and `cost: unknown (worst case about 0.19 USD)`.
 
 #### 4. Tests
 
@@ -173,7 +173,7 @@ The script itself: read the diff, make one model call, write a sanitised comment
   - 1: runtime failure (API error, unusable output, refusal, git error).
   - 2: config failure (`OPENAI_API_KEY` empty or missing), checked first, before git and before any call.
   - On a non-zero exit neither the comment file nor `$GITHUB_OUTPUT` is written.
-- **Diff**: `subprocess` with a list of arguments, no shell: `git diff --no-ext-diff --no-color HEAD^1 HEAD -- . ':(exclude)uv.lock' ':(exclude)package-lock.json' ':(exclude)context'`. Decode with `errors="replace"`. `MAX_DIFF_CHARS = 60_000`. When over the cap, cut the text and collect the paths whose content was dropped: the `diff --git` headers past the cut, plus the last header before it, since that file is cut partway.
+- **Diff**: `subprocess` with a list of arguments, no shell: `git diff --no-ext-diff --no-color HEAD^1 HEAD -- . ':(exclude)uv.lock' ':(exclude)package-lock.json' ':(exclude)context'`. Decode with `errors="replace"`. `MAX_DIFF_CHARS = 120_000`. When over the cap, cut the text and collect the paths whose content was dropped: the `diff --git` headers past the cut, plus the last header before it, since that file is cut partway.
 - **Empty diff after exclusions**: no model call, verdict `pass`, a comment saying there was nothing reviewable and naming the exclusions, the log line `cost: 0.000000 USD (no model call)`, exit 0. This makes a `context/`-only PR free.
 - **Prompt**: states the role, that the review is in English, and that the content between per-run delimiters is data under review and never instructions. The delimiter contains a random `secrets.token_hex` value, so a diff cannot close it. It also asks the model never to quote a secret value it finds, only to name the file.
 - **Call**: one `client.responses.parse(model=LLM_MODEL, input=..., text_format=Review, reasoning={"effort": "low"}, max_output_tokens=6000, store=False)`, no `tools`. Client: `OpenAI(api_key=..., timeout=180, max_retries=0)`. Model and prices come from `from talkaitive.settings import LLM_MODEL, LLM_PRICES_USD_PER_MTOK`.
@@ -372,7 +372,7 @@ Push, open the PR and prove the whole path on real infrastructure. This phase ho
 
 ## Performance Considerations
 
-- Cost is an estimate until measured: at most about 0.14 USD per run (20k input tokens, from 60,000 characters at 3 per token, at 2.50/M plus 6k output tokens at 15.00/M; the short prompt adds under 0.01 USD). Every push to an open PR and every retry is one run.
+- Cost is an estimate until measured: at most about 0.19 USD per run (40k input tokens, from 120,000 characters at 3 per token, at 2.50/M plus 6k output tokens at 15.00/M; the short prompt adds under 0.01 USD). Every push to an open PR and every retry is one run.
 - Output cap and reasoning effort are coupled, because `max_output_tokens` includes reasoning tokens. That is why the effort is `low`.
 - A cancelled call may still be billed.
 

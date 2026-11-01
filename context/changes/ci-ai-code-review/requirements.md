@@ -92,7 +92,7 @@ logs, LLM review comment on a PR). The user takes the screenshots himself.
 - Review comment language: English.
 - Labels: `ai-cr:passed` green, `ai-cr:failed` red (create if missing).
 - Retry: adding the label `ai-cr:review` re-runs the review.
-- Max diff size: about 60k characters, truncated with a note in the comment.
+- Max diff size: about 120k characters, truncated with a note in the comment.
 - No Linear issue.
 
 ## Done when
