@@ -1,4 +1,4 @@
-"""The only module that imports `openai`.
+"""The only application module that imports `openai`.
 
 Two calls to the Responses API, both with structured output:
 

@@ -40,7 +40,7 @@ Django 6.1 web app for German conversation practice (B1–B2). Spec: `context/fo
 - Tests run with `uv run pytest` (pytest-django, settings `talkaitive.settings_test`); no type checker yet. Ruff (config in `pyproject.toml`) auto-formats and lints each edited `.py` file via a PostToolUse hook; whole-repo run: `uv run ruff check . && uv run ruff format .`. `mypy` + `django-stubs` are planned to make up for Django's weak typing, so type-hint new models, views and services.
 - Dependency audit: `uv export --format requirements-txt --no-hashes > /tmp/req.txt && uvx pip-audit -r /tmp/req.txt`. Bare `uvx pip-audit` checks uvx's own environment, not the project's, and wrongly reports it clean.
 - `talkaitive/settings.py` reads `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `DATABASE_URL` and `OPENAI_API_KEY` from env vars. Locally, with none set, it falls back to DEBUG on, a dev key and SQLite. On Railway (`RAILWAY_ENVIRONMENT` is set) DEBUG defaults to off. Outside DEBUG a missing `SECRET_KEY` or `OPENAI_API_KEY` crashes startup on purpose. In DEBUG a missing `OPENAI_API_KEY` only makes the first LLM call fail with a config error. Optional: `LLM_MODEL` (default `gpt-5.4`; it needs an entry in `LLM_PRICES_USD_PER_MTOK`, otherwise startup fails), `LLM_ANALYSIS_REASONING_EFFORT` (default `medium`, used by the post-conversation mistake analysis; `high` measured 3x slower and costlier), `DAILY_BUDGET_USD` (default `1.00`, per user per day, reset at midnight Europe/Berlin) and `OPENAI_BASE_URL` (default is the global endpoint `https://api.openai.com/v1`; EU data residency via `eu.api.openai.com` needs an OpenAI organization approved for it, which this account is not; our keys get a 401 there).
-- Real LLM locally: put `OPENAI_API_KEY` in `.env` (gitignored; never commit or print it), then run `uv run --env-file .env python manage.py runserver`. Only `conversations/llm.py` calls OpenAI. Tests replace the SDK client or `generate_turn` with fakes, and `settings_test` sets a dummy key, so `uv run pytest` needs no key and makes no network calls.
+- Real LLM locally: put `OPENAI_API_KEY` in `.env` (gitignored; never commit or print it), then run `uv run --env-file .env python manage.py runserver`. In the application, only `conversations/llm.py` calls OpenAI; the standalone CI review script `scripts/review/` is the one deliberate exception. Tests replace the SDK client or `generate_turn` with fakes, and `settings_test` sets a dummy key, so `uv run pytest` needs no key and makes no network calls.
 - Mutation checks run locally and periodically, never in CI: `uv run python scripts/mutation/manual_mutants.py [ID ...]` (exit 0 = every result matches its expectation) and `uv run mutmut run` + `uv run mutmut results` (delete `mutants/` first after test-only changes, or mutmut shows stale results). Every survivor kept on purpose gets a row in `scripts/mutation/accepted_survivors.md`. How to add a test and confirm it with a mutant: `context/foundation/test-plan.md` §6.1.
 - AI eval on the real model runs locally and manually, never in CI, and is not part of `uv run pytest` (only its scorer and golden-set consistency tests are): `uv run --env-file .env python scripts/eval/run_eval.py run [--suite analysis,turn,memory,latency] [--repeats 3] [--max-usd 5]`, then `uv run python scripts/eval/run_eval.py compare <baseline>.json <new>.json` against the committed baseline in `scripts/eval/results/`. Run it before and after changing the turn prompt, the analysis prompt, the memory block text, `LLM_MODEL` or a reasoning effort. It bypasses the app's daily budget and has its own cap (default 5 USD; the full K=3 run cost 0.83 USD and ~12 min on 2026-10-19) and uses the same OpenAI account as production. How to run, read and extend it: `context/foundation/test-plan.md` §6.5.
 - Production runs on Railway (`web` + Postgres, EU West) and `main` auto-deploys, but only after the GitHub Actions workflow `CI` (`.github/workflows/ci.yml`: ruff check, ruff format --check, pytest; runs on every PR and push to `main`) is green on that commit (Railway "Wait for CI"); a red run skips the deploy. Live resources, IDs, plan status and open TODOs are in `context/deployment/deploy-plan.md`. Railway ignores `railway.json`, so the `web` service settings (pre-deploy `migrate`, start command, health check) live only in Railway; their copy is `context/deployment/web-settings.json`. Update it whenever you change them.
@@ -64,38 +64,26 @@ The design-system contract (from change `ui-home-tokens`). Read it before touchi
 
 <!-- BEGIN @przeprogramowani/10x-cli -->
 
-## 10xDevs AI Toolkit - Module 3, Lesson 4 (E2E Tests)
+## 10xDevs AI Toolkit - Module 4, Lesson 2 (Project Map)
 
-**For E2E tests, use the two M3L4 skills in this order:**
+Get up to speed in an unfamiliar or legacy repo from evidence, not from directory trees: **Wide Scan first, Deep Focus later.**
 
-1. **`/10x-e2e-setup`** — one-time setup: Playwright config (`webServer`,
-   auth `setup` project, `storageState`), a green seed test, and `context/foundation/test-stack.md`.
-2. **`/10x-e2e`** — the per-risk loop: risk → explore the running app with
-   `playwright-cli` → generate → review against the five anti-patterns →
-   re-prompt by name → verify with a deliberate break.
+```
+git history + dependency graph + contributors -> context/map/repo-map.md -> focused /10x-research
+```
 
-The skills' `references/` carry the full rules, anti-patterns, seed pattern, and
-prompt-template.
+### Task Router - Where to start
 
-A few hard rules that hold even before you invoke the skill:
+| Skill / prompt | Use it when |
+| --- | --- |
+| `/10x-repo-map` | One-run Project Map. It ranks business capabilities by criticality × buzz, keeps its evidence in `context/map/evidence/`, and writes `context/map/repo-map.md` with risk zones, a first-day reading list and explicit unknowns. Use `--replace` to refresh; the previous run moves to `context/archive/`. |
+| `m4l2-1-territory-git-history` -> `m4l2-2-structure-dependency-cruiser` -> `m4l2-3-contributors-git` -> `m4l2-repo-map-synthesis` | The same map built step by step, one artifact at a time, so you can see what each evidence source adds. |
+| `/10x-research` | A question about one feature or area. The map covers breadth and takes no target; depth belongs to research. |
 
-- **Locators:** `getByRole` / `getByLabel` / `getByText` first; `getByTestId`
-  only when accessibility attributes are ambiguous. Never CSS selectors, XPath,
-  or DOM structure.
-- **Never `page.waitForTimeout()`.** Wait for state: `toBeVisible()`,
-  `waitForURL()`, `waitForResponse()`.
-- **Test independence + cleanup.** Each test runs standalone — its own setup,
-  action, assertion, and cleanup; unique ids (timestamp suffix) so parallel runs
-  and re-runs don't collide.
+### Hard rules
 
-Two boundaries to keep straight:
-
-- **DOM (snapshot) is the default.** Vision (`--caps=vision`) is a supplement for
-  visual-only risks (layout, z-index, animation); for pixel regression prefer
-  deterministic tools (`toHaveScreenshot`, Argos, Lost Pixel). VLM model
-  selection/cost is a debugging topic (Lesson 5), not testing.
-- **A red test is a signal, not a chore.** A changed selector → update the
-  locator in a reviewed diff. A changed business behavior → the test caught a
-  bug; never edit the assertion to match it. Fixing failing tests is Lesson 5.
+- **Let tools collect evidence outside the context window.** Use git, the forge and graph tools to gather data, then interpret only their condensed output. Never read the repo file by file.
+- **Exclude the noise.** Leave out lockfiles, generated code, bulk formatting commits, bot commits and agent-authored commits when ranking activity.
+- **Unknowns are part of the map.** Mark what the evidence can't show as unknown instead of filling the gap with a guess.
 
 <!-- END @przeprogramowani/10x-cli -->
