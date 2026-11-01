@@ -393,20 +393,20 @@ Deviations from the phase text, recorded during `/10x-implement`:
 
 #### Automated
 
-- [x] 1.1 Criteria tests pass: `uv run pytest tests/test_review_criteria.py`
-- [x] 1.2 Script tests pass: `uv run pytest tests/test_review_script.py`
-- [x] 1.3 Full suite passes: `uv run pytest`
-- [x] 1.4 Lint and format are clean: `uv run ruff check .` and `uv run ruff format --check .`
-- [x] 1.5 Phase commit exists: `feat(ci-ai-review-gate): six criteria, blockers and one verdict for the comment and the output`, also holding this folder's `change.md`, `research.md`, `public-exposure-report.md`, `plan.md`, `plan-brief.md` and `reviews/plan-review.md`
+- [x] 1.1 Criteria tests pass: `uv run pytest tests/test_review_criteria.py` — ee63b37
+- [x] 1.2 Script tests pass: `uv run pytest tests/test_review_script.py` — ee63b37
+- [x] 1.3 Full suite passes: `uv run pytest` — ee63b37
+- [x] 1.4 Lint and format are clean: `uv run ruff check .` and `uv run ruff format --check .` — ee63b37
+- [x] 1.5 Phase commit exists: `feat(ci-ai-review-gate): six criteria, blockers and one verdict for the comment and the output`, also holding this folder's `change.md`, `research.md`, `public-exposure-report.md`, `plan.md`, `plan-brief.md` and `reviews/plan-review.md` — ee63b37
 
 ### Phase 2: Workflow
 
 #### Automated
 
-- [ ] 2.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py`
-- [ ] 2.2 Full suite passes: `uv run pytest`
-- [ ] 2.3 Lint and format are clean: `uv run ruff check .` and `uv run ruff format --check .`
-- [ ] 2.4 Phase commit exists: `feat(ci-ai-review-gate): make the review job a real check that ends red on a fail`
+- [x] 2.1 Workflow tests pass: `uv run pytest tests/test_review_workflow.py`
+- [x] 2.2 Full suite passes: `uv run pytest`
+- [x] 2.3 Lint and format are clean: `uv run ruff check .` and `uv run ruff format --check .`
+- [x] 2.4 Phase commit exists: `feat(ci-ai-review-gate): make the review job a real check that ends red on a fail`
 
 ### Phase 3: Docs and review before the first push
 
