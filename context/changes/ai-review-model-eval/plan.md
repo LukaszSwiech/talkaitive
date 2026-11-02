@@ -375,13 +375,13 @@ None (no app or data change).
 
 #### Automated
 
-- [ ] 1.1 `uv run pytest tests/test_review_eval.py` passes locally with materialisation tests running (not skipped)
-- [ ] 1.2 `uv run pytest` passes
-- [ ] 1.3 `uv run ruff check . && uv run ruff format --check .` pass
+- [x] 1.1 `uv run pytest tests/test_review_eval.py` passes locally with materialisation tests running (not skipped)
+- [x] 1.2 `uv run pytest` passes
+- [x] 1.3 `uv run ruff check . && uv run ruff format --check .` pass
 
 #### Manual
 
-- [ ] 1.4 Orchestrator reads three materialised diffs (one pass, one seed, the injection) and confirms they look like real PR diffs
+- [x] 1.4 Orchestrator reads three materialised diffs (one pass, one seed, the injection) and confirms they look like real PR diffs
 
 ### Phase 2: promptfoo wiring and runner (still no paid call)
 
