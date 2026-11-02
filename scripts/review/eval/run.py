@@ -4,7 +4,11 @@
 
 `--dry-run` stops before promptfoo; `--fake` runs it with a canned review (no
 network, no spend); `--smoke` reviews one small case once; `--out DIR` (outside the
-repo) is a trial. Exit: 0 complete, 1 runtime error, 2 configuration error or a
+repo) is a trial. A repeat whose full worst case no longer fits the ledger is not
+started: it is counted in `repeats_skipped_budget`, and the run is still
+`complete: true` if at least one repeat finished and every started one finished
+(plan D22, "3 repeats if budget allows"); read `repeats_completed` against
+`repeats_requested`. Exit: 0 complete, 1 runtime error, 2 configuration error or a
 reservation refused mid-repeat (partial result, `complete: false`). Decision rule:
 `pick_winner`.
 """
