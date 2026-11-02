@@ -414,15 +414,15 @@ None (no app or data change).
 
 #### Automated
 
-- [ ] 4.1 The run exits 0 with `complete: true` (at least one repeat finished, every started repeat finished) and the ledger total ≤ 10.00 USD (smoke included)
-- [ ] 4.2 `uv run pytest` passes, including the gate test
-- [ ] 4.3 The gate test fails when `_INSTRUCTIONS` or `LLM_MODEL` is changed (monkeypatch) and passes on the real code
-- [ ] 4.4 `uv run ruff check . && uv run ruff format --check .` pass
+- [x] 4.1 The run exits 0 with `complete: true` (at least one repeat finished, every started repeat finished) and the ledger total ≤ 10.00 USD (smoke included)
+- [x] 4.2 `uv run pytest` passes, including the gate test
+- [x] 4.3 The gate test fails when `_INSTRUCTIONS` or `LLM_MODEL` is changed (monkeypatch) and passes on the real code
+- [x] 4.4 `uv run ruff check . && uv run ruff format --check .` pass
 
 #### Manual
 
 - [ ] 4.5 Share links open in the TalkAItive org and are not viewable when logged out (the repo is public)
-- [ ] 4.6 Matrix numbers re-derive from the rows (orchestrator spot-checks one model)
+- [x] 4.6 Matrix numbers re-derive from the rows (orchestrator spot-checks one model)
 
 ### Phase 5: Documentation and final report
 

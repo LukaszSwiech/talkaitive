@@ -821,3 +821,58 @@ def test_result_file_is_capped_and_never_overwritten(tmp_path: Path) -> None:
     with pytest.raises(run.EvalError, match="over 20000"):
         run.write_result(result | {"entries": result["entries"] * 60}, tmp_path, "big")
     assert not (tmp_path / "big.json").exists()
+
+
+# --- CI gate (D18): the newest committed result covers the current reviewer ------
+
+RERUN = (
+    "re-run: uv run --env-file .env python -m scripts.review.eval.run --repeats 3 "
+    "--max-usd 10 --share (one model: add --models <label>); note that an "
+    "openai/pydantic upgrade can change the schema hash"
+)
+
+
+def newest_result() -> dict:
+    files = sorted(run.RESULTS_DIR.glob("*.json"))  # lexicographic max (D21)
+    assert files, f"no result file in {run.RESULTS_DIR}; {RERUN}"
+    return json.loads(files[-1].read_text(encoding="utf-8"))
+
+
+def fingerprint_mismatch(result: dict) -> str | None:
+    if result["fingerprint"] == fingerprint():
+        return None
+    return f"newest result has another fingerprint than the reviewer code; {RERUN}"
+
+
+def model_unmeasured(result: dict) -> str | None:
+    if run_review.LLM_MODEL in {m["label"] for m in result["models"]}:
+        return None
+    return f"reviewer model {run_review.LLM_MODEL} is not measured; {RERUN}"
+
+
+def test_newest_result_matches_current_fingerprint() -> None:
+    assert (error := fingerprint_mismatch(newest_result())) is None, error
+
+
+def test_newest_result_measures_current_model() -> None:
+    assert (error := model_unmeasured(newest_result())) is None, error
+
+
+def test_newest_result_is_complete() -> None:
+    result = newest_result()
+
+    assert result["complete"] is True and not result["fake"], RERUN
+
+
+def test_gate_checks_report_a_prompt_or_model_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result = {"fingerprint": fingerprint(), "models": [{"label": "gpt-5.4"}]}
+    monkeypatch.setattr(run_review, "LLM_MODEL", "gpt-5.4")
+    assert fingerprint_mismatch(result) is model_unmeasured(result) is None
+
+    monkeypatch.setattr(run_review, "_INSTRUCTIONS", run_review._INSTRUCTIONS + "x")
+    monkeypatch.setattr(run_review, "LLM_MODEL", "gpt-6.1-terra")
+
+    assert "--models <label>" in (fingerprint_mismatch(result) or "")
+    assert "schema hash" in (model_unmeasured(result) or "")
