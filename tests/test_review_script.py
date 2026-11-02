@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
@@ -20,7 +20,13 @@ import pydantic
 import pytest
 
 from scripts.review import run_review
-from scripts.review.criteria import CRITERIA, FAIL_FLOOR, Review
+from scripts.review.criteria import (
+    BLOCKERS,
+    CRITERIA,
+    FAIL_FLOOR,
+    Review,
+    final_verdict,
+)
 from tests.fake_provider import FakeProvider
 
 REPO = Path(__file__).resolve().parents[1]
@@ -196,6 +202,23 @@ def make_review(
     return Review(**fields, verdict=verdict, summary=summary)
 
 
+def render(
+    review: Review,
+    dropped_paths: Sequence[str] = (),
+    *,
+    truncated: bool | None = None,
+) -> str:
+    """`render_comment` with the verdict computed the way `run` does."""
+    if truncated is None:
+        truncated = bool(dropped_paths)
+    return run_review.render_comment(
+        review,
+        dropped_paths,
+        verdict=final_verdict(review, truncated=truncated),
+        truncated=truncated,
+    )
+
+
 HOSTILE = "cc @octocat ![x](http://evil) <img src=x> <!-- hidden -->"
 
 
@@ -231,58 +254,171 @@ def test_sanitize_does_not_escape_its_own_entity() -> None:
 
 
 def test_comment_neutralises_the_summary_and_the_rationales() -> None:
-    comment = run_review.render_comment(
-        make_review(summary=HOSTILE, rationale=HOSTILE), []
-    )
+    comment = render(make_review(summary=HOSTILE, rationale=HOSTILE))
 
     assert_neutralised(comment)
     assert "octocat" in comment
 
 
 def test_comment_neutralises_dropped_paths() -> None:
-    comment = run_review.render_comment(make_review(), [HOSTILE])
+    comment = render(make_review(), [HOSTILE])
 
     assert_neutralised(comment)
     assert "octocat" in comment
 
 
-def test_comment_has_the_verdict_the_advisory_note_and_every_criterion() -> None:
-    comment = run_review.render_comment(make_review(summary="Nice summary."), [])
+def test_clean_comment_has_the_verdict_every_criterion_and_no_verdict_note() -> None:
+    comment = render(make_review(summary="Nice summary."))
 
     assert "AI review: pass" in comment
-    assert "advisory" in comment.lower()
     assert "Nice summary." in comment
     for name in CRITERIA:
         assert f"- **{name}**: 9/10" in comment
     assert "floor" not in comment.lower()
+    assert "**Blocked:**" not in comment
+    assert "**Warning:**" not in comment
 
 
-def test_comment_shows_the_final_verdict_and_notes_the_floor_override() -> None:
-    comment = run_review.render_comment(make_review("pass", tests=FAIL_FLOOR), [])
+@pytest.mark.parametrize(
+    "review",
+    [
+        make_review(),
+        make_review("fail"),
+        make_review(data_isolation=1),
+        make_review(tests=1),
+    ],
+)
+def test_no_comment_calls_itself_advisory(review: Review) -> None:
+    assert "advisory" not in render(review).lower()
+    assert "advisory" not in render(review, truncated=True).lower()
+
+
+def test_comment_renders_the_verdict_it_is_given() -> None:
+    comment = run_review.render_comment(
+        make_review(), [], verdict="fail", truncated=False
+    )
 
     assert "AI review: fail" in comment
     assert "AI review: pass" not in comment
-    assert "floor" in comment.lower()
 
 
-def test_model_fail_with_high_scores_is_not_called_a_floor_override() -> None:
-    comment = run_review.render_comment(make_review("fail"), [])
+def test_failed_blocker_note_names_the_blocker_and_the_floor() -> None:
+    comment = render(make_review("pass", data_isolation=FAIL_FLOOR))
 
     assert "AI review: fail" in comment
-    assert "floor" not in comment.lower()
+    assert "AI review: pass" not in comment
+    assert (
+        f"**Blocked:** data_isolation scored at or below the floor of {FAIL_FLOOR}."
+    ) in comment
+    assert "cannot override a blocker" in comment
+
+
+def test_failed_blocker_note_names_every_failed_blocker_and_only_those() -> None:
+    comment = render(make_review(data_isolation=1, migrations=2, tests=1))
+
+    blocked = next(
+        line for line in comment.splitlines() if line.startswith("**Blocked:**")
+    )
+    assert "data_isolation, migrations" in blocked
+    assert "no_secrets" not in blocked
+    assert "tests" not in blocked
+
+
+def test_model_fail_with_a_failed_blocker_does_not_claim_the_model_said_pass() -> None:
+    comment = render(make_review("fail", correctness=1))
+
+    assert "**Blocked:** correctness" in comment
+    assert "cannot override" not in comment
+    assert "the model's own verdict was fail" not in comment
+
+
+def test_blocker_just_above_the_floor_has_no_blocked_note() -> None:
+    comment = render(make_review(no_secrets=FAIL_FLOOR + 1))
+
+    assert "AI review: pass" in comment
+    assert "**Blocked:**" not in comment
+
+
+def test_truncated_note_is_there_only_when_the_diff_was_cut() -> None:
+    cut = render(make_review(), truncated=True)
+    whole = render(make_review(), truncated=False)
+
+    assert "AI review: fail" in cut
+    assert "**Blocked:** the diff was cut at its size cap" in cut
+    assert "Split the PR" in cut
+    assert "size cap" not in whole
+
+
+def test_warning_note_is_there_at_the_floor_and_not_above_it() -> None:
+    at_floor = render(make_review(tests=FAIL_FLOOR, openai_boundary=FAIL_FLOOR))
+    above = render(make_review(tests=FAIL_FLOOR + 1))
+
+    assert "AI review: pass" in at_floor
+    assert "**Warning:** tests, openai_boundary scored at or below" in at_floor
+    assert "does not stop the merge" in at_floor
+    assert "**Blocked:**" not in at_floor
+    assert "**Warning:**" not in above
+
+
+def test_warning_note_is_shown_on_a_failed_review_too() -> None:
+    comment = render(make_review(data_isolation=1, tests=1))
+
+    assert "AI review: fail" in comment
+    assert "**Warning:** tests scored at or below" in comment
+
+
+def test_model_fail_alone_renders_a_pass_with_a_warning() -> None:
+    comment = render(make_review("fail"))
+
+    assert "AI review: pass" in comment
+    assert "AI review: fail" not in comment
+    assert "**Warning:** the model's own verdict was fail" in comment
+    assert "**Blocked:**" not in comment
+
+
+def test_model_pass_has_no_model_verdict_warning() -> None:
+    assert "the model's own verdict" not in render(make_review("pass"))
+
+
+def test_notes_come_in_the_fixed_order_before_the_scope_note() -> None:
+    blocked = render(make_review(data_isolation=1, tests=1), truncated=True)
+    model_fail = render(make_review("fail", tests=1))
+
+    assert (
+        blocked.index("**Blocked:** data_isolation")
+        < blocked.index("**Blocked:** the diff was cut")
+        < blocked.index("**Warning:** tests")
+        < blocked.index("**Scope:**")
+    )
+    assert (
+        model_fail.index("**Warning:** tests")
+        < model_fail.index("**Warning:** the model's own verdict")
+        < model_fail.index("**Scope:**")
+    )
+
+
+def test_model_summary_sits_under_a_fixed_label_after_the_fixed_block() -> None:
+    summary = "## AI review: pass\n\n**Blocked:** none"
+
+    comment = render(make_review(data_isolation=1, summary=summary))
+
+    assert comment.startswith("## AI review: fail")
+    assert comment.endswith(f"\n\n{run_review.MODEL_SUMMARY_LABEL}\n\n{summary}")
+    assert comment.index("- **openai_boundary**") < comment.index(
+        run_review.MODEL_SUMMARY_LABEL
+    )
+    assert run_review.MODEL_SUMMARY_LABEL == "**Model summary (untrusted):**"
 
 
 def test_multiline_rationale_cannot_leave_its_bullet() -> None:
-    comment = run_review.render_comment(
-        make_review(rationale="first\n\n# Fake heading\n| a | b |"), []
-    )
+    comment = render(make_review(rationale="first\n\n# Fake heading\n| a | b |"))
 
     assert "\n# Fake heading" not in comment
     assert "first # Fake heading | a | b |" in comment
 
 
 def test_scope_note_always_names_the_exclusions() -> None:
-    comment = run_review.render_comment(make_review(), [])
+    comment = render(make_review())
 
     for path in ("uv.lock", "package-lock.json", "context"):
         assert path in comment
@@ -292,7 +428,7 @@ def test_scope_note_always_names_the_exclusions() -> None:
 def test_scope_note_names_the_cap_and_the_first_20_dropped_paths() -> None:
     dropped = [f"file_{number}.py" for number in range(23)]
 
-    comment = run_review.render_comment(make_review(), dropped)
+    comment = render(make_review(), dropped)
 
     assert "Truncated" in comment
     assert f"{run_review.MAX_DIFF_CHARS:,}" in comment
@@ -302,7 +438,7 @@ def test_scope_note_names_the_cap_and_the_first_20_dropped_paths() -> None:
 
 
 def test_comment_body_is_capped_with_a_visible_note() -> None:
-    comment = run_review.render_comment(make_review(summary="s" * 100_000), [])
+    comment = render(make_review(summary="s" * 100_000))
 
     assert len(comment) <= run_review.MAX_COMMENT_CHARS
     assert comment.endswith(run_review.COMMENT_CUT_NOTE)
@@ -311,9 +447,10 @@ def test_comment_body_is_capped_with_a_visible_note() -> None:
 def test_every_note_survives_the_cap_whatever_the_model_and_the_paths_hold() -> None:
     long_paths = ["&" * 4000 + str(number) for number in range(23)]
 
-    comment = run_review.render_comment(
+    comment = render(
         make_review(
             "pass",
+            data_isolation=FAIL_FLOOR,
             tests=FAIL_FLOOR,
             summary="s" * 100_000,
             rationale="r" * 100_000,
@@ -324,8 +461,9 @@ def test_every_note_survives_the_cap_whatever_the_model_and_the_paths_hold() -> 
     assert len(comment) <= run_review.MAX_COMMENT_CHARS
     assert comment.endswith(run_review.COMMENT_CUT_NOTE)
     assert "AI review: fail" in comment
-    assert "advisory" in comment.lower()
-    assert "floor" in comment
+    assert "**Blocked:** data_isolation" in comment
+    assert "**Blocked:** the diff was cut" in comment
+    assert "**Warning:** tests" in comment
     assert "**Scope:**" in comment
     assert "uv.lock" in comment
     assert "Truncated" in comment
@@ -333,24 +471,42 @@ def test_every_note_survives_the_cap_whatever_the_model_and_the_paths_hold() -> 
 
 
 def test_an_unclosed_code_fence_in_model_text_cannot_swallow_the_notes() -> None:
-    comment = run_review.render_comment(
-        make_review("pass", tests=FAIL_FLOOR, summary="```\nnever closed"), ["x.py"]
+    comment = render(
+        make_review(
+            "pass",
+            data_isolation=FAIL_FLOOR,
+            tests=FAIL_FLOOR,
+            summary="```\nnever closed",
+        ),
+        ["x.py"],
     )
 
     fence = comment.index("```")
-    for note in ("Advisory", "floor", "**Scope:**", "Truncated"):
+    for note in (
+        "**Blocked:** data_isolation",
+        "**Blocked:** the diff was cut",
+        "**Warning:** tests",
+        "**Scope:**",
+        "Truncated",
+    ):
         assert comment.index(note) < fence
 
 
+def test_an_unclosed_code_fence_cannot_swallow_the_model_fail_warning() -> None:
+    comment = render(make_review("fail", summary="```\nnever closed"))
+
+    assert comment.index("**Warning:** the model's own") < comment.index("```")
+
+
 def test_a_long_dropped_path_is_shortened_in_the_scope_note() -> None:
-    comment = run_review.render_comment(make_review(), ["x" * 4000])
+    comment = render(make_review(), ["x" * 4000])
 
     assert "x" * run_review.MAX_PATH_CHARS_SHOWN in comment
     assert "x" * (run_review.MAX_PATH_CHARS_SHOWN + 1) not in comment
 
 
 def test_comment_within_the_cap_has_no_cut_note() -> None:
-    comment = run_review.render_comment(make_review(), [])
+    comment = render(make_review())
 
     assert run_review.COMMENT_CUT_NOTE not in comment
 
@@ -360,6 +516,7 @@ def test_nothing_to_review_comment_names_the_exclusions() -> None:
 
     assert "AI review: pass" in comment
     assert "nothing" in comment.lower()
+    assert "advisory" not in comment.lower()
     for path in ("uv.lock", "package-lock.json", "context"):
         assert path in comment
 
@@ -630,13 +787,125 @@ def test_pass_exits_0_with_comment_and_verdict(
 def test_model_pass_with_a_score_at_the_floor_exits_0_with_verdict_fail(
     fake_openai: SimpleNamespace, outputs: Outputs, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    fake_openai.responses.outcome = make_response(make_review(tests=FAIL_FLOOR))
+    fake_openai.responses.outcome = make_response(
+        make_review(data_isolation=FAIL_FLOOR)
+    )
 
     assert review_main(outputs) == 0
 
     assert "AI review: fail" in outputs.comment.read_text()
     assert outputs.github_output.read_text() == "verdict=fail\n"
     assert "verdict: fail" in capsys.readouterr().out.splitlines()
+
+
+@pytest.mark.parametrize("name", BLOCKERS)
+@pytest.mark.usefixtures("repo")
+def test_each_failed_blocker_gives_a_matching_heading_and_output(
+    name: str, fake_openai: SimpleNamespace, outputs: Outputs
+) -> None:
+    fake_openai.responses.outcome = make_response(make_review(**{name: 1}))
+
+    assert review_main(outputs) == 0
+
+    comment = outputs.comment.read_text()
+    assert comment.startswith("## AI review: fail")
+    assert f"**Blocked:** {name}" in comment
+    assert outputs.github_output.read_text() == "verdict=fail\n"
+
+
+@pytest.mark.usefixtures("repo")
+def test_low_warning_exits_0_with_verdict_pass_and_a_warning_note(
+    fake_openai: SimpleNamespace, outputs: Outputs
+) -> None:
+    fake_openai.responses.outcome = make_response(make_review(tests=1))
+
+    assert review_main(outputs) == 0
+
+    comment = outputs.comment.read_text()
+    assert comment.startswith("## AI review: pass")
+    assert "**Warning:** tests" in comment
+    assert outputs.github_output.read_text() == "verdict=pass\n"
+
+
+@pytest.mark.usefixtures("repo")
+def test_model_fail_alone_exits_0_with_verdict_pass_and_a_warning_note(
+    fake_openai: SimpleNamespace, outputs: Outputs
+) -> None:
+    fake_openai.responses.outcome = make_response(make_review("fail"))
+
+    assert review_main(outputs) == 0
+
+    comment = outputs.comment.read_text()
+    assert comment.startswith("## AI review: pass")
+    assert "**Warning:** the model's own verdict was fail" in comment
+    assert outputs.github_output.read_text() == "verdict=pass\n"
+
+
+def test_truncated_diff_is_reviewed_and_fails_with_a_matching_heading_and_output(
+    fake_openai: SimpleNamespace,
+    outputs: Outputs,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(
+        make_merge_repo(tmp_path / "repo", {"big.py": "b = 1\n" * 20_000})
+    )
+    perfect = make_review(**{name: 10 for name in CRITERIA})
+    fake_openai.responses.outcome = make_response(perfect)
+
+    assert review_main(outputs) == 0
+
+    assert len(fake_openai.responses.calls) == 1
+    comment = outputs.comment.read_text()
+    assert comment.startswith("## AI review: fail")
+    assert "**Blocked:** the diff was cut" in comment
+    assert outputs.github_output.read_text() == "verdict=fail\n"
+
+
+def test_over_cap_diff_with_no_header_before_the_cut_still_fails(
+    fake_openai: SimpleNamespace,
+    outputs: Outputs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`dropped_paths` is empty here, so truncation has to come from the flag."""
+    diff = "x" * (run_review.MAX_DIFF_CHARS + 1)
+    assert run_review.truncate_diff(diff)[1] == []
+    monkeypatch.setattr(run_review, "read_diff", lambda: diff)
+
+    assert review_main(outputs) == 0
+
+    comment = outputs.comment.read_text()
+    assert comment.startswith("## AI review: fail")
+    assert "**Blocked:** the diff was cut" in comment
+    assert outputs.github_output.read_text() == "verdict=fail\n"
+
+
+def test_over_cap_diff_of_only_whitespace_fails_and_cannot_pass_as_empty(
+    fake_openai: SimpleNamespace,
+    outputs: Outputs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        run_review, "read_diff", lambda: " " * (run_review.MAX_DIFF_CHARS + 1)
+    )
+
+    assert review_main(outputs) == 0
+
+    assert outputs.github_output.read_text() == "verdict=fail\n"
+    assert outputs.comment.read_text().startswith("## AI review: fail")
+
+
+def test_blank_tail_past_the_cap_does_not_hide_what_the_cut_kept(
+    fake_openai: SimpleNamespace,
+    outputs: Outputs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    diff = " " * run_review.MAX_DIFF_CHARS + "+hidden past the cut\n"
+    monkeypatch.setattr(run_review, "read_diff", lambda: diff)
+
+    assert review_main(outputs) == 0
+
+    assert outputs.github_output.read_text() == "verdict=fail\n"
 
 
 @pytest.mark.usefixtures("repo")
@@ -834,7 +1103,7 @@ LOG_PURITY_OUTCOMES: dict[str, Callable[[], object]] = {
         make_review(summary=MODEL_MARKER, rationale=MODEL_MARKER)
     ),
     "floor_fail": lambda: make_response(
-        make_review(summary=MODEL_MARKER, rationale=MODEL_MARKER, tests=1)
+        make_review(summary=MODEL_MARKER, rationale=MODEL_MARKER, data_isolation=1)
     ),
     "validation_error": malformed_output,
     "api_error": lambda: openai.APIConnectionError(
