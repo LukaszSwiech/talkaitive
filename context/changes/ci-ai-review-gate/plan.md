@@ -434,10 +434,10 @@ Deviations from the phase text, recorded during `/10x-implement`:
 - [x] 4.5 Fail test job `review` is red, failed at step `stop` — run 41393876424: job failure; post success, failure-cleanup skipped, "Stop on a failed review" failure
 - [x] 4.6 Fail test `mergeStateStatus` is `BLOCKED` — read on PR 30 before closing: BLOCKED, mergeable MERGEABLE, only required check `review` (`lint-and-test` also failed there, but is not required)
 - [x] 4.7 Fail test PR is closed unmerged and its branch is deleted — PR 30: state CLOSED, mergedAt null; `git ls-remote` for `ci-ai-review-gate-failtest` is empty
-- [ ] 4.8 Evidence commit's control run is green and the gate PR is `CLEAN`
+- [x] 4.8 Evidence commit's control run is green and the gate PR is `CLEAN` — PR 29, run 41394397331 on ab874e8: `review` success, `lint-and-test` success, `mergeStateStatus` CLEAN, label `ai-cr:passed`
 - [x] 4.9 Final quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` — 712 passed, ruff clean, on 43aebf0
 
 #### Manual
 
-- [ ] 4.10 The user merged the gate PR through GitHub, and the Railway deploy of the merge commit succeeded
-- [ ] 4.11 The user set the fork approval policy and deleted the `ai-cr:review` label
+- [x] 4.10 The user merged the gate PR through GitHub, and the Railway deploy of the merge commit succeeded — PR 29 merged 2026-11-02T07:57:09Z as 28f0ad9; CI run 41409599455 success; deployment 7487056119 (`talkaitive / production`) state success; the merge commit carries only `lint-and-test`, no `review`
+- [x] 4.11 The user set the fork approval policy and deleted the `ai-cr:review` label — read back: `approval_policy` is `all_external_contributors`; `gh label delete` confirmed the delete
