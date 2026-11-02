@@ -421,23 +421,23 @@ Deviations from the phase text, recorded during `/10x-implement`:
 
 #### Manual
 
-- [x] 3.5 `/10x-impl-review` is done and its findings are fixed before the first push
+- [x] 3.5 `/10x-impl-review` is done and its findings are fixed before the first push — 43aebf0
 
 ### Phase 4: Go live and fail test
 
 #### Automated
 
-- [x] 4.1 Control run on the gate PR is green with `ai-cr:passed` and a comment — PR 29, run 41391187741, SHA 43aebf0: `review` success, `mergeStateStatus` CLEAN, label `ai-cr:passed`, comment "AI review: pass" (correctness 6/10)
-- [x] 4.2 Branch protection requires only `review`, app 15368, `strict` false, admins not enforced — read back after the PUT: checks `[{review, 15368}]`, strict false, admins false; `checks` without `contexts` was accepted
-- [x] 4.3 Fail test comment is posted and names `data_isolation` — PR 30, SHA 74d7411: "**Blocked:** data_isolation, correctness scored at or below the floor of 3" (data_isolation 1/10, correctness 1/10); `tests` 2/10 appears as a separate warning
-- [x] 4.4 Fail test PR has the `ai-cr:failed` label — PR 30 labels: `["ai-cr:failed"]`, still there after the red job
-- [x] 4.5 Fail test job `review` is red, failed at step `stop` — run 41393876424: job failure; post success, failure-cleanup skipped, "Stop on a failed review" failure
-- [x] 4.6 Fail test `mergeStateStatus` is `BLOCKED` — read on PR 30 before closing: BLOCKED, mergeable MERGEABLE, only required check `review` (`lint-and-test` also failed there, but is not required)
-- [x] 4.7 Fail test PR is closed unmerged and its branch is deleted — PR 30: state CLOSED, mergedAt null; `git ls-remote` for `ci-ai-review-gate-failtest` is empty
-- [ ] 4.8 Evidence commit's control run is green and the gate PR is `CLEAN`
-- [x] 4.9 Final quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` — 712 passed, ruff clean, on 43aebf0
+- [x] 4.1 Control run on the gate PR is green with `ai-cr:passed` and a comment — PR 29, run 41391187741, SHA 43aebf0: `review` success, `mergeStateStatus` CLEAN, label `ai-cr:passed`, comment "AI review: pass" (correctness 6/10) — ab874e8
+- [x] 4.2 Branch protection requires only `review`, app 15368, `strict` false, admins not enforced — read back after the PUT: checks `[{review, 15368}]`, strict false, admins false; `checks` without `contexts` was accepted — ab874e8
+- [x] 4.3 Fail test comment is posted and names `data_isolation` — PR 30, SHA 74d7411: "**Blocked:** data_isolation, correctness scored at or below the floor of 3" (data_isolation 1/10, correctness 1/10); `tests` 2/10 appears as a separate warning — ab874e8
+- [x] 4.4 Fail test PR has the `ai-cr:failed` label — PR 30 labels: `["ai-cr:failed"]`, still there after the red job — ab874e8
+- [x] 4.5 Fail test job `review` is red, failed at step `stop` — run 41393876424: job failure; post success, failure-cleanup skipped, "Stop on a failed review" failure — ab874e8
+- [x] 4.6 Fail test `mergeStateStatus` is `BLOCKED` — read on PR 30 before closing: BLOCKED, mergeable MERGEABLE, only required check `review` (`lint-and-test` also failed there, but is not required) — ab874e8
+- [x] 4.7 Fail test PR is closed unmerged and its branch is deleted — PR 30: state CLOSED, mergedAt null; `git ls-remote` for `ci-ai-review-gate-failtest` is empty — ab874e8
+- [x] 4.8 Evidence commit's control run is green and the gate PR is `CLEAN` — PR 29, run 41394397331 on ab874e8: `review` success, `lint-and-test` success, `mergeStateStatus` CLEAN, label `ai-cr:passed` — fec2d39
+- [x] 4.9 Final quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` — 712 passed, ruff clean, on 43aebf0 — ab874e8
 
 #### Manual
 
-- [ ] 4.10 The user merged the gate PR through GitHub, and the Railway deploy of the merge commit succeeded
-- [ ] 4.11 The user set the fork approval policy and deleted the `ai-cr:review` label
+- [x] 4.10 The user merged the gate PR through GitHub, and the Railway deploy of the merge commit succeeded — PR 29 merged 2026-11-02T07:57:09Z as 28f0ad9; CI run 41409599455 success; deployment 7487056119 (`talkaitive / production`) state success; the merge commit carries only `lint-and-test`, no `review` — fec2d39
+- [x] 4.11 The user set the fork approval policy and deleted the `ai-cr:review` label — read back: `approval_policy` is `all_external_contributors`; `gh label delete` confirmed the delete — fec2d39
