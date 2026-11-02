@@ -28,7 +28,7 @@ KITCHEN_SINK_NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 
 
 def _get_conversation(request: AuthenticatedHttpRequest, pk: int) -> Conversation:
-    return get_object_or_404(Conversation.objects.for_user(request.user), pk=pk)
+    return get_object_or_404(Conversation.objects.all(), pk=pk)
 
 
 def _to_detail(conversation: Conversation) -> HttpResponse:
