@@ -402,13 +402,13 @@ None (no app or data change).
 
 #### Automated
 
-- [x] 3.1 `uv run --env-file .env python -m scripts.review.eval.run --smoke --out <tmp>` exits 0 and the ledger total is ≤ 0.50 USD
-- [x] 3.2 `uv run pytest` still passes after any fix
+- [x] 3.1 `uv run --env-file .env python -m scripts.review.eval.run --smoke --out <tmp>` exits 0 and the ledger total is ≤ 0.50 USD — 514db79
+- [x] 3.2 `uv run pytest` still passes after any fix — 514db79
 
 #### Manual
 
-- [x] 3.3 Each model returns a schema-valid review, or the failure is understood and recorded (a model that cannot return a valid review on its route is reported as such, not worked around)
-- [x] 3.4 OpenRouter served providers satisfy `data_collection: deny` and are inside the `structured_outputs` `only` list, and completion tokens stay ≤ 6000 on every route (recorded per model)
+- [x] 3.3 Each model returns a schema-valid review, or the failure is understood and recorded (a model that cannot return a valid review on its route is reported as such, not worked around) — 514db79
+- [x] 3.4 OpenRouter served providers satisfy `data_collection: deny` and are inside the `structured_outputs` `only` list, and completion tokens stay ≤ 6000 on every route (recorded per model) — 514db79
 
 ### Phase 4: Full run, result file and CI gate
 
