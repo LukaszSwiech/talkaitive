@@ -79,6 +79,8 @@ One custom promptfoo Python provider serves all four models. It reuses the real 
 
 One branch `ai-review-model-eval` (from `main` at 12dccd1, after PR 31) and one PR for all phases: nothing here touches the deployed app, and the gate test only lands with its first result file.
 
+**Implementation decision (2026-11-02, after Phase 2, autonomous mode):** the reviewable diff after Phase 2 is ~91.5k chars and the projected total with the result file and gate test is ~113k, over the 5.2 threshold of 100k, so plan-review F1 Fix B applies: PR 1 = Phases 1–3 (eval code, tests, smoke notes) on `ai-review-model-eval`; PR 2 = Phases 4–5 (result file, gate test, test-plan §6.6, report) on `ai-review-model-eval-results`, branched from `ai-review-model-eval` and stacked on PR 1. The threshold was not raised.
+
 ## Phase 1: Eval core without network
 
 ### Overview
@@ -387,26 +389,26 @@ None (no app or data change).
 
 #### Automated
 
-- [x] 2.1 `uv run pytest` passes
-- [x] 2.2 `uv run ruff check . && uv run ruff format --check .` pass
-- [x] 2.3 `uv run --env-file .env python -m scripts.review.eval.run --dry-run` prints the worst case per model and per repeat and exits 0 without any API call
-- [x] 2.4 `uv run --env-file .env python -m scripts.review.eval.run --fake --out <tmp>` runs promptfoo 0.125.1 end to end on all 16 cases × 4 models, writes a result file and leaves the ledger unchanged
+- [x] 2.1 `uv run pytest` passes — 2d434d1
+- [x] 2.2 `uv run ruff check . && uv run ruff format --check .` pass — 2d434d1
+- [x] 2.3 `uv run --env-file .env python -m scripts.review.eval.run --dry-run` prints the worst case per model and per repeat and exits 0 without any API call — 2d434d1
+- [x] 2.4 `uv run --env-file .env python -m scripts.review.eval.run --fake --out <tmp>` runs promptfoo 0.125.1 end to end on all 16 cases × 4 models, writes a result file and leaves the ledger unchanged — 2d434d1
 
 #### Manual
 
-- [x] 2.5 Orchestrator checks the dry-run worst case against research §4 and that three repeats are not guaranteed up front only if the numbers say so
+- [x] 2.5 Orchestrator checks the dry-run worst case against research §4 and that three repeats are not guaranteed up front only if the numbers say so — 2d434d1
 
 ### Phase 3: Smoke run (real, ≤ 0.50 USD reserved)
 
 #### Automated
 
-- [ ] 3.1 `uv run --env-file .env python -m scripts.review.eval.run --smoke --out <tmp>` exits 0 and the ledger total is ≤ 0.50 USD
-- [ ] 3.2 `uv run pytest` still passes after any fix
+- [x] 3.1 `uv run --env-file .env python -m scripts.review.eval.run --smoke --out <tmp>` exits 0 and the ledger total is ≤ 0.50 USD
+- [x] 3.2 `uv run pytest` still passes after any fix
 
 #### Manual
 
-- [ ] 3.3 Each model returns a schema-valid review, or the failure is understood and recorded (a model that cannot return a valid review on its route is reported as such, not worked around)
-- [ ] 3.4 OpenRouter served providers satisfy `data_collection: deny` and are inside the `structured_outputs` `only` list, and completion tokens stay ≤ 6000 on every route (recorded per model)
+- [x] 3.3 Each model returns a schema-valid review, or the failure is understood and recorded (a model that cannot return a valid review on its route is reported as such, not worked around)
+- [x] 3.4 OpenRouter served providers satisfy `data_collection: deny` and are inside the `structured_outputs` `only` list, and completion tokens stay ≤ 6000 on every route (recorded per model)
 
 ### Phase 4: Full run, result file and CI gate
 
