@@ -16,7 +16,7 @@ Legend used on the step headings below: ✅ done as planned · ⚠️ done, but 
 
 Change `ci-ai-review-gate` makes the AI review a real gate on merges to `main`. The workflow is `.github/workflows/ai-review.yml`.
 
-- **Required check:** `review` (GitHub Actions, app 15368, `strict: false`, admins not enforced). It is the only required check. The check's name is the job's name, so renaming the job leaves the check waiting forever.
+- **Required check:** `review` (GitHub Actions, app 15368, `strict: false`, admins not enforced). It is the only required check, set on 2026-11-02 and proven by the fail test PR 30 (`mergeStateStatus` BLOCKED). The check's name is the job's name, so renaming the job leaves the check waiting forever.
 - **What stops a merge:** a blocker (`data_isolation`, `no_secrets`, `correctness`, `migrations`) at or below the floor of 3, a truncated diff, or an operational failure (API, key, unusable output). A low `tests` or `openai_boundary`, or the model's own fail alone, is only a warning in the comment.
 - **What passes with no model call, and what is always red:** a PR changing only `uv.lock`, `package-lock.json` or `context/` has an empty reviewed diff, so it passes with no model call; the owner reads lockfile PRs by hand, because a lockfile reaches production on deploy. A fork PR is always red and can only go in by admin merge.
 - **The repo must stay public:** going private disables branch protection on the free plan.

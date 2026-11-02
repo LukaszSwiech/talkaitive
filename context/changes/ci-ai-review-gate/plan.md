@@ -427,15 +427,15 @@ Deviations from the phase text, recorded during `/10x-implement`:
 
 #### Automated
 
-- [ ] 4.1 Control run on the gate PR is green with `ai-cr:passed` and a comment
-- [ ] 4.2 Branch protection requires only `review`, app 15368, `strict` false, admins not enforced
-- [ ] 4.3 Fail test comment is posted and names `data_isolation`
-- [ ] 4.4 Fail test PR has the `ai-cr:failed` label
-- [ ] 4.5 Fail test job `review` is red, failed at step `stop`
-- [ ] 4.6 Fail test `mergeStateStatus` is `BLOCKED`
-- [ ] 4.7 Fail test PR is closed unmerged and its branch is deleted
+- [x] 4.1 Control run on the gate PR is green with `ai-cr:passed` and a comment — PR 29, run 41391187741, SHA 43aebf0: `review` success, `mergeStateStatus` CLEAN, label `ai-cr:passed`, comment "AI review: pass" (correctness 6/10)
+- [x] 4.2 Branch protection requires only `review`, app 15368, `strict` false, admins not enforced — read back after the PUT: checks `[{review, 15368}]`, strict false, admins false; `checks` without `contexts` was accepted
+- [x] 4.3 Fail test comment is posted and names `data_isolation` — PR 30, SHA 74d7411: "**Blocked:** data_isolation, correctness scored at or below the floor of 3" (data_isolation 1/10, correctness 1/10); `tests` 2/10 appears as a separate warning
+- [x] 4.4 Fail test PR has the `ai-cr:failed` label — PR 30 labels: `["ai-cr:failed"]`, still there after the red job
+- [x] 4.5 Fail test job `review` is red, failed at step `stop` — run 41393876424: job failure; post success, failure-cleanup skipped, "Stop on a failed review" failure
+- [x] 4.6 Fail test `mergeStateStatus` is `BLOCKED` — read on PR 30 before closing: BLOCKED, mergeable MERGEABLE, only required check `review` (`lint-and-test` also failed there, but is not required)
+- [x] 4.7 Fail test PR is closed unmerged and its branch is deleted — PR 30: state CLOSED, mergedAt null; `git ls-remote` for `ci-ai-review-gate-failtest` is empty
 - [ ] 4.8 Evidence commit's control run is green and the gate PR is `CLEAN`
-- [ ] 4.9 Final quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`
+- [x] 4.9 Final quality gates are green: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .` — 712 passed, ruff clean, on 43aebf0
 
 #### Manual
 
