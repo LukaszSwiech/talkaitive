@@ -375,26 +375,26 @@ None (no app or data change).
 
 #### Automated
 
-- [x] 1.1 `uv run pytest tests/test_review_eval.py` passes locally with materialisation tests running (not skipped)
-- [x] 1.2 `uv run pytest` passes
-- [x] 1.3 `uv run ruff check . && uv run ruff format --check .` pass
+- [x] 1.1 `uv run pytest tests/test_review_eval.py` passes locally with materialisation tests running (not skipped) — 4c10a6a
+- [x] 1.2 `uv run pytest` passes — 4c10a6a
+- [x] 1.3 `uv run ruff check . && uv run ruff format --check .` pass — 4c10a6a
 
 #### Manual
 
-- [x] 1.4 Orchestrator reads three materialised diffs (one pass, one seed, the injection) and confirms they look like real PR diffs
+- [x] 1.4 Orchestrator reads three materialised diffs (one pass, one seed, the injection) and confirms they look like real PR diffs — 4c10a6a
 
 ### Phase 2: promptfoo wiring and runner (still no paid call)
 
 #### Automated
 
-- [ ] 2.1 `uv run pytest` passes
-- [ ] 2.2 `uv run ruff check . && uv run ruff format --check .` pass
-- [ ] 2.3 `uv run --env-file .env python -m scripts.review.eval.run --dry-run` prints the worst case per model and per repeat and exits 0 without any API call
-- [ ] 2.4 `uv run --env-file .env python -m scripts.review.eval.run --fake --out <tmp>` runs promptfoo 0.125.1 end to end on all 16 cases × 4 models, writes a result file and leaves the ledger unchanged
+- [x] 2.1 `uv run pytest` passes
+- [x] 2.2 `uv run ruff check . && uv run ruff format --check .` pass
+- [x] 2.3 `uv run --env-file .env python -m scripts.review.eval.run --dry-run` prints the worst case per model and per repeat and exits 0 without any API call
+- [x] 2.4 `uv run --env-file .env python -m scripts.review.eval.run --fake --out <tmp>` runs promptfoo 0.125.1 end to end on all 16 cases × 4 models, writes a result file and leaves the ledger unchanged
 
 #### Manual
 
-- [ ] 2.5 Orchestrator checks the dry-run worst case against research §4 and that three repeats are not guaranteed up front only if the numbers say so
+- [x] 2.5 Orchestrator checks the dry-run worst case against research §4 and that three repeats are not guaranteed up front only if the numbers say so
 
 ### Phase 3: Smoke run (real, ≤ 0.50 USD reserved)
 

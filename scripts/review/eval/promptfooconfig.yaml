@@ -1,0 +1,25 @@
+# The AI review model eval. Run it only through `python -m scripts.review.eval.run`,
+# which sets the interpreter, PYTHONPATH, the budget and the promptfoo flags.
+description: AI review model eval
+sharing: false
+# The provider builds the reviewer's real prompt from the case id.
+prompts:
+  - "{{case_id}}"
+providers:
+  - id: file://provider.py
+    label: gpt-5.4
+    config: { model: gpt-5.4 }
+  - id: file://provider.py
+    label: gpt-6.1-terra
+    config: { model: gpt-6.1-terra }
+  - id: file://provider.py
+    label: claude-sonnet-5.5
+    config: { model: claude-sonnet-5.5 }
+  - id: file://provider.py
+    label: gemini-3.8-flash
+    config: { model: gemini-3.8-flash }
+tests: file://cases.py:generate_tests
+defaultTest:
+  assert:
+    - type: python
+      value: file://assertion.py:get_assert

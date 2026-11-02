@@ -26,7 +26,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from scripts.review.criteria import Verdict
 
@@ -420,6 +420,21 @@ def get_case(case_id: str) -> Case:
         if case.id == case_id:
             return case
     raise KeyError(case_id)
+
+
+def generate_tests() -> list[dict[str, Any]]:
+    """promptfoo's tests, one per case; no diff in `vars`, the provider builds it."""
+    return [
+        {
+            "description": case.id,
+            "vars": {
+                "case_id": case.id,
+                "expected_verdict": case.expected_verdict,
+                "tier": case.tier,
+            },
+        }
+        for case in CASES
+    ]
 
 
 # --- git ------------------------------------------------------------------------------
