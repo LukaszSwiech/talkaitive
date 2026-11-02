@@ -26,6 +26,16 @@ _OPENROUTER_POLICY: Mapping[str, Any] = {
     "zdr": True,
 }
 
+# OpenRouter reports the serving provider by display name; `only` takes slugs. A
+# name missing here counts as off policy in the result's matrix.
+OPENROUTER_SLUGS: Mapping[str, str] = {
+    "Google": "google-vertex",
+    "Google AI Studio": "google-ai-studio",
+    "Azure": "azure",
+    "Anthropic": "anthropic",
+    "Amazon Bedrock": "amazon-bedrock",
+}
+
 
 @dataclass(frozen=True)
 class EvalModel:
