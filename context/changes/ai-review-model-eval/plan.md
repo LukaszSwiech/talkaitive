@@ -430,7 +430,7 @@ None (no app or data change).
 
 - [x] 5.1 `uv run pytest` and ruff pass — 257eedd
 - [x] 5.2 Reviewable diff `git diff main...HEAD -- . ':(exclude)uv.lock' ':(exclude)package-lock.json' ':(exclude)context' | wc -c` is under 100 000 chars before the PR is opened (else Fix B: split into a code PR and a results PR) — 257eedd
-- [ ] 5.3 PR opened against `main`; CI `lint-and-test` green; the `review` check result is recorded in report.md
+- [x] 5.3 PR opened against `main`; CI `lint-and-test` green; the `review` check result is recorded in report.md — 7d65dbe
 
 #### Manual
 
