@@ -1,10 +1,10 @@
 ---
 change_id: ai-review-model-eval
 title: Compare AI review models with promptfoo and add a regression gate
-status: implemented
+status: archived
 created: 2026-11-02
 updated: 2026-11-08
-archived_at: null
+archived_at: 2026-11-08T19:55:07Z
 ---
 
 ## Notes
