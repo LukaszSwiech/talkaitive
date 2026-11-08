@@ -38,7 +38,13 @@ from scripts.review.eval.budget import (
 )
 from scripts.review.eval.cases import CASES, REPO, Case, get_case
 from scripts.review.eval.fingerprint import fingerprint
-from scripts.review.eval.models import MODELS, PRICES_CHECKED, EvalModel, get_model
+from scripts.review.eval.models import (
+    MODELS,
+    OPENROUTER_SLUGS,
+    PRICES_CHECKED,
+    EvalModel,
+    get_model,
+)
 from scripts.review.run_review import LLM_MODEL, ConfigError
 
 HERE = Path(__file__).resolve().parent
@@ -60,7 +66,7 @@ REPEAT_FIELDS = (
 )
 COUNTERS = (
     "runs hard_false_passes false_fails hard_pass_runs model_errors unmeasured_hard "
-    "wrong_blocker warnings_detected warning_runs soft_detected soft_runs"
+    "wrong_blocker warnings_detected warning_runs soft_detected soft_runs off_policy"
 ).split()
 
 
@@ -127,8 +133,18 @@ def row_record(row: Mapping[str, Any]) -> tuple[str, str, list[Any]]:
     return row["vars"]["case_id"], meta.get("model") or row["provider"]["label"], record
 
 
-def _add(a: dict[str, Any], case: Case, r: dict[str, Any]) -> None:
+def _off_policy(only: tuple[str, ...] | None, r: dict[str, Any]) -> bool:
+    """D5: an OpenRouter answer served outside `only`, or by an unknown provider."""
+    if only is None or (r["served"] is None and r["error"] is not None):
+        return False
+    return OPENROUTER_SLUGS.get(r["served"] or "") not in only
+
+
+def _add(
+    a: dict[str, Any], case: Case, r: dict[str, Any], only: tuple[str, ...] | None
+) -> None:
     error, verdict = r["error"], r["verdict"]
+    a["off_policy"] += _off_policy(only, r)
     if error is not None and error not in provider.MODEL_ERRORS:
         a["infra_errors"][error] = a["infra_errors"].get(error, 0) + 1
         a["unmeasured_hard"] += case.tier == "hard"
@@ -165,6 +181,7 @@ def aggregate(entries: Sequence[Mapping[str, Any]], repeats: int) -> dict[str, d
     An entry is one case: `{"case": id, <model label>: [repeat, ...], ...}`.
     """
     acc: dict[str, dict[str, Any]] = {}
+    policy = {m.label: m.openrouter_only for m in MODELS if m.route == "openrouter"}
     for entry in entries:
         case = get_case(entry["case"])
         for label, records in entry.items():
@@ -182,7 +199,8 @@ def aggregate(entries: Sequence[Mapping[str, Any]], repeats: int) -> dict[str, d
                 },
             )
             for record in records:
-                _add(a, case, dict(zip(REPEAT_FIELDS, record, strict=True)))
+                r = dict(zip(REPEAT_FIELDS, record, strict=True))
+                _add(a, case, r, policy.get(label))
             a["stable"].append(len({record[0] or record[3] for record in records}) == 1)
     for a in acc.values():
         usd, regular, ms, stable = (
@@ -333,8 +351,7 @@ def run(argv: Sequence[str]) -> int:
     run_id = datetime.now(UTC).strftime("%Y-%m-%dT%H%M%S")
     raw = (args.out / "raw" if trial else DEFAULT_LEDGER.parent / "runs") / run_id
     raw.mkdir(parents=True)
-    share_env = {k: v for k, v in os.environ.items() if k != provider.FAKE_ENV}
-    env = share_env | {
+    env = {k: v for k, v in os.environ.items() if k != provider.FAKE_ENV} | {
         "PROMPTFOO_DISABLE_TELEMETRY": "1",
         "PROMPTFOO_DISABLE_UPDATE": "1",
         "PROMPTFOO_DISABLE_SHARING": "true",
@@ -344,6 +361,8 @@ def run(argv: Sequence[str]) -> int:
         provider.MAX_USD_ENV: str(args.max_usd),
     }
     env |= {provider.FAKE_ENV: "1"} if args.fake else {}
+    drop = ("PROMPTFOO_DISABLE_SHARING", provider.FAKE_ENV)
+    share_env = {k: v for k, v in env.items() if k not in drop}
     pattern = "|".join(re.escape(m.label) for m in models)
     flags = ["--no-cache", "--no-share", "-j", "4", "--no-table", "--no-progress-bar"]
     flags += ["--filter-providers", f"^({pattern})$"]

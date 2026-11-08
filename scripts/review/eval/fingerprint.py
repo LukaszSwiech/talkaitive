@@ -3,11 +3,14 @@
 A result file carries it, and `tests/test_review_eval.py` compares it with the
 current code, so a change of the prompt, the schema, a call constant or the verdict
 rule without a new eval run turns CI red. The prompt is hashed as its template: the
-delimiter in the sent prompt is random per run. The schema is the one the OpenAI SDK
+delimiter in the sent prompt is random per run. The prompt builder and the verdict
+functions are hashed as source text, so even a comment or format edit there needs a
+new run. The schema is the one the OpenAI SDK
 sends, so an `openai` or `pydantic` upgrade can change the hash too.
 """
 
 import hashlib
+import inspect
 import json
 from typing import Any
 
@@ -28,6 +31,15 @@ def fingerprint_inputs() -> dict[str, Any]:
         "excluded_paths": list(run_review.EXCLUDED_PATHS),
         "fail_floor": criteria.FAIL_FLOOR,
         "blockers": list(criteria.BLOCKERS),
+        "sources": [
+            inspect.getsource(function)
+            for function in (
+                run_review._build_input,
+                criteria.final_verdict,
+                criteria.failed_blockers,
+                criteria._at_or_below_floor,
+            )
+        ],
     }
 
 

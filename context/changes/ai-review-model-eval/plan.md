@@ -414,24 +414,24 @@ None (no app or data change).
 
 #### Automated
 
-- [ ] 4.1 The run exits 0 with `complete: true` (at least one repeat finished, every started repeat finished) and the ledger total ≤ 10.00 USD (smoke included)
-- [ ] 4.2 `uv run pytest` passes, including the gate test
-- [ ] 4.3 The gate test fails when `_INSTRUCTIONS` or `LLM_MODEL` is changed (monkeypatch) and passes on the real code
-- [ ] 4.4 `uv run ruff check . && uv run ruff format --check .` pass
+- [x] 4.1 The run exits 0 with `complete: true` (at least one repeat finished, every started repeat finished) and the ledger total ≤ 10.00 USD (smoke included) — dba27ff
+- [x] 4.2 `uv run pytest` passes, including the gate test — dba27ff
+- [x] 4.3 The gate test fails when `_INSTRUCTIONS` or `LLM_MODEL` is changed (monkeypatch) and passes on the real code — dba27ff
+- [x] 4.4 `uv run ruff check . && uv run ruff format --check .` pass — dba27ff
 
 #### Manual
 
 - [ ] 4.5 Share links open in the TalkAItive org and are not viewable when logged out (the repo is public)
-- [ ] 4.6 Matrix numbers re-derive from the rows (orchestrator spot-checks one model)
+- [x] 4.6 Matrix numbers re-derive from the rows (orchestrator spot-checks one model) — dba27ff
 
 ### Phase 5: Documentation and final report
 
 #### Automated
 
-- [ ] 5.1 `uv run pytest` and ruff pass
-- [ ] 5.2 Reviewable diff `git diff main...HEAD -- . ':(exclude)uv.lock' ':(exclude)package-lock.json' ':(exclude)context' | wc -c` is under 100 000 chars before the PR is opened (else Fix B: split into a code PR and a results PR)
+- [x] 5.1 `uv run pytest` and ruff pass — 257eedd
+- [x] 5.2 Reviewable diff `git diff main...HEAD -- . ':(exclude)uv.lock' ':(exclude)package-lock.json' ':(exclude)context' | wc -c` is under 100 000 chars before the PR is opened (else Fix B: split into a code PR and a results PR) — 257eedd
 - [ ] 5.3 PR opened against `main`; CI `lint-and-test` green; the `review` check result is recorded in report.md
 
 #### Manual
 
-- [ ] 5.4 The report's winner follows from the matrix by D8→D9
+- [x] 5.4 The report's winner follows from the matrix by D8→D9 — 257eedd

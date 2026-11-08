@@ -275,6 +275,10 @@ class OtherReview(pydantic.BaseModel):
     verdict: criteria.Verdict
 
 
+def other_function(*args: object, **kwargs: object) -> None:
+    """Stands in for a hashed function with another body."""
+
+
 def test_fingerprint_is_a_stable_sha256() -> None:
     value = fingerprint()
 
@@ -313,6 +317,10 @@ def test_fingerprint_is_the_same_in_a_fresh_interpreter() -> None:
         (criteria, "FAIL_FLOOR", 4),
         (criteria, "BLOCKERS", ("data_isolation", "no_secrets", "correctness")),
         (criteria, "Review", OtherReview),
+        (run_review, "_build_input", other_function),
+        (criteria, "final_verdict", other_function),
+        (criteria, "failed_blockers", other_function),
+        (criteria, "_at_or_below_floor", other_function),
     ],
 )
 def test_fingerprint_changes_with_each_input(
@@ -789,6 +797,24 @@ def test_aggregate_counts_each_column() -> None:
     assert run.pick_winner(matrix)[0] == "a"
 
 
+def test_aggregate_counts_rows_served_off_policy() -> None:
+    def served(name: str | None, error: str | None = None) -> list:
+        return [*rec(error=error)[:7], name]
+
+    gemini = [served("Google"), served("Google AI Studio"), served(None)]
+    gemini += [served(None, "budget"), served("Azure", "schema")]
+    claude = [served("Azure"), served("Anthropic"), served("Unknown Cloud")]
+    entries = grouped(**{"gemini-3.8-flash": {"pass-css": gemini}})
+    entries[0] |= {"claude-sonnet-5.5": claude, "gpt-5.4": [served(None)]}
+
+    matrix = run.aggregate(entries, 1)
+
+    # Gemini: AI Studio, no name on an answer, Azure; a refused call has no name.
+    assert matrix["gemini-3.8-flash"]["off_policy"] == 3
+    assert matrix["claude-sonnet-5.5"]["off_policy"] == 2
+    assert matrix["gpt-5.4"]["off_policy"] == 0
+
+
 def test_winner_rule() -> None:
     cheap = {c: [[*r[:4], 0.005, *r[5:]] for r in rs] for c, rs in GOOD.items()}
     false_pass = GOOD | {"inject-idor": [rec("pass")]}
@@ -821,3 +847,157 @@ def test_result_file_is_capped_and_never_overwritten(tmp_path: Path) -> None:
     with pytest.raises(run.EvalError, match="over 20000"):
         run.write_result(result | {"entries": result["entries"] * 60}, tmp_path, "big")
     assert not (tmp_path / "big.json").exists()
+
+
+# --- CI gate (D18): the newest committed result covers the current reviewer ------
+
+RERUN = (
+    "re-run: uv run --env-file .env python -m scripts.review.eval.run --repeats 3 "
+    "--max-usd 10 --share (one model: add --models <label>); note that an "
+    "openai/pydantic upgrade can change the schema hash"
+)
+
+
+def newest_result() -> dict:
+    files = sorted(run.RESULTS_DIR.glob("*.json"))  # lexicographic max (D21)
+    assert files, f"no result file in {run.RESULTS_DIR}; {RERUN}"
+    return json.loads(files[-1].read_text(encoding="utf-8"))
+
+
+def fingerprint_mismatch(result: dict) -> str | None:
+    if result["fingerprint"] == fingerprint():
+        return None
+    return f"newest result has another fingerprint than the reviewer code; {RERUN}"
+
+
+def model_unmeasured(result: dict) -> str | None:
+    names = {m.get(k) for m in result["models"] for k in ("label", "api_id")}
+    if run_review.LLM_MODEL in names:
+        return None
+    return f"reviewer model {run_review.LLM_MODEL} is not measured; {RERUN}"
+
+
+def test_newest_result_matches_current_fingerprint() -> None:
+    assert (error := fingerprint_mismatch(newest_result())) is None, error
+
+
+def test_newest_result_measures_current_model() -> None:
+    assert (error := model_unmeasured(newest_result())) is None, error
+
+
+def test_newest_result_is_complete() -> None:
+    result = newest_result()
+
+    assert result["complete"] is True and not result["fake"], RERUN
+
+
+def test_gate_checks_report_a_prompt_or_model_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sonnet = {"label": "claude-sonnet-5.5", "api_id": "anthropic/claude-sonnet-5.5"}
+    result = {"fingerprint": fingerprint(), "models": [{"label": "gpt-5.4"}, sonnet]}
+    for model in ("gpt-5.4", "claude-sonnet-5.5", "anthropic/claude-sonnet-5.5"):
+        monkeypatch.setattr(run_review, "LLM_MODEL", model)
+        assert fingerprint_mismatch(result) is model_unmeasured(result) is None
+
+    monkeypatch.setattr(run_review, "_INSTRUCTIONS", run_review._INSTRUCTIONS + "x")
+    monkeypatch.setattr(run_review, "LLM_MODEL", "gpt-6.1-terra")
+
+    assert "--models <label>" in (fingerprint_mismatch(result) or "")
+    assert "schema hash" in (model_unmeasured(result) or "")
+
+
+# --- runner orchestration (D12, D22) with promptfoo replaced ----------------------
+
+
+@pytest.fixture
+def runner(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict:
+    """`run.run` with git, node and promptfoo faked; each eval spends `spend`."""
+    state: dict = {"dirty": "", "error": None, "spend": Decimal(0), "calls": []}
+    state["ledger"] = tmp_path / "ledger.json"
+    outputs = {"node": "v22.22.0", "git": "abc1234\n"}  # promptfoo: not installed
+    monkeypatch.setattr(
+        run,
+        "_out",
+        lambda *a: state["dirty"] if a[1] == "status" else outputs.get(a[0]),
+    )
+    monkeypatch.setattr(run.provider, "prepare", lambda case: ([], False))
+    monkeypatch.setattr(run.provider, "input_chars", lambda messages: 1000)
+    monkeypatch.setattr(run, "VENV_PYTHON", Path(sys.executable))
+    monkeypatch.setenv("OPENAI_API_KEY", "test-dummy")
+
+    def fake_subprocess(args: list[str], env: dict, **kwargs: object) -> object:
+        state["calls"].append((args, env))
+        if "share" in args:
+            return ns(returncode=0, stdout=b"View: https://promptfoo.app/x", stderr=b"")
+        ledger = Ledger(state["ledger"], Decimal(env[provider.MAX_USD_ENV]))
+        ledger.settle(ledger.reserve(state["spend"]), state["spend"])
+        meta = {"model": "gpt-5.4", "truncated": False, "cost_usd": 0.01}
+        meta |= {"latency_ms": 900, "error_kind": state["error"]}
+        row = {"vars": {"case_id": "pass-css"}, "provider": {"label": "gpt-5.4"}}
+        row |= {"response": {"output": review_dict(), "metadata": meta}}
+        data = {"evalId": f"eval-{len(state['calls'])}", "results": {"results": [row]}}
+        Path(args[args.index("-o") + 1]).write_text(json.dumps(data))
+        return ns(returncode=0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(run.subprocess, "run", fake_subprocess)
+    total = run.worst_case_per_repeat(
+        [get_model("gpt-5.4")], dict.fromkeys(CASES, 1000)
+    )
+    state["total"] = sum(total.values(), Decimal(0))
+    state["argv"] = ["--models", "gpt-5.4", "--out", str(tmp_path / "out")]
+    state["argv"] += ["--ledger", str(state["ledger"])]
+    return state
+
+
+def run_result(state: dict, *more: str) -> tuple[int, dict]:
+    code = run.run([*state["argv"], *more])
+    (path,) = (Path(state["argv"][3])).glob("*.json")
+    return code, json.loads(path.read_text())
+
+
+def test_a_repeat_that_does_not_fit_is_skipped(runner: dict) -> None:
+    # Room for 1.5 repeats; the first spends 0.6 of one, so the second cannot fit.
+    max_usd = runner["total"] * Decimal("1.5") + SAFETY_MARGIN_USD
+    runner["spend"] = runner["total"] * Decimal("0.6")
+
+    code, result = run_result(runner, "--repeats", "3", "--max-usd", str(max_usd))
+
+    assert code == 0 and len(runner["calls"]) == 1
+    assert result["complete"] is True and result["repeats_completed"] == 1
+    assert result["repeats_skipped_budget"] == 2
+
+
+def test_a_refused_reservation_stops_the_run_unshared(runner: dict) -> None:
+    runner["error"] = "budget"
+
+    code, result = run_result(runner, "--repeats", "2", "--share")
+
+    assert code == 2 and result["complete"] is False and result["share_links"] == []
+    assert [args for args, _ in runner["calls"] if "share" in args] == []
+
+
+def test_a_complete_run_is_shared_with_the_opt_outs(runner: dict) -> None:
+    code, result = run_result(runner, "--repeats", "1", "--share")
+
+    (args, env) = runner["calls"][-1]
+    assert code == 0 and "share" in args
+    assert result["share_links"] == ["https://promptfoo.app/x"]
+    assert env["PROMPTFOO_DISABLE_TELEMETRY"] == env["PROMPTFOO_DISABLE_UPDATE"] == "1"
+    assert "PROMPTFOO_DISABLE_SHARING" not in env and provider.FAKE_ENV not in env
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["--repeats", "1"],  # a real run on a dirty tree
+        ["--fake", "--share", "--out", "/tmp/eval-out"],
+        ["--fake", "--out", str(REPO / "eval-out")],
+    ],
+)
+def test_runner_refuses_unsafe_runs(runner: dict, argv: list[str]) -> None:
+    runner["dirty"] = " M scripts/review/criteria.py\n"
+
+    with pytest.raises(run_review.ConfigError):
+        run.run(["--models", "gpt-5.4", "--ledger", str(runner["ledger"]), *argv])
+    assert runner["calls"] == []
