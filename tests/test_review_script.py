@@ -582,8 +582,18 @@ def fake_openai(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
 def real_sdk(
     fake_provider: FakeProvider, monkeypatch: pytest.MonkeyPatch
 ) -> FakeProvider:
-    """The real SDK client on the scripted transport (`tests/fake_provider.py`)."""
-    monkeypatch.setattr(run_review, "OpenAI", fake_provider.make_client)
+    """The real SDK client on the scripted transport (`tests/fake_provider.py`).
+
+    `sleeps` restarts when the client is built: `read_diff` runs git first with a
+    timeout, and `subprocess` may poll it with `time.sleep(0.001)`, which is not
+    the SDK waiting to retry.
+    """
+
+    def make_client(**kwargs: Any) -> Any:
+        fake_provider.sleeps.clear()
+        return fake_provider.make_client(**kwargs)
+
+    monkeypatch.setattr(run_review, "OpenAI", make_client)
     return fake_provider
 
 
