@@ -2,7 +2,7 @@
 
 Local and manual only: the CI reviewer itself still uses `LLM_MODEL` from the
 settings. Prices are USD per 1M tokens, standard tier, checked on `PRICES_CHECKED`
-(sources: `context/changes/ai-review-model-eval/research.md` §3). Reasoning tokens
+(sources: `context/archive/2026-11-02-ai-review-model-eval/research.md` §3). Reasoning tokens
 are billed as output on every route.
 """
 
