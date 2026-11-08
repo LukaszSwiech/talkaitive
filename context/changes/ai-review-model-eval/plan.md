@@ -421,7 +421,7 @@ None (no app or data change).
 
 #### Manual
 
-- [ ] 4.5 Share links open in the TalkAItive org and are not viewable when logged out (the repo is public)
+- [x] 4.5 Share links open in the TalkAItive org and are not viewable when logged out (the repo is public) (checked by the user, logged in, 2026-11-08) — 7d65dbe
 - [x] 4.6 Matrix numbers re-derive from the rows (orchestrator spot-checks one model) — dba27ff
 
 ### Phase 5: Documentation and final report
